@@ -462,7 +462,7 @@ Son 18 tablas en la Entrega 1 y 6 para después.
 **Reglas:**
 - Datos mínimos del alta (Acl. 3): nombre, apellido, fecha de nacimiento, familia, al menos un tutor en la familia, y una inscripción.
 - No se pueden cargar `alergias` ni `condiciones_medicas` si `consentimiento_datos_medicos` es false: `CHECK (consentimiento_datos_medicos OR (alergias IS NULL AND condiciones_medicas IS NULL))`.
-- Un Profesor ve los datos médicos solo de los alumnos de sus grupos. De los hermanos que estén en otros grupos no los ve (Acl. 11). Esto se filtra en la consulta.
+- Un Profesor ve los datos médicos solo de los alumnos de sus grupos. De los hijos que estén en otros grupos no los ve (Acl. 11). Esto se filtra en la consulta.
 
 ##### `persona` · Entrega 1
 
@@ -489,7 +489,7 @@ Son 18 tablas en la Entrega 1 y 6 para después.
 | `persona_id` | bigint | PK, FK → persona | |
 | `es_tutor` | boolean | NOT NULL, DEFAULT false | |
 | `autorizado_retiro` | boolean | NOT NULL, DEFAULT false | |
-| `contacto_emergencia` | boolean | NOT NULL, DEFAULT false *(después, HU-AF-08)* | Los contactos de emergencia son por familia: los hermanos los comparten (Acl. 3). |
+| `contacto_emergencia` | boolean | NOT NULL, DEFAULT false *(después, HU-AF-08)* | Los contactos de emergencia son por familia: los hijos los comparten (Acl. 3). |
 
 **Reglas:**
 - Un tutor siempre está autorizado a retirar: `CHECK (NOT es_tutor OR autorizado_retiro)` (Acl. 3).

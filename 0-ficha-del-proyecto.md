@@ -10,7 +10,7 @@ Escuelita de Verano — Sistema de administración
 
 ### **0.3. Descripción breve del proyecto:**
 
-Sistema web para administrar una escuela de verano que funciona en el club de una mutual de médicos: ficha de alumnos con tutores y documentación, grupos por edad y turno, asistencia, tarifario configurable con descuentos por categoría de familia y hermanos, cuenta corriente por familia, tesorería general y canon al club. Reemplaza la gestión manual en planillas y hojas escritas a mano.
+Sistema web para administrar una escuela de verano que funciona en el club de una mutual de médicos: ficha de alumnos con tutores y documentación, grupos por edad y turno, asistencia, tarifario configurable con descuentos por categoría de familia e hijos, cuenta corriente por familia, tesorería general y canon al club. Reemplaza la gestión manual en planillas y hojas escritas a mano.
 
 ### **0.4. URL del proyecto:**
 

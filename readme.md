@@ -1,6 +1,6 @@
 # Escuelita de Verano — Sistema de administración
 
-Sistema web para administrar una escuela de verano que funciona en el club de una mutual de médicos. Centraliza la ficha de cada alumno (datos, tutores autorizados y documentación), los grupos por edad y turno con su asistencia, el tarifario con descuentos por categoría de familia y cantidad de hermanos, la cuenta corriente de cada familia, la tesorería general y el canon que se paga al club.
+Sistema web para administrar una escuela de verano que funciona en el club de una mutual de médicos. Centraliza la ficha de cada alumno (datos, tutores autorizados y documentación), los grupos por edad y turno con su asistencia, el tarifario con descuentos por categoría de familia y cantidad de hijos, la cuenta corriente de cada familia, la tesorería general y el canon que se paga al club.
 
 Proyecto Final del máster **AI4Devs (LIDR)**, desarrollado con **Spec-Driven Development** y asistentes de IA en todas las fases.
 
@@ -15,9 +15,13 @@ Proyecto Final del máster **AI4Devs (LIDR)**, desarrollado con **Spec-Driven De
 6. [Tickets de Trabajo](6-tickets-de-trabajo.md)
 7. [Pull Requests](7-pull-requests.md)
 
-**Otros documentos**
+**Fuentes y documentos de trabajo**
 
-- [PRD — Producto (versión de relevamiento)](docs/prd/PRD%20Escuelita%20de%20Verano.pdf)
+- [PRD — Producto (versión de relevamiento, PDF)](docs/prd/PRD%20Escuelita%20de%20Verano.pdf)
+- [PRD transcripto a Markdown](docs/prd/prd-escuelita-de-verano.md): transcripción fiel del PDF, que no se modifica.
+- [Aclaraciones del cliente](docs/prd/aclaraciones-cliente.md): decisiones de negocio posteriores al PRD. Prevalecen sobre el PRD cuando se contradicen.
+- [Documento técnico](docs/architecture/documento-tecnico.md): stack, despliegue en Render, seguridad y pendientes técnicos.
+- [Backlog de historias de usuario](docs/product/historias-backlog.md): todas las historias, con prioridad y sustento, y el alcance del lote de la Entrega 1.
 - [Registro de uso de IA (prompts.md)](prompts.md)
 
 ## Estado

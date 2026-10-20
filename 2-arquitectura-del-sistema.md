@@ -173,7 +173,7 @@ Principio general: **todo control de acceso se hace en la API**. El frontend sol
 - Cada endpoint declara con una **dependencia de FastAPI** qué roles pueden usarlo: Admin, Coordinador o Profesor.
 - Para el Profesor, una **segunda dependencia** comprueba que el grupo o el alumno pertenezca a sus grupos asignados (`grupo_profesor`).
 - **Los listados se filtran en la consulta a la base, no después**: un Profesor nunca recibe datos de otros grupos.
-- **Datos sensibles** (Acl. 11): el Profesor ve alergias y condiciones médicas solo de los alumnos de sus grupos. De los hermanos que están en otros grupos ve los datos de familia y las personas autorizadas, pero no los datos médicos ni los documentos.
+- **Datos sensibles** (Acl. 11): el Profesor ve alergias y condiciones médicas solo de los alumnos de sus grupos. De los hijos que están en otros grupos ve los datos de familia y las personas autorizadas, pero no los datos médicos ni los documentos.
 
 **Archivos privados**
 - Los documentos se guardan en el disco del servidor, **fuera de cualquier carpeta pública**, con un **nombre aleatorio**.

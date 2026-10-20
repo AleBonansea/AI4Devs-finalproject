@@ -106,53 +106,67 @@ porcentajes de descuentos
 
 ## 2. Arquitectura del Sistema
 
+> Prompt de la sesión de Claude Code (CLI) sobre el repo. Se transcribe tal cual se escribió (extractos marcados con [...]). Un solo prompt generó las seis subsecciones: va completo en la 2.1, y las demás remiten a él.
+
 ### **2.1. Diagrama de arquitectura:**
 
-**Prompt 1:**
+**Prompt 1: Arquitectura completa a partir del documento técnico, sin contradecirlo**
 
-**Prompt 2:**
+*Contexto:* el documento técnico ya definía el stack, el despliegue en Render y la seguridad. Pedí volcarlo a las seis subsecciones del template, con diagramas Mermaid simples, la justificación del stack con lo que se sacrifica, y la aclaración explícita de que la estructura de ficheros y los tests son lo planificado, porque todavía no hay código.
 
-**Prompt 3:**
+```
+[...] Completá 2-arquitectura-del-sistema.md, en la raíz. La fuente principal es
+docs/architecture/documento-tecnico.md, que ya tiene el stack, el despliegue en Render
+y la seguridad: no inventes nada que lo contradiga.
+
+2.1 Diagrama de arquitectura en Mermaid, con los componentes y las tecnologías. Explicá
+    por qué este stack y qué se sacrifica: FastAPI sobre Django implica programar a mano
+    la autenticación, los permisos y las pantallas de configuración.
+2.2 Componentes principales con su tecnología.
+2.3 Estructura de ficheros propuesta para el backend FastAPI y el frontend React+Vite.
+    Todavía no hay código, así que es la estructura planificada: decilo explícitamente.
+2.4 Infraestructura y despliegue, con el diagrama de Render en Mermaid: sitio estático,
+    servicio web, PostgreSQL y disco persistente, y el deploy automático desde GitHub.
+2.5 Seguridad, a partir de la sección correspondiente del documento técnico.
+2.6 Estrategia de tests. No hay tests todavía, así que es el plan: pytest con foco en el
+    cálculo de cargos y descuentos, que es donde está la lógica de negocio.
+
+Mantené los diagramas Mermaid simples y sin caracteres raros en las etiquetas.
+```
+
+*Respuesta clave:* la IA describió la arquitectura como SPA + API REST, con un backend monolito modular en capas, y justificó el stack. El sacrificio de FastAPI sobre Django lo bajó a lo concreto: autenticación, permisos y pantallas de configuración hechas a mano, que en el backlog son historias propias. Además:
+- armó dos diagramas Mermaid (arquitectura y Render) y los validó con el CLI oficial;
+- propuso la estructura de ficheros del backend y el frontend, marcada como planificada;
+- armó un plan de tests en cinco niveles: unitario del motor de cálculo, integración de endpoints, permisos, constraints y migraciones, siempre con PostgreSQL real y no SQLite.
+
+Al cruzar el documento técnico con las aclaraciones encontró dos contradicciones, y aportó dos puntos que el documento técnico no cubría.
+
+*Ajuste humano / impacto:*
+- **Las dos contradicciones con las aclaraciones se resolvieron a favor de las aclaraciones,** y además se corrigieron en el propio documento técnico, para que las dos fuentes digan lo mismo:
+  - el límite de los documentos es **5 MB**, no 10 MB (Acl. 11);
+  - **no se borran los documentos** al cerrar la temporada, aunque el documento técnico lo recomendaba (Acl. 10). Quedan guardados y vuelven a figurar como pendientes en la temporada nueva.
+- **Se aceptó la propuesta de correr `alembic upgrade head` en el pre-deploy** del servicio web en Render, para que la nueva versión nunca reciba tráfico con un esquema viejo. Quedó incorporada al documento técnico.
+- **El hallazgo de la cookie de renovación entre dos servicios distintos** se resolvió publicando la API en un subdominio del dominio propio (por ejemplo, `app.<dominio>` y `api.<dominio>`). El sitio estático y la API son dos servicios de Render, y con los dominios que Render asigna por defecto la cookie httpOnly sería de terceros. Así queda same-site. Quedó atado al pendiente de registrar el dominio.
 
 ### **2.2. Descripción de componentes principales:**
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+Cubierto por el prompt 1 de la 2.1.
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+Cubierto por el prompt 1 de la 2.1. La estructura está marcada como planificada hasta que exista el código (Entrega 2).
 
 ### **2.4. Infraestructura y despliegue**
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+Cubierto por el prompt 1 de la 2.1. Le corresponden dos ajustes: el pre-deploy con `alembic upgrade head`, y no borrar los documentos fuera de temporada.
 
 ### **2.5. Seguridad**
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+Cubierto por el prompt 1 de la 2.1. Le corresponden dos ajustes: el límite de 5 MB y la cookie de renovación resuelta con un subdominio.
 
 ### **2.6. Tests**
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+Cubierto por el prompt 1 de la 2.1. Es el plan de tests, porque todavía no hay código.
 
 ---
 
@@ -391,11 +405,49 @@ historias, con el link al backlog.
 
 ### 6. Tickets de Trabajo
 
-**Prompt 1:**
+> Prompt de la sesión de Claude Code (CLI) sobre el repo. Se transcribe tal cual se escribió.
 
-**Prompt 2:**
+**Prompt 1: Corte vertical de HU-CC-01 en tres tickets**
 
-**Prompt 3:**
+*Contexto:* el template pide un ticket de base de datos, uno de backend y uno de frontend. En lugar de tres tickets sueltos, pedí que fueran las tres capas de una misma historia: la que concentra las reglas de negocio. Dejé fijados los constraints de la base y los casos de test mínimos.
+
+```
+Escribí 6-tickets-de-trabajo.md, en la raíz.
+
+Son exactamente 3 tickets —uno de base de datos, uno de backend y uno de frontend— y
+los tres son el corte vertical de HU-CC-01 (registrar un cargo con cálculo de tarifa y
+descuento). Elegimos esa historia porque es la que concentra las reglas de negocio, así
+que es la que mejor se ve partida en capas.
+
+Ticket de base de datos: las tablas que hacen falta para el cargo (tarifa_base,
+descuento_modalidad, descuento_mes, periodo_cobro, tipo_cargo, cargo), la migración de
+Alembic, y los constraints que sostienen las reglas: el CHECK que verifica que el total
+coincida con base y porcentaje, y la foránea compuesta que impide asociar un período de
+otra modalidad.
+
+Ticket de backend: POST /api/v1/cargos con el motor de cálculo, incluido simular=true.
+Listá los casos de test en pytest que tiene que cubrir, como mínimo: socio con 1 hijo al
+mes, no socio con 3 hijos al mes, empleado por día (donde la cantidad de hijos no
+interviene), el tramo de 4 o más aplicado a todos los hijos, y los rechazos por rol y
+por familia o inscripción inexistente.
+
+Ticket de frontend: la pantalla de registrar cobro en React, con el desglose del cálculo
+usando la simulación antes de confirmar.
+
+Cada ticket con: título, descripción, criterios de aceptación técnicos, dependencias
+entre ellos, estimación, y las referencias concretas a la historia, a las tablas de
+3-modelo-de-datos.md y al endpoint de 4-especificaciones-de-la-api.md.
+```
+
+*Respuesta clave:* la IA armó tres tickets encadenados (base de datos → backend → frontend), con un diagrama de dependencias y una estimación total de 22 horas:
+- **TK-01, base de datos (4 h):** la migración de Alembic con ida y vuelta; el `CHECK` del total; la FK compuesta con `MATCH SIMPLE`, explicando por qué la Preinscripción y el Día no la violan; los `CHECK` de forma del cargo; y tests de constraints contra PostgreSQL.
+- **TK-02, backend (10 h):** el motor de cálculo como función pura, con redondeo `Decimal` igual al de PostgreSQL para que el `CHECK` nunca rechace un cargo calculado por la API; `simular=true` sin escribir nada; y 16 casos de test, los 7 pedidos más 9 que salen de los escenarios de HU-CC-01.
+- **TK-03, frontend (8 h):** el formulario según el tipo de cargo y la modalidad, el desglose con la simulación, la confirmación con el saldo y el manejo de errores. El frontend nunca calcula ni envía montos.
+
+*Ajuste humano / impacto:* la revisión dejó tres cosas, y las tres se aceptaron:
+- **Se incorporaron la tabla `pago` y la vista `v_cuenta_corriente` al ticket de base de datos,** aunque no estaban en la lista pedida. El `saldo_pendiente` que devuelve `POST /cargos` depende de ellas. `pago` se crea solo con su estructura; su endpoint sigue siendo de HU-CC-02.
+- **El caso "familia inexistente" se prueba con un `alumno_id` inexistente.** La API no recibe `familia_id`: la familia se deriva del alumno, así que a nivel API ese es el caso real.
+- **Quedó anotada como dependencia del ticket de frontend la falta de endpoints de lectura** para llenar los selectores (alumnos con sus inscripciones, tipos de cargo y períodos). No entran entre los 3 endpoints documentados por el límite de la entrega, así que hay que acordarlos con el backend o con el ticket de lectura que corresponda del lote.
 
 ---
 

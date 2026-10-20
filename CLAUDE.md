@@ -59,7 +59,7 @@ Los datos se conservan entre temporadas: no se borra nada.
   - Si vuelve en otra temporada, reutiliza su ficha, su familia y sus tutores, pero se lo inscribe de nuevo en los grupos.
 - **Inscripción**: alumno × grupo/turno × temporada. Cada turno es una inscripción independiente.
 - **Persona autorizada a retirar**: incluye a los tutores. Puede estar autorizada en más de una familia.
-- **Contacto de emergencia**: lista aparte de las personas autorizadas. Es de la familia: los hermanos lo comparten.
+- **Contacto de emergencia**: lista aparte de las personas autorizadas. Es de la familia: los hijos lo comparten.
 - **Documento**:
   - Archivo privado (PDF, JPG o PNG, hasta 5 MB) adjunto a la ficha.
   - Checklist configurable: el Admin define por temporada qué documentos son obligatorios (por ejemplo, ficha médica, DNI o autorización de salidas). También se pueden adjuntar otros no obligatorios.
