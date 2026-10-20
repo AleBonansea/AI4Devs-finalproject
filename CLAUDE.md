@@ -7,7 +7,7 @@ Sistema de administración para la escuelita de verano del club sede: gestiona f
 ## Roles
 
 - **Admin** (puede haber varios; el primero se crea al instalar el sistema):
-  - Da de alta usuarios de cualquier rol, y puede desactivarlos.
+  - Da de alta usuarios de cualquier rol, puede desactivarlos y les blanquea la contraseña.
   - Administra profesores y grupos.
   - Registra alumnos en cualquier grupo, carga documentación y gestiona asistencia.
   - Es el único rol que registra cobros y ve la cuenta corriente familiar y la tesorería.
@@ -38,6 +38,7 @@ Los datos se conservan entre temporadas: no se borra nada.
 - **Usuario**:
   - Tiene un rol: Admin, Coordinador o Profesor.
   - Se puede activar y desactivar.
+  - Acceso: cambio obligatorio de contraseña en el primer ingreso y después de un blanqueo. Solo un Admin blanquea contraseñas. El usuario queda bloqueado tras 5 intentos fallidos seguidos, hasta que se le blanquee la contraseña.
   - Un Profesor se asigna a uno o más grupos, y un grupo puede tener varios profesores.
 - **Grupo**:
   - Nombre, turno (mañana o tarde) y rango de fechas de nacimiento (desde/hasta). El rango se usa para sugerir el grupo al cargar un alumno.

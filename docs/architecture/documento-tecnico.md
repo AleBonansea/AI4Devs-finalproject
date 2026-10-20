@@ -31,6 +31,7 @@ Componentes y cómo se conectan: el navegador (computadora o celular) carga la a
 - **PostgreSQL**: plan pago. El gratis vence a los 30 días y no tiene backups. El pago permite recuperar la base a cualquier momento de los últimos 3 días (workspace Hobby) o 7 (Pro), y guarda los exports 7 días.
 - **Disco persistente** para los documentos, adjunto al servicio web: copia automática cada 24 horas, guardada al menos 7 días. Con disco, el servicio no puede tener más de una instancia y cada deploy tiene un corte breve; con menos de 10 usuarios no es un problema.
 - **Deploy**: automático desde GitHub en cada push a la rama principal.
+- **Migraciones**: `alembic upgrade head` corre como paso previo al arranque del servicio web (pre-deploy command de Render), antes de que la nueva versión reciba tráfico.
 
 ## Autenticación, permisos y archivos privados
 
@@ -40,6 +41,7 @@ Todo control de acceso se hace en la API; el frontend solo oculta lo que el usua
 
 - Hash con argon2 (pwdlib); nunca se guardan ni se registran en texto.
 - El login devuelve un token de acceso de vida corta y un token de renovación en una cookie httpOnly. Mientras hay actividad la sesión se renueva; sin actividad vence (30 minutos en computadora, más en el celular del profesor, a ajustar).
+- **Dominio y cookie:** el sitio estático y la API son dos servicios distintos de Render, así que con los dominios que Render asigna por defecto la cookie de renovación sería de terceros. La solución es registrar un dominio propio y publicar la API en un subdominio (por ejemplo, `app.<dominio>` y `api.<dominio>`), de modo que la cookie quede same-site. Queda atado al pendiente de registrar el dominio.
 - El usuario tiene un indicador `debe_cambiar_password`. Se activa al crearlo y al blanquearlo; mientras esté activo, la API rechaza todo salvo el cambio de contraseña.
 - Validación de la nueva contraseña: mínimo 8 caracteres, al menos una letra y un número, distinta del nombre de usuario y de la anterior (se guarda el hash de la anterior para comparar).
 - Contador de intentos fallidos: al quinto seguido el usuario queda bloqueado; el blanqueo lo desbloquea.
@@ -56,17 +58,27 @@ Todo control de acceso se hace en la API; el frontend solo oculta lo que el usua
 
 - Los documentos se guardan en el disco del servidor, fuera de cualquier carpeta pública, con un nombre aleatorio.
 - Se descargan solo por un endpoint que valida el permiso sobre ese alumno antes de entregar el archivo.
-- Al subir se valida el tipo (PDF, JPG, PNG) y el tamaño (hasta 10 MB).
+- Al subir se valida el tipo (PDF, JPG, PNG) y el tamaño (**hasta 5 MB**, según Acl. 11; este documento decía 10 MB y se corrigió).
 
 ## Fuera de temporada
 
-De marzo a noviembre el sistema no se usa. El cliente elige una de estas tres opciones; la recomendada es la A. En cualquier opción se recomienda borrar los archivos de documentación al cerrar la temporada, porque se vuelven a pedir cada año y son datos de salud de menores.
+De marzo a noviembre el sistema no se usa. El cliente elige una de estas tres opciones; la recomendada es la A.
+
+> **Corregido:** este documento recomendaba borrar los archivos de documentación al cerrar la temporada. La Acl. 10 define lo contrario —no se borra nada entre temporadas— y prevalece. Los documentos quedan guardados y vuelven a figurar como pendientes hasta que se presente uno nuevo. Como los datos sensibles de menores se conservan de forma indefinida, los controles de la sección de seguridad pasan a ser más importantes.
 
 | Opción | Qué se conserva | Riesgo y trabajo |
 |---|---|---|
 | **A. Suspender el servidor y dejar la base prendida (recomendada)** | Todo: alumnos, tutores, profesores, usuarios e historial de cobros, sueldos y canon | Ninguno; no requiere tareas manuales |
 | B. Exportar la base, guardarla en el Drive del cliente y borrarla; restaurarla en diciembre | Todo, si la restauración sale bien | 1 a 2 horas de trabajo por año. Render guarda los exports solo 7 días, así que hay que descargarlo; si el backup falla o se pierde, se pierden los datos |
 | C. Borrar todo y empezar de cero en diciembre | Nada | Hay que recargar alumnos, tutores, profesores y usuarios; se pierde el historial de cobros y canon, y cambia lo definido en Temporada en el PRD |
+
+## Gestión del trabajo
+
+No se usa ningún gestor de tickets. Para la entrega del curso, las unidades de trabajo son el archivo `6-tickets-de-trabajo.md` del repo; el template oficial no pide Jira, Azure DevOps ni ningún otro sistema, solo el fork de GitHub.
+
+**Render no gestiona tickets**: es solo hosting (builds, deploys, base de datos, sitio estático). El gestor de tickets y la plataforma de despliegue son independientes y no se comunican entre sí, así que usar cualquier gestor no condiciona el despliegue en Render. Lo único que Render observa es el repositorio de GitHub, de donde dispara el deploy en cada push a la rama principal.
+
+**Si más adelante el proyecto real necesita un gestor**, la opción recomendada es **GitHub Issues**, por tres razones concretas: el repositorio ya está ahí, los commits y los pull requests se enlazan de forma nativa (`Closes #12`), y la Entrega 3 exige documentar pull requests de GitHub, con lo cual ese flujo se usa igual. Adoptar un sistema externo implicaría mantener dos herramientas que no se conocen entre sí. Decisión no tomada todavía y reversible en cualquier momento.
 
 ## Pendientes técnicos
 
@@ -76,3 +88,4 @@ De marzo a noviembre el sistema no se usa. El cliente elige una de estas tres op
 - [ ] **Región de Render**: elegir la más cercana disponible.
 - [ ] **Dominio**: registrar el nombre.
 - [ ] **Librería de UI**: MUI o Mantine.
+- [ ] **Gestor de issues para el proyecto real**: adoptar GitHub Issues o seguir sin gestor. No afecta a la entrega del curso.

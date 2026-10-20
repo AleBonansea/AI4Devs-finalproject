@@ -12,7 +12,7 @@ Artefacto de trabajo derivado de las fuentes. **No** es parte del PRD.
 **Roles:** cuando varios roles hacen lo mismo, se nombran juntos en una sola historia. Los matices de permisos se definen en los criterios de aceptación. "Staff" significa Admin, Coordinador o Profesor; el Profesor siempre solo sobre sus grupos.
 
 **Prioridades:**
-- **MVP-Entrega1**: forma parte del primer lote de desarrollo (18 historias, ver «Alcance de la Entrega 1»). Tres de ellas, además, se documentan con criterios en `5-historias-de-usuario.md` para cumplir con la consigna del curso.
+- **MVP-Entrega1**: forma parte del primer lote de desarrollo (20 historias, ver «Alcance de la Entrega 1»). Tres de ellas, además, se documentan con criterios en `5-historias-de-usuario.md` para cumplir con la consigna del curso.
 - **Should-have**: valiosa, pero no imprescindible para demostrar el sistema en esta entrega.
 - **Backlog**: necesaria para el sistema en producción, pero fuera de esta entrega académica.
 
@@ -383,7 +383,7 @@ Como Admin, quiero que, si se anula un cobro que ya estaba incluido en un cierre
 
 **HU-UT-01** · `MVP-Entrega1`
 Como staff, quiero ingresar con mi usuario y contraseña personales, para acceder solo a lo que permite mi rol.
-*Sustento:* PRD «Roles y permisos»; Acl. 11 (Autenticación: usuarios individuales).
+*Sustento:* PRD «Roles y permisos»; Acl. 9 (Acceso al sistema), 11 (Autenticación: usuarios individuales). Si el usuario tiene pendiente el cambio obligatorio de contraseña, el ingreso lo lleva directo a HU-UT-06, y la API rechaza cualquier otra operación hasta que la cambie.
 
 **HU-UT-02** · `MVP-Entrega1`
 Como Admin (cualquier rol) o Coordinador (solo usuarios Profesor), quiero dar de alta usuarios y modificar sus datos, para que cada persona del staff tenga su propio acceso.
@@ -407,6 +407,18 @@ Como Admin, quiero abrir una nueva temporada con su fecha de inicio y de cierre 
 Como staff, quiero consultar los datos de una temporada anterior, según los permisos de mi rol y sin poder modificarlos, para revisar lo que pasó sin alterar el historial.
 *Sustento:* Acl. 10 (la temporada anterior queda solo para consulta).
 
+**HU-UT-06** · `MVP-Entrega1`
+Como staff, quiero que el sistema me obligue a cambiar la contraseña en el primer ingreso y después de un blanqueo, para que solo yo conozca la contraseña con la que entro.
+*Sustento:* Acl. 9 (Acceso al sistema: cambio obligatorio). Las reglas de la contraseña nueva están en el documento técnico, «Contraseñas y sesión»: mínimo 8 caracteres, al menos una letra y un número, distinta del nombre de usuario y de la anterior.
+
+**HU-UT-07** · `MVP-Entrega1`
+Como Admin, quiero blanquear la contraseña de un usuario, para que pueda volver a ingresar si la olvidó o si quedó bloqueado. Al blanquearla se activa el cambio obligatorio (HU-UT-06) y se desbloquea el usuario.
+*Sustento:* Acl. 9 (Acceso al sistema: blanqueo).
+
+**HU-UT-08** · `Should-have`
+Como Admin, quiero que un usuario quede bloqueado después de 5 intentos de ingreso fallidos seguidos, hasta que yo le blanquee la contraseña (HU-UT-07), para que nadie pueda adivinar una contraseña probando.
+*Sustento:* Acl. 9 (Acceso al sistema: bloqueo).
+
 ---
 
 ## Resumen
@@ -420,8 +432,8 @@ Como staff, quiero consultar los datos de una temporada anterior, según los per
 | Cuenta corriente familiar | 6 | 3 | 2 | 1 |
 | Tesorería general | 3 | 1 | 2 | 0 |
 | Canon al club | 5 | 0 | 0 | 5 |
-| Usuarios y temporadas | 5 | 3 | 0 | 2 |
-| **Total** | **46** | **18** | **15** | **13** |
+| Usuarios y temporadas | 8 | 5 | 1 | 2 |
+| **Total** | **49** | **20** | **16** | **13** |
 
 ## Alcance de la Entrega 1 (decisión del 19/10/2026)
 
@@ -429,7 +441,9 @@ No se usan datos semilla: todo lo que hace falta para demostrar el sistema se ca
 
 1. **Usuarios y login:**
    - HU-UT-01: ingresar con usuario y contraseña.
+   - HU-UT-06: cambio obligatorio de contraseña en el primer ingreso y después de un blanqueo. Un login sin esto no está terminado.
    - HU-UT-02: alta y modificación de usuarios.
+   - HU-UT-07: blanqueo de contraseña por un Admin.
    - HU-UT-03: baja, es decir, desactivar un usuario.
 
    El ABM de profesores es el ABM de usuarios con rol Profesor.
@@ -462,13 +476,13 @@ No se usan datos semilla: todo lo que hace falta para demostrar el sistema se ca
 
 Son dos cosas distintas y no tienen por qué coincidir:
 
-- **Lote de desarrollo (18 historias, los 6 bloques de arriba):** es lo que se construye primero, en cadena. Sin usuarios, grupos y alta de alumno no hay nada que demostrar de punta a punta.
+- **Lote de desarrollo (20 historias, los 6 bloques de arriba):** es lo que se construye primero, en cadena. Sin usuarios, grupos y alta de alumno no hay nada que demostrar de punta a punta.
 - **Historias documentadas con criterios en [`5-historias-de-usuario.md`](../../5-historias-de-usuario.md) (3):** es lo que pide la consigna del curso. Se documentan en profundidad, con criterios Dado / Cuando / Entonces, las tres que mejor muestran el sistema. Los criterios son los mismos que figuran en este archivo, debajo de cada historia:
   1. **HU-AF-01** — registrar un alumno con familia, grupo y turno.
   2. **HU-GA-04** — tomar asistencia por grupo, día y turno.
   3. **HU-CC-01** — registrar un cargo con cálculo de tarifa y descuento (es la que concentra las reglas de negocio). Sus dependencias del bloque Tarifario (tarifa base, tipos de cargo, fechas del período y tabla de descuentos) van como precondiciones en el "Dado" de los escenarios. Las historias HU-TAR no se documentan aparte.
 
-Las otras 15 del lote se construyen igual, pero quedan listadas acá sin criterios. Esto resuelve el "4 bloques contra 3 historias" sin recortar el sistema real ni inflar la entrega.
+Las otras 17 del lote se construyen igual, pero quedan listadas acá sin criterios. Esto resuelve el "4 bloques contra 3 historias" sin recortar el sistema real ni inflar la entrega.
 
 **Cambios respecto de las versiones anteriores:**
 - El bloque de cobro (HU-CC-01 a HU-CC-03) vuelve a MVP-Entrega1.
@@ -481,13 +495,21 @@ Las otras 15 del lote se construyen igual, pero quedan listadas acá sin criteri
 - HU-AF-11, HU-DOC-04 y HU-UT-04 se reescriben según la nueva sección 10 de las aclaraciones, y se agrega HU-UT-05 (consulta de temporadas anteriores).
 - HU-TES-01 pasa a MVP-Entrega1 como dato: cada pago escribe su ingreso desde la Entrega 1. Las pantallas de tesorería (HU-TES-02, HU-TES-03) siguen como Should-have.
 - HU-UT-04 incorpora la copia de grupos de la temporada anterior (Acl. 4). La primera temporada se crea en la puesta en marcha.
+- El cambio y el blanqueo de contraseña y el bloqueo por intentos salen de «Excluido», porque los define la sección «Acceso al sistema y usuarios» del PRD vigente (registrada en Acl. 9). Se agregan tres historias:
+  - HU-UT-06, cambio obligatorio, al lote;
+  - HU-UT-07, blanqueo, al lote, junto a HU-UT-02;
+  - HU-UT-08, bloqueo tras 5 intentos, como Should-have porque es endurecimiento y no hace falta para demostrar el sistema.
+
+  Ninguna se resolvió como criterio de una historia existente, por estos motivos:
+  - el cambio obligatorio tiene su propia pantalla, su endpoint y sus reglas de validación, y HU-UT-01 solo lo hace cumplir;
+  - el blanqueo lo hace solo el Admin, mientras que HU-UT-02 también la usa el Coordinador, y tiene efectos propios (activa el cambio obligatorio y desbloquea);
+  - el bloqueo tiene otra prioridad que HU-UT-01, y un criterio no puede tener una prioridad distinta de la de su historia.
 
 **Baja de grupos — propuesta, pendiente de confirmar:** un grupo con alumnos o asistencia registrada no se borra, se **desactiva**: deja de aparecer para inscribir, pero conserva su historia. Es el mismo criterio que ya rige para los usuarios (los desactivados se conservan para no romper las referencias de quién cobró). Si se confirma, pasa a `aclaraciones-cliente.md`.
 
 ## Excluido por no estar en las fuentes
 
-Estos temas aparecen solo en el documento técnico, así que no se convirtieron en historias. Si se quieren, primero hay que confirmarlos con el cliente y sumarlos a `aclaraciones-cliente.md`:
-- Cambio y blanqueo de contraseña, y bloqueo tras 5 intentos fallidos.
+Hoy no queda ningún tema del documento técnico fuera de las fuentes. El cambio y el blanqueo de contraseña y el bloqueo por intentos ya tienen historias (HU-UT-06 a HU-UT-08). Si aparece otro tema, va acá hasta que se confirme y se sume a `aclaraciones-cliente.md`.
 
 El primer Admin (Acl. 9) y la primera temporada (Acl. 10), que se crean al instalar el sistema, son tareas de puesta en marcha, no historias de usuario.
 

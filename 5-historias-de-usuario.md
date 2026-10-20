@@ -1,6 +1,6 @@
 # 5. Historias de Usuario
 
-> **Recorte de MVP.** Estas 3 historias son el recorte de MVP de un backlog completo de **46 historias**. Son las que se documentan con criterios de aceptación; el resto del primer lote de desarrollo (18 historias en total) y el backlog completo, con prioridades y sustento, están en [`docs/product/historias-backlog.md`](docs/product/historias-backlog.md).
+> **Recorte de MVP.** Estas 3 historias son el recorte de MVP de un backlog completo de **49 historias**. Son las que se documentan con criterios de aceptación; el resto del primer lote de desarrollo (20 historias en total) y el backlog completo, con prioridades y sustento, están en [`docs/product/historias-backlog.md`](docs/product/historias-backlog.md).
 
 > **Convenciones.** "Staff" significa Admin, Coordinador o Profesor; el Profesor siempre actúa solo sobre sus grupos asignados. En el campo *Sustento*, "PRD" remite a [`docs/prd/prd-escuelita-de-verano.md`](docs/prd/prd-escuelita-de-verano.md) y "Acl." a [`docs/prd/aclaraciones-cliente.md`](docs/prd/aclaraciones-cliente.md), que prevalece sobre el PRD. Las precondiciones que dependen de otras historias del lote van en el "Dado".
 

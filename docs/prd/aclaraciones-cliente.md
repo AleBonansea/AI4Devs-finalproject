@@ -103,6 +103,10 @@ Fuente complementaria de `prd-escuelita-de-verano.md`. Recoge las respuestas a l
 - Solo los Admin registran cobros.
 - Solo los Admin modifican la categoría de una familia.
 - El profesor puede crear familias y ve los datos de los hijos que componen la familia. Esto queda limitado por la sección 11: no ve datos médicos ni documentos de hijos de otros grupos.
+- **Acceso al sistema y usuarios.** Esto lo define la versión vigente del PRD, sección «Acceso al sistema y usuarios». No figura en la transcripción del repo (ver la nota del encabezado). Las reglas de validación concretas están en el documento técnico, «Contraseñas y sesión».
+  - **Cambio obligatorio de contraseña:** en el primer ingreso y después de un blanqueo, el usuario tiene que cambiar la contraseña antes de poder hacer cualquier otra cosa en el sistema.
+  - **Blanqueo:** un Admin puede blanquear la contraseña de un usuario. Al blanquearla, se activa el cambio obligatorio y se desbloquea el usuario si estaba bloqueado.
+  - **Bloqueo:** después de 5 intentos de ingreso fallidos seguidos, el usuario queda bloqueado hasta que un Admin le blanquee la contraseña.
 
 ## 10. Temporadas y persistencia
 
@@ -161,6 +165,7 @@ Fuente complementaria de `prd-escuelita-de-verano.md`. Recoge las respuestas a l
 | Tutores | Tutores más personas autorizadas y de emergencia | Los tutores son personas autorizadas a retirar; los contactos de emergencia son una lista aparte |
 | Quincena / Semana | Sin definición de fechas | Fechas fijas definidas por los Admin |
 | Usuarios | No especificado | Los da de alta un Admin; el primer Admin se crea al instalar; el Coordinador también administra profesores |
+| Acceso al sistema | No especificado (la transcripción del repo no tiene la sección «Acceso al sistema y usuarios» del PRD vigente) | Cambio obligatorio de contraseña en el primer ingreso y tras un blanqueo; blanqueo por un Admin; bloqueo tras 5 intentos fallidos seguidos |
 | Documentación obligatoria | Ficha médica, DNI y otros certificados | Checklist configurable por temporada: el Admin define cuáles son obligatorios. Al abrir una temporada vuelven a quedar pendientes |
 | Grupos | Por franja de edad | Por rango de fechas de nacimiento, con sugerencia automática. Son por temporada y se pueden copiar de la anterior |
 | Temporadas | Cada temporada arranca de cero | Se conservan todos los datos, sin borrar nada; los documentos vencidos se reemplazan en la temporada siguiente |

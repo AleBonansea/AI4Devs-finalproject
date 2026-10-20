@@ -17,6 +17,9 @@ erDiagram
         bigint id PK
         varchar username UK
         varchar password_hash
+        varchar password_hash_anterior
+        boolean debe_cambiar_password
+        smallint intentos_fallidos
         varchar nombre
         varchar apellido
         rol_usuario rol
@@ -316,6 +319,9 @@ Son 18 tablas en la Entrega 1 y 6 para después.
 | `id` | bigint | PK | |
 | `username` | varchar(60) | NOT NULL, UNIQUE | Inicial del nombre + apellido, sin acentos. Si ya existe, se agrega un número (documento técnico). |
 | `password_hash` | varchar(255) | NOT NULL | Hash argon2. Nunca se guarda la contraseña en texto. |
+| `password_hash_anterior` | varchar(255) | NULL | Hash de la contraseña anterior, para impedir que se repita al cambiarla (HU-UT-06, documento técnico). |
+| `debe_cambiar_password` | boolean | NOT NULL, DEFAULT true | Cambio obligatorio pendiente. Se activa al crear el usuario y al blanquearlo (HU-UT-06, HU-UT-07). |
+| `intentos_fallidos` | smallint | NOT NULL, DEFAULT 0, `CHECK (intentos_fallidos >= 0)` *(después, HU-UT-08)* | Intentos de ingreso fallidos seguidos. |
 | `nombre`, `apellido` | varchar(80) | NOT NULL | |
 | `rol` | rol_usuario | NOT NULL | |
 | `activo` | boolean | NOT NULL, DEFAULT true | Baja = desactivar. |
@@ -324,6 +330,11 @@ Son 18 tablas en la Entrega 1 y 6 para después.
 - El Admin da de alta usuarios de cualquier rol. El Coordinador, solo de rol `profesor`. El primer Admin se crea al instalar el sistema (Acl. 9).
 - Un usuario desactivado no puede ingresar, pero se conserva para no romper las referencias de quién cobró, anuló o abonó (Acl. 11).
 - Los usuarios no son por temporada: se conservan de un año a otro (Acl. 10).
+- **Acceso** (Acl. 9):
+  - Mientras `debe_cambiar_password` es true, la API rechaza todo salvo el cambio de contraseña.
+  - El usuario está **bloqueado** cuando `intentos_fallidos >= 5`. El estado no se guarda en una columna aparte: se deduce del contador, para que no haya dos datos que se puedan desincronizar.
+  - Un ingreso correcto pone el contador en 0.
+  - El blanqueo (lo hace un Admin) pone el contador en 0 y activa `debe_cambiar_password`.
 
 ##### `temporada` · Entrega 1
 
@@ -781,4 +792,4 @@ Al instalar el sistema se crean el primer Admin (Acl. 9) y la primera temporada 
 
 #### Fuera del modelo
 
-Los campos de seguridad que describe el documento técnico (`debe_cambiar_password`, intentos fallidos, hash de la contraseña anterior) no se modelan. Corresponden a cambio y blanqueo de contraseña y bloqueo por intentos, que el backlog deja fuera por no estar en las fuentes. Si se suman, van en `usuario`.
+Por ahora nada. Los campos de acceso del documento técnico (cambio obligatorio, contraseña anterior e intentos fallidos) ya están en `usuario`, porque los define Acl. 9 (HU-UT-06 a HU-UT-08).
