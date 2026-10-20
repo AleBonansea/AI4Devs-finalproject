@@ -24,7 +24,14 @@
 |---|---|---|---|
 | HU-AF-01 | `POST /api/v1/alumnos` | Admin y Coordinador en cualquier grupo; Profesor solo en sus grupos | `201` alumno creado e inscripto |
 | HU-GA-04 | `PUT /api/v1/grupos/{grupo_id}/asistencias/{fecha}` | Admin y Coordinador en cualquier grupo; Profesor solo en sus grupos | `200` asistencia registrada |
-| HU-CC-01 | `POST /api/v1/cargos` | Solo Admin | `201` cargo registrado (`200` si se usa `simular=true`) |
+| HU-CC-01 | `POST /api/v1/cargos` | Solo Admin | `201` cargo registrado, con el saldo de la familia (`200` si se usa `simular=true`) |
+
+### Concesiones por el límite de 3 endpoints
+
+La consigna de la entrega pide documentar como máximo 3 endpoints. Eso obliga a dos concesiones, que se dejan explícitas para que no se lean como decisiones de diseño:
+
+- **`simular=true` en `POST /api/v1/cargos`.** Sin el límite, la previsualización sería un endpoint propio: `GET /api/v1/cargos/simulacion`, con los mismos campos como parámetros de consulta. En los dos casos el cálculo pasa por la API y no por el frontend, porque **el precio no puede venir del cliente**: la tarifa base, el descuento y la cantidad de hijos se resuelven en el servidor, y el cliente solo dice qué se cobra.
+- **Escenario 4 de HU-GA-04 (grupo sin alumnos inscriptos).** Ese escenario es "abrir la lista de asistencia de un grupo sin alumnos", y se verifica contra un `GET` de la lista que no está entre los 3 endpoints documentados. El `422` por lista vacía del `PUT` es una validación correcta del cuerpo, pero no es lo mismo que ese escenario, así que no se presenta como su cobertura.
 
 ### Errores por endpoint y escenario
 
@@ -52,7 +59,7 @@ En cada fila, el escenario indica de qué criterio de aceptación de `5-historia
 | 409 | El grupo es de una temporada `cerrada` | Acl. 10 |
 | 422 | La `fecha` está fuera de la temporada | Regla de `asistencia` |
 | 422 | Una `inscripcion_id` no es de ese grupo, o está repetida en el cuerpo | Escenarios 1 y 2 |
-| 422 | La lista llega vacía | Escenario 4 |
+| 422 | La lista llega vacía | Validación del cuerpo. No cubre el escenario 4: ver «Concesiones por el límite de 3 endpoints». |
 
 **`POST /api/v1/cargos` (HU-CC-01)**
 
@@ -178,7 +185,6 @@ paths:
                       - persona_id: 20
                         es_tutor: true
                         autorizado_retiro: true
-                        contacto_emergencia: false
                 segundo_hijo:
                   summary: La etiqueta pasa a «Pérez – Ana»
                   value:
@@ -200,7 +206,6 @@ paths:
                       - persona_id: 20
                         es_tutor: true
                         autorizado_retiro: true
-                        contacto_emergencia: false
         '401':
           $ref: '#/components/responses/NoAutenticado'
         '403':
@@ -399,7 +404,7 @@ paths:
                   - $ref: '#/components/schemas/Error'
               examples:
                 lista_vacia:
-                  summary: No hay alumnos para registrar (escenario 4)
+                  summary: La lista de asistencias llega vacía
                   value:
                     detail:
                       - type: too_short
@@ -457,7 +462,15 @@ paths:
 
         Con `simular=true` devuelve el cálculo sin guardar nada. Es lo que usa
         la pantalla para mostrar base, porcentaje y total antes de confirmar
-        (escenario 1).
+        (escenario 1). Es una concesión al límite de 3 endpoints de la
+        entrega: sin ese límite sería `GET /api/v1/cargos/simulacion`. La
+        previsualización tiene que pasar por la API porque el precio no puede
+        venir del cliente.
+
+        La respuesta `201` incluye `saldo_pendiente`: el saldo de la cuenta
+        corriente de la familia en la temporada, ya incluyendo este cargo. Con
+        eso el escenario 1 ("el saldo pendiente de la familia aumenta") se
+        verifica en la misma respuesta.
 
         Que la ficha esté incompleta no impide el cargo (escenario 8).
 
@@ -466,7 +479,11 @@ paths:
         - name: simular
           in: query
           required: false
-          description: Si es true, calcula y devuelve el cargo sin guardarlo (200).
+          description: >
+            Si es true, calcula y devuelve el cargo sin guardarlo (200).
+            Es una concesión al límite de 3 endpoints de la entrega: sin ese
+            límite sería GET /api/v1/cargos/simulacion. El cálculo no se puede
+            hacer en el frontend porque el precio no puede venir del cliente.
           schema:
             type: boolean
             default: false
@@ -500,11 +517,14 @@ paths:
                   tipo_cargo_id: 1
       responses:
         '201':
-          description: Cargo registrado en la cuenta corriente de la familia.
+          description: >
+            Cargo registrado en la cuenta corriente de la familia, con el saldo
+            pendiente resultante. Los tres ejemplos son cargos sucesivos de la
+            misma familia, todavía sin pagos.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Cargo'
+                $ref: '#/components/schemas/CargoRegistrado'
               examples:
                 abono_mes:
                   summary: 15 % sobre $ 100.000 = $ 85.000
@@ -525,6 +545,7 @@ paths:
                     monto_total: '85000.00'
                     creado_por: 2
                     creado_en: '2026-12-20T10:31:05-03:00'
+                    saldo_pendiente: '85000.00'
                 abono_semana:
                   summary: 10 % sobre $ 30.000 = $ 27.000
                   value:
@@ -544,6 +565,7 @@ paths:
                     monto_total: '27000.00'
                     creado_por: 2
                     creado_en: '2026-12-20T10:33:47-03:00'
+                    saldo_pendiente: '112000.00'
                 preinscripcion:
                   summary: Monto fijo de $ 20.000, sin descuento
                   value:
@@ -563,6 +585,7 @@ paths:
                     monto_total: '20000.00'
                     creado_por: 2
                     creado_en: '2026-12-20T10:35:12-03:00'
+                    saldo_pendiente: '132000.00'
         '200':
           description: Solo con `simular=true`. Devuelve el cálculo sin guardarlo.
           content:
@@ -782,15 +805,16 @@ components:
 
     FamiliaPersona:
       type: object
-      required: [persona_id, es_tutor, autorizado_retiro, contacto_emergencia]
+      description: >
+        Vínculo de una persona con la familia. contacto_emergencia no forma
+        parte de este contrato: se suma cuando llegue HU-AF-08.
+      required: [persona_id, es_tutor, autorizado_retiro]
       properties:
         persona_id:
           type: integer
         es_tutor:
           type: boolean
         autorizado_retiro:
-          type: boolean
-        contacto_emergencia:
           type: boolean
 
     AlumnoCreado:
@@ -947,6 +971,20 @@ components:
             creado_en:
               type: string
               format: date-time
+
+    CargoRegistrado:
+      description: Respuesta 201 de POST /cargos. Es el cargo guardado más el saldo de la familia.
+      allOf:
+        - $ref: '#/components/schemas/Cargo'
+        - type: object
+          required: [saldo_pendiente]
+          properties:
+            saldo_pendiente:
+              $ref: '#/components/schemas/Decimal'
+              description: >
+                Saldo de la cuenta corriente de la familia en la temporada del
+                cargo, ya incluyendo este cargo. Sale de la vista
+                v_cuenta_corriente (columna saldo_pendiente).
 
     Error:
       type: object

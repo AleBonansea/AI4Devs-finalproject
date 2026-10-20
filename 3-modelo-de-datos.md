@@ -768,12 +768,12 @@ Todas las tablas de esta sección cuelgan de `temporada`: cada verano tiene su p
 
 No son tablas: se calculan, para que no haya datos duplicados que se puedan desincronizar.
 
-| Vista | Qué calcula |
-|---|---|
-| `v_familia_etiqueta` | "Apellido – Hijo mayor": apellido y nombre del alumno de la familia con la `fecha_nacimiento` más antigua (Acl. 1). |
-| `v_cuenta_corriente` | Por familia y temporada: total de cargos, total de pagos no anulados y saldo pendiente (PRD: "en todo momento se debe poder ver el saldo"). Es la base del reporte de deudas (HU-CC-04). |
-| `v_ficha_pendientes` | Por alumno y temporada: tipos de documento obligatorios que todavía no tienen un `documento` (Acl. 8, HU-DOC-02). |
-| `v_tesoreria_saldo` | Por temporada: ingresos, egresos y saldo disponible. |
+| Vista | Columnas | Qué calcula |
+|---|---|---|
+| `v_familia_etiqueta` | `familia_id`, `etiqueta` | `etiqueta` es "Apellido – Hijo mayor": apellido y nombre del alumno de la familia con la `fecha_nacimiento` más antigua (Acl. 1). La API la expone con el mismo nombre. |
+| `v_cuenta_corriente` | `familia_id`, `temporada_id`, `total_cargos`, `total_pagos`, `saldo_pendiente` | Por familia y temporada: total de cargos, total de pagos no anulados, y `saldo_pendiente = total_cargos − total_pagos` (PRD: "en todo momento se debe poder ver el saldo"). Es la base del reporte de deudas (HU-CC-04). La API devuelve `saldo_pendiente` al registrar un cargo. |
+| `v_ficha_pendientes` | `alumno_id`, `temporada_id`, `tipo_documento_id` | Una fila por cada tipo de documento obligatorio que el alumno todavía no presentó en esa temporada (Acl. 8, HU-DOC-02). |
+| `v_tesoreria_saldo` | `temporada_id`, `total_ingresos`, `total_egresos`, `saldo_disponible` | Por temporada: ingresos, egresos y saldo disponible. |
 
 #### Puesta en marcha
 
