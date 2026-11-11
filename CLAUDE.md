@@ -2,11 +2,114 @@
 
 ## Producto
 
-Sistema de administración para la escuelita de verano del club sede: gestiona fichas de alumnos, documentación, asistencia por grupo y turno, cuenta corriente por familia, tesorería general y canon al club, por temporada. Fuentes de verdad: `docs/prd/prd-escuelita-de-verano.md` (transcripción fiel del PRD, no se modifica) y lo confirmado en `docs/prd/aclaraciones-cliente.md`, que prevalece sobre el PRD cuando se contradicen.
+Sistema de administración para la escuelita de verano del club sede: gestiona fichas de alumnos, documentación, asistencia por grupo y turno, cuenta corriente por familia, tesorería general y canon al club, por temporada.
+
+**Fuentes de verdad, en este orden:**
+
+1. `docs/prd/aclaraciones-cliente.md` — decisiones del cliente posteriores al PRD. **Prevalece** cuando contradice al PRD.
+2. `docs/prd/prd-escuelita-de-verano.md` — transcripción fiel del PRD original. No se modifica.
+3. `docs/architecture/documento-tecnico.md` — stack, despliegue y seguridad.
+4. `5-historias-de-usuario.md` — criterios de aceptación de las historias en curso. Mandan sobre el código.
+5. `docs/product/historias-backlog.md` — alcance: qué entra en este lote y qué no.
+
+**El prototipo no es especificación.** Las capturas de `docs/previews/` son de un prototipo anterior al modelo de datos y tienen diferencias conocidas con él (campo de medio de pago, asistencia dentro del cálculo, cargo de día por rango). Sirven para ver la intención visual, nunca para deducir comportamiento.
+
+## Comandos
+
+Todo con `make` desde la raíz. `pytest`, `alembic` y `uv`/`pip` se ejecutan dentro de `backend/`; `npm` dentro de `frontend/`.
+
+| Qué | Comando |
+|---|---|
+| Levantar todo en local | `make up` |
+| Instalar dependencias | `make install` |
+| Tests del backend | `make test` |
+| Un solo test | `cd backend && pytest tests/functional/<archivo>.py::<test> -x` |
+| Lint y formato del backend | `make lint` (ruff check + ruff format) |
+| Tipos del backend | `make typecheck` (mypy) |
+| Nueva migración | `cd backend && alembic revision --autogenerate -m "<mensaje>"` |
+| Aplicar migraciones | `make migrate` |
+| Datos de ejemplo | `make seed` |
+| Regenerar el contrato OpenAPI | `make openapi-generate` |
+| Comprobar que el contrato está al día | `make openapi-check` |
+| Frontend en desarrollo | `cd frontend && npm run dev` |
+| Lint y build del frontend | `cd frontend && npm run lint && npm run build` |
+
+## Estructura
+
+```
+backend/
+  app/
+    main.py            arranque de FastAPI
+    core/              config, seguridad, dependencias de permisos
+    models/            SQLAlchemy 2
+    schemas/           Pydantic v2 — entra y sale de la API
+    api/v1/            un router por capability
+    services/          reglas de negocio; tarifario.py tiene el cálculo
+  alembic/versions/
+  tests/
+    conftest.py        fixtures; aislamiento por transacción
+    functional/        tests de contrato, por capability
+frontend/src/
+  lib/api.ts           único punto de contacto con el backend
+  components/  pages/  routes/
+scripts/seed.py        datos de ejemplo
+docs/api/openapi.json  contrato versionado — generado, no se edita
+```
+
+## Convenciones del backend
+
+### El cálculo vive en un solo lugar
+
+Todo el cálculo de un cargo está en `app/services/tarifario.py`, como **función pura**: recibe tarifa base, categoría, modalidad y cantidad de hijos, y devuelve el desglose. No toca la base, no lee el request y no tiene efectos. Ningún endpoint, modelo ni componente recalcula un precio por su cuenta.
+
+### El precio nunca viene del cliente
+
+El frontend manda **qué** se cobra (alumno, tipo, modalidad, período). El monto lo calcula y lo guarda la API. Un endpoint que acepte un importe del cuerpo de la petición es un error.
+
+### Todo cargo guarda su cálculo
+
+Al crear un cargo se persisten la tarifa base, el porcentaje aplicado, la categoría y la cantidad de hijos usadas. El cargo **no se recalcula nunca**: el tarifario cambia y lo ya cobrado no se toca.
+
+### Nada se borra
+
+No hay `DELETE` sobre datos del negocio. Un cobro mal cargado **se anula** (motivo, usuario y fecha) y su ingreso en tesorería se contraasienta con un egreso por el mismo monto. Un usuario o un grupo **se desactivan**. Los movimientos de tesorería y los cierres de canon abonados son inmutables.
+
+### El estado derivado no se almacena
+
+Si se puede calcular, se calcula. El saldo de una familia sale de sus cargos y pagos; que un usuario esté bloqueado sale del contador de intentos fallidos. No hay columnas que dupliquen eso.
+
+### Toda respuesta pasa por un esquema
+
+Nunca se devuelve un modelo de SQLAlchemy. Cada endpoint declara su `response_model` de Pydantic. Es lo que impide que se filtren el hash de la contraseña o datos médicos de un alumno que no corresponde.
+
+### Los permisos se declaran y se filtran en la consulta
+
+Cada endpoint declara qué roles pueden usarlo con una dependencia de FastAPI. Para el Profesor, una segunda dependencia comprueba que el grupo o el alumno sean de los suyos. **Los listados se filtran en la consulta, no después**: un profesor nunca recibe filas de otros grupos ni siquiera para descartarlas.
+
+### Migraciones
+
+Una migración por cambio de esquema, con `--autogenerate` y **revisando el diff a mano**: autogenerate se equivoca con los índices, los tipos enumerados y los renombres. Tiene que ser reversible y probarse en los dos sentidos contra la base de pruebas. Ver la skill `revisar-migracion`.
+
+## Versiones por delante de la documentación conocida
+
+El stack va en versiones más nuevas que la documentación que te sabés, y varias APIs cambiaron:
+
+- **SQLAlchemy 2**: los modelos se declaran con `Mapped[...]` y `mapped_column(...)`, no con `Column(...)`. Las consultas van con `select()` y `session.execute()`, no con `session.query()`.
+- **Pydantic v2**: `model_config = ConfigDict(...)` en vez de `class Config`, `model_validate` en vez de `from_orm`, `field_validator` en vez de `validator`.
+- **FastAPI** con `lifespan` en vez de `@app.on_event`.
+- **React 19** y **Vite**.
+
+Antes de dar por buena una firma de memoria, comprobala en el paquete instalado (`backend/.venv/lib/python3.*/site-packages/...`).
+
+## Frontend
+
+El único punto de contacto con el backend es `src/lib/api.ts`: envuelve `fetch`, adjunta el token, y traduce los errores de FastAPI a un error con mensaje en castellano y errores por campo. Toda llamada nueva se agrega ahí, nunca en un componente.
+
+La librería de componentes está **pendiente de elegir** (MUI o Mantine). Hasta que se decida no se escriben pantallas nuevas. Cuando se elija: los colores son tokens con nombre, nunca valores a pelo, y una pieza de interfaz nueva sale del catálogo o se declara como nueva con su porqué.
 
 ## Roles
 
-- **Admin** (puede haber varios; el primero se crea al instalar el sistema):
+- **Admin** (puede haber varios; el primero se crea en la puesta en marcha):
   - Da de alta usuarios de cualquier rol, puede desactivarlos y les blanquea la contraseña.
   - Administra profesores y grupos.
   - Registra alumnos en cualquier grupo, carga documentación y gestiona asistencia.
@@ -87,7 +190,7 @@ Los datos se conservan entre temporadas: no se borra nada.
 
 **Tesorería y canon**
 - **Movimiento de tesorería**:
-  - Ingreso (automático por cada pago, desde la Entrega 1) o egreso (descripción y monto, sin categorías).
+  - Ingreso (automático por cada pago) o egreso (descripción y monto, sin categorías).
   - Anular un cobro no borra su ingreso: se contraasienta con un egreso automático por el mismo monto, y el neto queda en cero.
   - Ningún movimiento se modifica ni se borra. El saldo disponible sale de los movimientos.
 - **Cierre de canon**:
@@ -97,12 +200,15 @@ Los datos se conservan entre temporadas: no se borra nada.
 
 ## Reglas de proceso
 
-1. La Entrega 1 es solo documentación: nada de código.
-2. La documentación vive en los archivos numerados `0-ficha-del-proyecto.md` a `7-pull-requests.md` de la raíz; `readme.md` es solo el índice.
-3. Los prompts reales que usemos se registran en `prompts.md` (máximo 3 por sección).
-4. Todo en español.
-5. Lo que no esté en las fuentes de verdad se marca como **[SUPUESTO]**:
+1. **La rama es por unidad de trabajo, no por petición.** Antes de tocar código mirá en qué rama estás: si ya es una rama de trabajo (`feat/*`), seguí en ella. Solo desde `main` o desde una rama de entrega se crea una nueva con `git checkout -b feat/<slug>`. Nunca se commitea directo en `main` ni en una rama de entrega.
+2. **El commit sí es por petición**: al cerrar cada una, usar la skill `/commit`.
+3. **Cualquier tarea de backend usa la skill `backend-feature`**, y cualquier pieza de interfaz usa `frontend-feature`, aunque nadie lo pida. No se escribe código de producción sin pasar por ellas: definen el orden tests → rojo → congelar → implementar → verde.
+4. **Un cambio que toque rutas, esquemas o modelos se cierra en el mismo commit con `docs/api/openapi.json` regenerado** (`make openapi-generate`). El CI lo comprueba.
+5. **El pase del subagente `adversarial-reviewer` va una sola vez, al terminar la unidad de trabajo**, antes de abrir el pull request. No al cerrar cada petición.
+6. **Los pull requests se abren dentro de este fork**, de `feat/*` hacia la rama de entrega. Ahí corre el revisor automático; en los PR hacia el repositorio de LIDR no corre, porque un fork no recibe los secretos.
+7. Todo en español: código comentado en español, mensajes de error en español, nombres de dominio en español (`familia`, `cargo`, `tarifa`).
+8. **Lo que no esté en las fuentes de verdad se marca como [SUPUESTO]**:
    - Lo **confirmado** en `aclaraciones-cliente.md` es fuente de verdad y no lleva la marca.
-   - Lo que en `aclaraciones-cliente.md` figura como **[SUPUESTO]** o como pregunta abierta **no** es fuente de verdad: está pensado y pendiente de confirmar con el cliente. Al usarlo se sigue marcando como **[SUPUESTO]**, pero se referencia esa entrada en lugar de tratarlo como algo no documentado.
-   - Lo que no aparece en ninguno de los dos archivos y es una **regla de negocio** (qué hace el sistema, qué pasa en un caso) se marca como **[SUPUESTO]** y se registra como pregunta abierta en `aclaraciones-cliente.md`.
-   - Las **decisiones de diseño** (nulabilidad, tipos, índices, cómo se modela algo) no son preguntas para el cliente: se documentan con su justificación en el archivo donde se toman (por ejemplo, `3-modelo-de-datos.md`), sin marca y sin pasar por `aclaraciones-cliente.md`.
+   - Lo que ahí figura como **[SUPUESTO]** o como pregunta abierta no es fuente de verdad: se sigue marcando, pero referenciando esa entrada.
+   - Una **regla de negocio** que no aparece en ninguna fuente se marca **[SUPUESTO]** y se registra como pregunta abierta en `aclaraciones-cliente.md`.
+   - Las **decisiones de diseño** (nulabilidad, tipos, índices, estructura) no son preguntas para el cliente: se deciden, se documentan con su justificación donde se toman, y no pasan por `aclaraciones-cliente.md`.

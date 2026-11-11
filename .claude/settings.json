@@ -1,0 +1,35 @@
+{
+  "env": {
+    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1"
+  },
+  "permissions": {
+    "deny": [
+      "Read(./backend/.env)",
+      "Read(./backend/.env.*)",
+      "Read(./frontend/.env)",
+      "Read(./frontend/.env.*)",
+      "Read(./**/*.pem)",
+      "Read(./**/uploads/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "python .claude/hooks/sin_borrar_datos.py" },
+          { "type": "command", "command": "python .claude/hooks/datos_que_no_salen.py" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "python .claude/hooks/formato.py" },
+          { "type": "command", "command": "python .claude/hooks/color_con_nombre.py" }
+        ]
+      }
+    ]
+  }
+}
