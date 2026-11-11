@@ -44,7 +44,7 @@ backend/
     models/            SQLAlchemy 2
     schemas/           Pydantic v2 — entra y sale de la API
     api/v1/            un router por capability
-    services/          reglas de negocio; tarifario.py tiene el cálculo
+    services/          reglas de negocio; calculo_cargo.py tiene el cálculo
   alembic/versions/
   tests/
     conftest.py        fixtures; aislamiento por transacción
@@ -61,7 +61,7 @@ docs/api/openapi.json  contrato versionado — generado, no se edita
 
 ### El cálculo vive en un solo lugar
 
-Todo el cálculo de un cargo está en `app/services/tarifario.py`, como **función pura**: recibe tarifa base, categoría, modalidad y cantidad de hijos, y devuelve el desglose. No toca la base, no lee el request y no tiene efectos. Ningún endpoint, modelo ni componente recalcula un precio por su cuenta.
+Todo el cálculo de un cargo está en `app/services/calculo_cargo.py`, como **función pura**: recibe tarifa base, categoría, modalidad y cantidad de hijos, y devuelve el desglose. No toca la base, no lee el request y no tiene efectos. Ningún endpoint, modelo ni componente recalcula un precio por su cuenta.
 
 ### El precio nunca viene del cliente
 
@@ -179,10 +179,11 @@ Los datos se conservan entre temporadas: no se borra nada.
 **Tarifario y cobros**
 - **Período de cobro**: fechas desde/hasta de cada Mes (4 semanas), Quincena y Semana, definidas por los Admin. La modalidad Día no tiene rango.
 - **Tarifa base**: por temporada, turno y modalidad (Mes, Quincena, Semana, Día).
-- **Descuento**: tabla paramétrica por temporada, con una fila por categoría (socio, empleado, no socio).
-  - Un % por categoría para Día, Semana y Quincena. La cantidad de hijos no interviene.
-  - Un % por categoría y tramo de hijos (1, 2, 3, 4 o más), solo para el Mes.
-  - Se aplica un único porcentaje a la tarifa base, nunca acumulado.
+- **Descuento**: **dos** tablas paramétricas por temporada, que se **multiplican**. La categoría no socio es la referencia: lo que paga el no socio es el punto de partida, y socio y empleado reciben su % **sobre ese valor**, no sobre la tarifa base.
+  - **Por cantidad de hijos**: un % por tramo (1, 2, 3, 4 o más), **solo en el Mes**. Es la escala del no socio. El tramo de 1 hijo es **0% por definición**: la tarifa base *es* el valor del no socio con un hijo. Día, Semana y Quincena no tienen esta escala.
+  - **Por categoría**: un % por categoría y modalidad. El no socio es **siempre 0%**, porque es la referencia. No lleva dimensión de tramos; si la llevara, la escala de hijos se aplicaría dos veces.
+  - `total = base × (1 − % hijos) × (1 − % categoría)`, con **un solo redondeo al final**, al peso.
+  - **Los dos porcentajes se acumulan, y es deliberado.** Hasta el 10/11/2026 la regla era la contraria (un único porcentaje sobre la tarifa base). Quedó sin efecto el 11/11/2026.
   - El % del tramo alcanza a todos los hijos de la familia, no solo al que supera el tramo.
   - Los hijos se cuentan por turno.
 - **Tipo de cargo**: catálogo configurable por temporada (por ejemplo, Preinscripción o Abono).

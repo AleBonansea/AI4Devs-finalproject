@@ -33,7 +33,7 @@ tapar.
 1. Lee los tests. Son la especificacion: lo que piden es lo que hay que
    construir, ni mas ni menos.
 2. Lee `CLAUDE.md`, sobre todo las convenciones del backend. No son
-   sugerencias: el calculo va en `app/services/tarifario.py` como
+   sugerencias: el calculo va en `app/services/calculo_cargo.py` como
    funcion pura, el monto nunca llega del cliente, toda respuesta pasa
    por un esquema de Pydantic, los listados se filtran en la consulta.
 3. Escribi lo minimo para que pasen. Nada de parametros "por si acaso",

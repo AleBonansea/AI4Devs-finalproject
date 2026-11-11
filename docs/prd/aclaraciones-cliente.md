@@ -54,11 +54,29 @@ Fuente complementaria de `prd-escuelita-de-verano.md`. Recoge las respuestas a l
 - **Se elimina** la regla "si asistió más de 3 días sueltos se cobra la semana". La tarifa por día va a quedar más cara que la semana.
 - La pantalla de registrar cobro **no** muestra la asistencia.
 - **Tarifa base:** un monto por **turno** (mañana/tarde) y por **modalidad** (Mes, Quincena, Semana, Día). El turno mañana y el turno tarde tienen precios distintos. Los montos los carga el administrador y cambian cada temporada.
-- **Descuentos:** una tabla paramétrica que carga el administrador, con una fila por categoría (socio, empleado, no socio) y estas columnas:
-  - Un porcentaje para **Día**, uno para **Semana** y uno para **Quincena**. Dependen solo de la categoría: **la cantidad de hijos no los afecta**.
-  - Un porcentaje para **Mes** por cada tramo de cantidad de hijos: 1 hijo, 2 hijos, 3 hijos, 4 o más.
-  - Los porcentajes son libres. El administrador decide cuánto da en cada celda y hasta dónde escala: puede cortar el beneficio en el tramo de 3 hijos, o seguir subiéndolo en el de 4 o más.
-- **Cómo se aplica:** se toma la tarifa base del turno y la modalidad contratada y se le descuenta **un solo porcentaje**, el de la celda que corresponde a la categoría de la familia (y, si la modalidad es Mes, también a su cantidad de hijos). Los porcentajes no se acumulan entre sí.
+- **Descuentos (decisión del 11/11/2026).** Son **dos tablas que se multiplican**. La categoría **no socio** es la referencia: lo que paga el no socio es el punto de partida, y socio y empleado reciben su porcentaje **sobre ese valor**, no sobre la tarifa base.
+
+  **a) Descuento por cantidad de hijos.** Solo para la modalidad **Mes**, con un porcentaje por tramo: 1 hijo, 2 hijos, 3 hijos, 4 o más. Es la escala del no socio.
+  - El tramo de **1 hijo es 0% por definición**: la tarifa base *es* el valor del no socio con un hijo. Por eso los porcentajes de socio y empleado se pueden leer directamente como "la mitad" y "tres cuartos" de lo que paga el no socio.
+  - Día, Semana y Quincena **no tienen esta escala**: en esas modalidades la cantidad de hijos no interviene.
+
+  **b) Descuento por categoría.** Un porcentaje por categoría y modalidad, que se aplica al valor que dio la tabla anterior. Para la temporada 2026-27: **socio 50%, empleado 25%, no socio 0%**, igual en las cuatro modalidades.
+  - El no socio es **siempre 0%**, porque es la referencia. No es un valor que el Admin elija: es lo que define el modelo.
+  - No lleva dimensión de tramos. Si la llevara, la escala de hijos se aplicaría dos veces.
+
+- **Cómo se aplica:**
+
+  ```
+  total = tarifa base (turno, modalidad)
+        × (1 − % del tramo de hijos)     ← solo en el Mes; 0 en las otras modalidades
+        × (1 − % de la categoría)
+  ```
+
+  Con un solo redondeo, al final, al peso.
+
+  **Los dos porcentajes se acumulan, y eso es deliberado.** Hasta el 10/11/2026 este archivo decía lo contrario ("un solo porcentaje, los porcentajes no se acumulan entre sí"). Ese modelo quedó sin efecto. La diferencia es plata: una familia socia con 3 hijos en el turno mañana, modalidad Mes, con tarifa base $100.000 y tramo de 3 hijos al 15%, paga **$42.500 por hijo** con el modelo nuevo ($100.000 × 0,85 × 0,50) y pagaba **$50.000** con el viejo ($100.000 × 0,50). Son $22.500 por mes de diferencia en esa familia.
+
+- **Los porcentajes son libres**, salvo los dos que el modelo fija: el tramo de 1 hijo en 0% y el no socio en 0%. El administrador decide el resto y hasta dónde escala: puede cortar el beneficio en el tramo de 3 hijos, o seguir subiéndolo en el de 4 o más.
 - **Alcance del descuento por hijos:** el porcentaje del tramo se aplica a **todos los hijos** de la familia, no solo a partir del que supera el tramo. Una familia de 4 hijos cuyo tramo "4 o más" tenga 20% paga los cuatro meses con 20%.
 - **Hijo que se suma a mitad de temporada:** los cargos que se generen desde ese momento usan el tramo nuevo. **Lo ya cobrado no se recalcula.**
 - **Tipos de cargo:** hay dos.
@@ -159,7 +177,7 @@ Fuente complementaria de `prd-escuelita-de-verano.md`. Recoge las respuestas a l
 | Modalidad de 4 semanas | "Período de 4 semanas" | "Mes", con fechas desde/hasta definidas por los Admin |
 | Regla de 3 días | Más de 3 días sueltos se cobra como semana | Eliminada |
 | Asistencia y cobro | La asistencia sirve de referencia; la pantalla de cobro debería mostrarla | Sin relación; no se muestra |
-| Descuentos | Se aplican sobre la tarifa base de cada modalidad | Igual, en todas las modalidades, con una tabla paramétrica por categoría; la cantidad de hijos solo afecta a la modalidad Mes |
+| Descuentos | Se aplican sobre la tarifa base de cada modalidad, con un único porcentaje por categoría y cantidad de hermanos | **Dos** porcentajes que se multiplican: la escala por cantidad de hijos (solo en el Mes, 0% con 1 hijo) y el porcentaje de la categoría, que se aplica **sobre el valor del no socio** y no sobre la tarifa base. Decisión del 11/11/2026 |
 | Tipos de cargo | Catálogo configurable por temporada (por ejemplo, Preinscripción, Período) | Dos tipos: Preinscripción (monto fijo, sin tarifario) y Abono (calculado con el tarifario). "Período" se renombró a "Abono"; tipo y modalidad son campos distintos |
 | Categoría | Se determina por los tutores (socio si alguno es socio) | La asigna quien registra; prioridad socio > empleado > no socio; solo los Admin la modifican |
 | Tutores | Tutores más personas autorizadas y de emergencia | Los tutores son personas autorizadas a retirar; los contactos de emergencia son una lista aparte |

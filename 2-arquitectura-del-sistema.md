@@ -199,7 +199,7 @@ Principio general: **todo control de acceso se hace en la API**. El frontend sol
 
 | Nivel | Qué se prueba | Cómo |
 |---|---|---|
-| **Unitario** | Motor de cálculo de cargos (`services/calculo_cargo.py`) | Tests parametrizados, sin base. Cubren: tarifa base por turno y modalidad; un único %, nunca acumulado; tramo de hijos solo en el Mes; tramo 4 o más aplicado a todos los hijos; Preinscripción de monto fijo; redondeo con `Decimal` a 2 decimales, igual al de PostgreSQL. |
+| **Unitario** | Motor de cálculo de cargos (`services/calculo_cargo.py`) | Tests parametrizados, sin base. Cubren: tarifa base por turno y modalidad; **los dos porcentajes multiplicados**, con el de la categoría aplicado sobre el valor del no socio y no sobre la tarifa base; tramo de hijos solo en el Mes; tramo 4 o más aplicado a todos los hijos; el no socio con 1 hijo pagando exactamente la tarifa base; Preinscripción de monto fijo; **un solo redondeo al final**, con `Decimal` a 2 decimales, igual al de PostgreSQL. |
 | **Integración de endpoints** | `POST /api/v1/cargos`, `POST /api/v1/alumnos`, `PUT …/asistencias/{fecha}` | Cliente de pruebas de FastAPI contra PostgreSQL. Se recorren los escenarios Dado / Cuando / Entonces de `5-historias-de-usuario.md`. Los casos mínimos del cargo están en `6-tickets-de-trabajo.md`, TK-02. |
 | **Permisos** | Cada endpoint, con cada rol | `403` para los roles sin permiso. Un Profesor no puede actuar sobre un grupo que no tiene asignado. Ninguna escritura queda hecha cuando el pedido se rechaza. |
 | **Constraints de la base** | `CHECK`, FK compuestas y vistas | Insertar filas inválidas y esperar `IntegrityError`. Por ejemplo, un total de cargo que no coincide, o un período de otra modalidad (`6-tickets-de-trabajo.md`, TK-01). |
