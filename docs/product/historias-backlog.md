@@ -12,7 +12,8 @@ Artefacto de trabajo derivado de las fuentes. **No** es parte del PRD.
 **Roles:** cuando varios roles hacen lo mismo, se nombran juntos en una sola historia. Los matices de permisos se definen en los criterios de aceptación. "Staff" significa Admin, Coordinador o Profesor; el Profesor siempre solo sobre sus grupos.
 
 **Prioridades:**
-- **MVP-Entrega1**: forma parte del primer lote de desarrollo (20 historias, ver «Alcance de la Entrega 1»). Tres de ellas, además, se documentan con criterios en `5-historias-de-usuario.md` para cumplir con la consigna del curso.
+- **Lote 1**: se construye en la Entrega 2 (11 historias, ver «Alcance de la implementación»). Tres de ellas, además, se documentan con criterios en `5-historias-de-usuario.md` para cumplir con la consigna del curso.
+- **Lote 2**: se construye después del lote 1 (9 historias). Son las que `make seed` sustituye durante el lote 1 y que el sistema necesita antes de ser productivo.
 - **Should-have**: valiosa, pero no imprescindible para demostrar el sistema en esta entrega.
 - **Backlog**: necesaria para el sistema en producción, pero fuera de esta entrega académica.
 
@@ -20,7 +21,7 @@ Artefacto de trabajo derivado de las fuentes. **No** es parte del PRD.
 
 ## 1. Alumnos y familias
 
-**HU-AF-01** · `MVP-Entrega1`
+**HU-AF-01** · `Lote 1`
 Como staff, quiero registrar un alumno con sus datos mínimos (incluido al menos un tutor) y asignarlo a un grupo y turno, para tenerlo inscripto desde el primer contacto y completar la documentación más adelante.
 *Sustento:* PRD «Alumnos, tutores y documentación» (ficha progresiva; la inscripción la hace el staff); PRD «Roles y permisos»; Acl. 3, 4, 8.
 
@@ -75,15 +76,15 @@ Datos mínimos del alta (Acl. 3): nombre, apellido y fecha de nacimiento del alu
 - **Entonces** el alumno no se registra
 - **Y** el sistema indica qué dato falta
 
-**HU-AF-02** · `MVP-Entrega1`
+**HU-AF-02** · `Lote 1`
 Como staff, quiero que al cargar el primer hijo se cree su familia, y que al cargar los siguientes pueda elegir la familia existente (identificada como "Apellido – Hijo mayor"), para que todos los hijos compartan una sola cuenta corriente.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar»; Acl. 1.
 
-**HU-AF-03** · `MVP-Entrega1`
+**HU-AF-03** · `Lote 1`
 Como staff, quiero cargar las personas autorizadas a retirar al alumno (incluidos los tutores, de los que hace falta al menos uno), y reutilizar una persona ya cargada en otra familia, para saber quién puede llevarse a cada chico.
 *Sustento:* PRD «Alumnos, tutores y documentación» (Tutores); Acl. 3.
 
-**HU-AF-04** · `MVP-Entrega1`
+**HU-AF-04** · `Lote 1`
 Como staff, quiero asignar la categoría de la familia (socio, empleado o no socio) al cargar el primer hijo, cuando se crea la familia, siguiendo la prioridad socio > empleado > no socio, para que después se apliquen los descuentos que corresponden.
 *Sustento:* PRD «Alumnos, tutores y documentación» (Categoría); Acl. 2.
 
@@ -143,11 +144,11 @@ Como Admin, quiero definir por temporada qué documentos son obligatorios (por e
 
 ## 3. Grupos y asistencia
 
-**HU-GA-01** · `MVP-Entrega1`
+**HU-GA-01** · `Lote 2`
 Como Admin o Coordinador, quiero dar de alta, modificar y dar de baja grupos con nombre, turno y rango de fechas de nacimiento, para organizar a los chicos por edad y turno.
 *Sustento:* PRD «Grupos, turnos y asistencia»; PRD «Roles y permisos»; Acl. 4. La baja de grupos no está en las fuentes. Cómo funciona (desactivar, no borrar) es una propuesta pendiente de confirmar: ver «Baja de grupos — propuesta, pendiente de confirmar».
 
-**HU-GA-02** · `MVP-Entrega1`
+**HU-GA-02** · `Lote 2`
 Como Admin o Coordinador, quiero asignar uno o más profesores a cada grupo (y un profesor a más de un grupo), para que cada profesor trabaje solo sobre sus grupos.
 *Sustento:* PRD «Roles y permisos».
 
@@ -155,7 +156,7 @@ Como Admin o Coordinador, quiero asignar uno o más profesores a cada grupo (y u
 Como staff, quiero que al cargar un alumno el sistema me sugiera el grupo según su fecha de nacimiento, y poder elegir otro, para inscribirlo más rápido y sin errores.
 *Sustento:* Acl. 4.
 
-**HU-GA-04** · `MVP-Entrega1`
+**HU-GA-04** · `Lote 1`
 Como staff, quiero tomar asistencia por grupo, día y turno desde el celular o la PC, para registrar quién estuvo presente.
 *Sustento:* PRD «Grupos, turnos y asistencia»; Acl. 12.
 
@@ -207,19 +208,19 @@ Como staff, quiero consultar la asistencia registrada de un grupo o de un alumno
 
 ## 4. Tarifario
 
-**HU-TAR-01** · `MVP-Entrega1`
+**HU-TAR-01** · `Lote 2`
 Como Admin, quiero definir la tarifa base de la temporada por turno y modalidad (Mes, Quincena, Semana, Día), y los dos tipos de cargo de la temporada (Preinscripción, con monto fijo y sin descuento, y Abono, que se calcula con el tarifario), para que todos cobren con los mismos precios.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar» (Tarifario; Tipos de cargo); Acl. 5. El ABM libre de tipos de cargo es HU-TAR-05 (Backlog).
 
-**HU-TAR-02** · `MVP-Entrega1`
+**HU-TAR-02** · `Lote 2`
 Como Admin, quiero definir las fechas desde/hasta de cada Mes, Quincena y Semana de la temporada, para que cada cargo quede asociado a un período concreto.
 *Sustento:* Acl. 5.
 
-**HU-TAR-03** · `MVP-Entrega1`
+**HU-TAR-03** · `Lote 2`
 Como Admin, quiero configurar la tabla de descuentos de la temporada —un % por categoría para Día, Semana y Quincena, y un % por categoría y tramo de cantidad de hijos (1, 2, 3, 4 o más) para el Mes— para reflejar la política de descuentos sin tocar código.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar»; Acl. 2, 5.
 
-**HU-TAR-04** · `MVP-Entrega1`
+**HU-TAR-04** · `Lote 1`
 Como Admin, quiero que al cargar un cargo el sistema calcule el monto solo: tarifa base del turno y la modalidad, menos el único porcentaje que corresponda según la categoría de la familia (y, en el Mes, la cantidad de hijos anotados en ese turno), para no calcularlo a mano.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar» (facturación por turno); Acl. 5.
 
@@ -229,7 +230,7 @@ Como Admin, quiero administrar el catálogo de tipos de cargo de la temporada (p
 
 ## 5. Cuenta corriente familiar
 
-**HU-CC-01** · `MVP-Entrega1`
+**HU-CC-01** · `Lote 1`
 Como Admin, quiero registrar un cargo a una familia (tipo, alumno, turno, modalidad y período), para dejar asentado lo que tiene que pagar.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar»; Acl. 5, 6.
 
@@ -323,11 +324,11 @@ Qué hijos cuentan para el tramo del Mes: lo define el PRD («Tarifario y cuenta
 - **Entonces** no tiene esa opción en pantalla
 - **Y** si la solicitud llega igual (por ejemplo, por la API), se rechaza y no se registra nada
 
-**HU-CC-02** · `MVP-Entrega1`
+**HU-CC-02** · `Lote 1`
 Como Admin, quiero registrar uno o varios pagos parciales sobre un cargo hasta saldarlo, para reflejar cómo paga cada familia (por ejemplo, una parte en la inscripción y el resto el primer día).
 *Sustento:* PRD «Tarifario y cuenta corriente familiar» (Pagos); Acl. 6, 9.
 
-**HU-CC-03** · `MVP-Entrega1`
+**HU-CC-03** · `Lote 1`
 Como Admin, quiero ver la cuenta corriente de una familia con sus cargos, pagos y saldo pendiente, para saber en todo momento cuánto debe.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar» (Pagos).
 
@@ -345,7 +346,7 @@ Como Admin, quiero anular un cobro mal cargado indicando el motivo, sin borrarlo
 
 ## 6. Tesorería general
 
-**HU-TES-01** · `MVP-Entrega1`
+**HU-TES-01** · `Lote 1`
 Como Admin, quiero que cada pago registrado genere automáticamente un ingreso en la tesorería, para no cargar los cobros dos veces.
 *Sustento:* PRD «Tesorería general»; Acl. 7. Entra en el lote como **dato**: desde la Entrega 1, registrar un pago escribe su ingreso en la tesorería, aunque no haya pantalla para verlo (eso es HU-TES-03).
 
@@ -381,15 +382,15 @@ Como Admin, quiero que, si se anula un cobro que ya estaba incluido en un cierre
 
 ## 8. Usuarios y temporadas
 
-**HU-UT-01** · `MVP-Entrega1`
+**HU-UT-01** · `Lote 1`
 Como staff, quiero ingresar con mi usuario y contraseña personales, para acceder solo a lo que permite mi rol.
 *Sustento:* PRD «Roles y permisos»; Acl. 9 (Acceso al sistema), 11 (Autenticación: usuarios individuales). Si el usuario tiene pendiente el cambio obligatorio de contraseña, el ingreso lo lleva directo a HU-UT-06, y la API rechaza cualquier otra operación hasta que la cambie.
 
-**HU-UT-02** · `MVP-Entrega1`
+**HU-UT-02** · `Lote 2`
 Como Admin (cualquier rol) o Coordinador (solo usuarios Profesor), quiero dar de alta usuarios y modificar sus datos, para que cada persona del staff tenga su propio acceso.
 *Sustento:* PRD «Roles y permisos» (Registrar profesores); Acl. 9.
 
-**HU-UT-03** · `MVP-Entrega1`
+**HU-UT-03** · `Lote 2`
 Como Admin, quiero desactivar usuarios, para que quien deja de trabajar en la escuelita no pueda ingresar y se conserve igual lo que registró.
 *Sustento:* Acl. 11 (Autenticación).
 
@@ -407,11 +408,11 @@ Como Admin, quiero abrir una nueva temporada con su fecha de inicio y de cierre 
 Como staff, quiero consultar los datos de una temporada anterior, según los permisos de mi rol y sin poder modificarlos, para revisar lo que pasó sin alterar el historial.
 *Sustento:* Acl. 10 (la temporada anterior queda solo para consulta).
 
-**HU-UT-06** · `MVP-Entrega1`
+**HU-UT-06** · `Lote 2`
 Como staff, quiero que el sistema me obligue a cambiar la contraseña en el primer ingreso y después de un blanqueo, para que solo yo conozca la contraseña con la que entro.
 *Sustento:* Acl. 9 (Acceso al sistema: cambio obligatorio). Las reglas de la contraseña nueva están en el documento técnico, «Contraseñas y sesión»: mínimo 8 caracteres, al menos una letra y un número, distinta del nombre de usuario y de la anterior.
 
-**HU-UT-07** · `MVP-Entrega1`
+**HU-UT-07** · `Lote 2`
 Como Admin, quiero blanquear la contraseña de un usuario, para que pueda volver a ingresar si la olvidó o si quedó bloqueado. Al blanquearla se activa el cambio obligatorio (HU-UT-06) y se desbloquea el usuario.
 *Sustento:* Acl. 9 (Acceso al sistema: blanqueo).
 
@@ -423,68 +424,84 @@ Como Admin, quiero que un usuario quede bloqueado después de 5 intentos de ingr
 
 ## Resumen
 
-| Módulo | Historias | MVP-Entrega1 | Should-have | Backlog |
-|---|---|---|---|---|
-| Alumnos y familias | 11 | 4 | 5 | 2 |
-| Documentación | 6 | 0 | 4 | 2 |
-| Grupos y asistencia | 5 | 3 | 2 | 0 |
-| Tarifario | 5 | 4 | 0 | 1 |
-| Cuenta corriente familiar | 6 | 3 | 2 | 1 |
-| Tesorería general | 3 | 1 | 2 | 0 |
-| Canon al club | 5 | 0 | 0 | 5 |
-| Usuarios y temporadas | 8 | 5 | 1 | 2 |
-| **Total** | **49** | **20** | **16** | **13** |
+| Módulo | Historias | Lote 1 | Lote 2 | Should-have | Backlog |
+|---|---|---|---|---|---|
+| Alumnos y familias | 11 | 4 | 0 | 5 | 2 |
+| Documentación | 6 | 0 | 0 | 4 | 2 |
+| Grupos y asistencia | 5 | 1 | 2 | 2 | 0 |
+| Tarifario | 5 | 1 | 3 | 0 | 1 |
+| Cuenta corriente familiar | 6 | 3 | 0 | 2 | 1 |
+| Tesorería general | 3 | 1 | 0 | 2 | 0 |
+| Canon al club | 5 | 0 | 0 | 0 | 5 |
+| Usuarios y temporadas | 8 | 1 | 4 | 1 | 2 |
+| **Total** | **49** | **11** | **9** | **16** | **13** |
 
-## Alcance de la Entrega 1 (decisión del 19/10/2026)
+## Alcance de la implementación (decisión del 11/11/2026)
 
-No se usan datos semilla: todo lo que hace falta para demostrar el sistema se carga desde la propia aplicación. Por eso el MVP se arma en cadena, y cada bloque habilita al siguiente:
+**Hay script de datos.** `make seed` deja la temporada vigente, los usuarios de los tres roles, los grupos de los dos turnos con sus profesores y el tarifario completo. Eso cambia el tamaño del primer lote: la decisión anterior (19/10/2026) era no usar semilla, y por eso el lote tenía que armarse en cadena —sin ABM de usuarios no había con qué entrar, sin ABM de grupos no había dónde inscribir, sin ABM de tarifario no había con qué calcular—. Con semilla la cadena se corta y el primer lote puede ser la espina del producto en lugar de su andamiaje.
 
-1. **Usuarios y login:**
+El motivo del cambio es el feedback de la Entrega 1: el lote de 20 historias era demasiado para el plazo, y el ABM de usuarios, grupos y tarifario son formularios que no ejercitan ninguna regla de negocio.
+
+### Lote 1 — la espina del dinero (Entrega 2)
+
+Once historias. Es el flujo que se demuestra de punta a punta: entrar, cargar una familia con un hijo, inscribirlo, tomarle asistencia, cobrarle y ver el saldo.
+
+1. **Entrar:**
    - HU-UT-01: ingresar con usuario y contraseña.
-   - HU-UT-06: cambio obligatorio de contraseña en el primer ingreso y después de un blanqueo. Un login sin esto no está terminado.
-   - HU-UT-02: alta y modificación de usuarios.
-   - HU-UT-07: blanqueo de contraseña por un Admin.
-   - HU-UT-03: baja, es decir, desactivar un usuario.
-
-   El ABM de profesores es el ABM de usuarios con rol Profesor.
-2. **Grupos y profesores:**
-   - HU-GA-01: ABM de grupos.
-   - HU-GA-02: asignar profesores a grupos.
-3. **Alta de alumno:**
-   - HU-AF-01: registrar alumno con grupo y turno.
+2. **Alta de alumno:**
    - HU-AF-02: crear o elegir familia.
-   - HU-AF-03: personas autorizadas, con al menos un tutor.
    - HU-AF-04: categoría, que se carga junto con el primer hijo.
-4. **Asistencia:**
+   - HU-AF-03: personas autorizadas, con al menos un tutor.
+   - HU-AF-01: registrar alumno con grupo y turno.
+3. **Asistencia:**
    - HU-GA-04: tomar asistencia por grupo, día y turno.
-5. **Tarifario:**
-   - HU-TAR-01: tarifa base por turno y modalidad, y los tipos de cargo Preinscripción y Abono.
-   - HU-TAR-02: fechas desde/hasta de cada Mes, Quincena y Semana.
-   - HU-TAR-03: tabla de descuentos por categoría (y por tramo de hijos en el Mes).
+4. **Cobro:**
    - HU-TAR-04: cálculo automático del monto del cargo.
-6. **Cobro:**
-   - HU-CC-01: registrar un cargo (tipo, alumno, turno, modalidad y período), con el cálculo de tarifa base y descuento.
+   - HU-CC-01: registrar un cargo (tipo, alumno, turno, modalidad y período), con tarifa base y descuento.
    - HU-CC-02: registrar pagos parciales sobre un cargo hasta saldarlo.
    - HU-CC-03: ver la cuenta corriente de la familia con cargos, pagos y saldo.
    - HU-TES-01: cada pago escribe su ingreso en la tesorería.
 
-**El dato no es lo mismo que la pantalla.** La tabla de tesorería se crea en la Entrega 1 y cada pago registra su ingreso desde el primer día (HU-TES-01). Lo que queda afuera son las pantallas: ver movimientos y saldo (HU-TES-03) y cargar egresos manuales (HU-TES-02). Escribir el ingreso al registrar el pago cuesta dos líneas; generar esos ingresos después con una migración sería más riesgoso.
+**Por qué asistencia entra en una espina que es del dinero.** No toca dinero y es la historia más barata del lote. Entra por otra razón: las tres historias documentadas con criterios Dado / Cuando / Entonces en [`5-historias-de-usuario.md`](../../5-historias-de-usuario.md) son HU-AF-01, HU-GA-04 y HU-CC-01, y con asistencia dentro el lote 1 implementa exactamente las tres que la Entrega 1 documentó. Sin ella, una de las tres queda documentada y sin construir.
 
-**Puesta en marcha.** El lote arranca con el primer Admin y la primera temporada vigente, que se crean al instalar el sistema (Acl. 9, 10). Configurar esa temporada (tarifa base, descuentos, tipos de cargo y fechas) ya está en el lote con el bloque Tarifario. Abrir una temporada **nueva**, con la copia de grupos y los reseteos, sigue en Backlog (HU-UT-04).
+**Dónde está el riesgo.** De las once, dos concentran casi todo: HU-TAR-04, el cálculo, y HU-CC-01, el cargo. Ahí viven el porcentaje único no acumulado, el tramo que alcanza a todos los hijos, el conteo de hermanos por turno y la persistencia del cálculo en el cargo. El resto son altas y consultas. El tiempo de revisión se reparte en consecuencia.
+
+### Lote 2 — el ABM que la semilla sustituye
+
+Nueve historias. Son las que `make seed` cubre durante el lote 1 y que el sistema necesita antes de ser productivo, porque en producción no hay semilla: alguien tiene que poder crear un usuario y configurar la temporada desde la aplicación.
+
+- HU-UT-02: alta y modificación de usuarios. El ABM de profesores es este mismo, con rol Profesor.
+- HU-UT-03: baja, es decir, desactivar un usuario.
+- HU-UT-06: cambio obligatorio de contraseña en el primer ingreso y después de un blanqueo.
+- HU-UT-07: blanqueo de contraseña por un Admin.
+- HU-GA-01: ABM de grupos.
+- HU-GA-02: asignar profesores a grupos.
+- HU-TAR-01: tarifa base por turno y modalidad, y los tipos de cargo Preinscripción y Abono.
+- HU-TAR-02: fechas desde/hasta de cada Mes, Quincena y Semana.
+- HU-TAR-03: tabla de descuentos por categoría y por tramo de hijos.
+
+**Las contraseñas bajaron de lote por indicación del revisor de la Entrega 1.** HU-UT-06 y HU-UT-07 estaban en el lote original; el revisor pidió sacarlas, y el motivo se sostiene: con un usuario de semilla ya logueable, el cambio obligatorio y el blanqueo no hacen falta para demostrar nada. Pero **no son opcionales para producción**: un sistema con datos de menores donde el Admin no puede blanquear una contraseña no se pone en marcha. Van en el lote 2, no en el Backlog.
+
+**El dato no es lo mismo que la pantalla.** La tabla de tesorería se crea en el lote 1 y cada pago registra su ingreso desde el primer día (HU-TES-01). Lo que queda afuera son las pantallas: ver movimientos y saldo (HU-TES-03) y cargar egresos manuales (HU-TES-02). Escribir el ingreso al registrar el pago cuesta dos líneas; generar esos ingresos después con una migración sería más riesgoso.
+
+**Puesta en marcha.** El primer Admin y la primera temporada vigente se crean al instalar el sistema (Acl. 9, 10) y no son historias de usuario. Abrir una temporada **nueva**, con la copia de grupos y los reseteos, sigue en Backlog (HU-UT-04).
+
+**Qué es y qué no es la semilla.** `make seed` es una herramienta de desarrollo y de demostración. Carga datos inventados, nunca datos reales de familias ni de alumnos, y no se ejecuta en producción. La puesta en marcha real de la temporada es el lote 2.
 
 ### Lote de desarrollo vs. historias documentadas
 
 Son dos cosas distintas y no tienen por qué coincidir:
 
-- **Lote de desarrollo (20 historias, los 6 bloques de arriba):** es lo que se construye primero, en cadena. Sin usuarios, grupos y alta de alumno no hay nada que demostrar de punta a punta.
-- **Historias documentadas con criterios en [`5-historias-de-usuario.md`](../../5-historias-de-usuario.md) (3):** es lo que pide la consigna del curso. Se documentan en profundidad, con criterios Dado / Cuando / Entonces, las tres que mejor muestran el sistema. Los criterios son los mismos que figuran en este archivo, debajo de cada historia:
+- **Lote de desarrollo (11 historias en el lote 1):** es lo que se construye primero.
+- **Historias documentadas con criterios (3):** es lo que pide la consigna del curso. Se documentan en profundidad, con criterios Dado / Cuando / Entonces, las tres que mejor muestran el sistema:
   1. **HU-AF-01** — registrar un alumno con familia, grupo y turno.
   2. **HU-GA-04** — tomar asistencia por grupo, día y turno.
-  3. **HU-CC-01** — registrar un cargo con cálculo de tarifa y descuento (es la que concentra las reglas de negocio). Sus dependencias del bloque Tarifario (tarifa base, tipos de cargo, fechas del período y tabla de descuentos) van como precondiciones en el "Dado" de los escenarios. Las historias HU-TAR no se documentan aparte.
+  3. **HU-CC-01** — registrar un cargo con cálculo de tarifa y descuento (es la que concentra las reglas de negocio). Sus dependencias del bloque Tarifario (tarifa base, tipos de cargo, fechas del período y tabla de descuentos) van como precondiciones en el "Dado" de los escenarios, y en el lote 1 las aporta la semilla. Las historias HU-TAR no se documentan aparte.
 
-Las otras 17 del lote se construyen igual, pero quedan listadas acá sin criterios. Esto resuelve el "4 bloques contra 3 historias" sin recortar el sistema real ni inflar la entrega.
+Las otras ocho del lote 1 se construyen igual, pero quedan listadas acá sin criterios.
 
 **Cambios respecto de las versiones anteriores:**
+- **11/11/2026.** Se incorpora el script de datos (`make seed`) y el lote de 20 se parte en dos: lote 1, la espina del dinero más asistencia (11 historias); lote 2, el ABM que la semilla sustituye (9 historias). Ninguna historia cambia de contenido y ninguna sale del alcance: solo cambia el orden. Motivo: el feedback de la Entrega 1 sobre el tamaño del lote.
 - El bloque de cobro (HU-CC-01 a HU-CC-03) vuelve a MVP-Entrega1.
 - HU-TAR-01 a HU-TAR-04 suben a MVP-Entrega1 como un bloque nuevo de Tarifario, antes del Cobro, porque sin datos semilla el cálculo del cargo los necesita. HU-TAR-01 incorpora los dos tipos de cargo de la temporada (Preinscripción y Abono). El ABM libre de tipos de cargo (HU-TAR-05) sigue en Backlog.
 - HU-UT-03 pasa de Backlog a MVP, como la baja del ABM.
