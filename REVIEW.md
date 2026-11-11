@@ -10,16 +10,10 @@ Solo estas cuatro cosas abren un hallazgo grave. Fuera de aca, nada es
 grave.
 
 1. **El dinero sale mal.** Un importe que se recalcula en vez de usar el
-   que se guardo con el cargo. **El % de la categoria aplicado a la tarifa
-   base en lugar de al valor del no socio** (es el error del modelo viejo,
-   vigente hasta el 10/11/2026, y el mas facil de cometer). Los dos
-   porcentajes sumados en lugar de multiplicados. Un redondeo intermedio
-   entre los dos factores en vez de uno solo al final. La escala de hijos
-   aplicada en Dia, Semana o Quincena, donde no corre. Una dimension de
-   tramos en el % de la categoria, que escalaria dos veces. Un tramo
-   aplicado a un solo hijo. Un monto que llega del cuerpo de la peticion.
-   Hermanos contados sin separar por turno. Una comparacion de dinero con
-   tolerancia.
+   que se guardo con el cargo. Un porcentaje acumulado. Un tramo
+   aplicado a un solo hijo. Un monto que llega del cuerpo de la
+   peticion. Hermanos contados sin separar por turno. Un redondeo
+   distinto en dos lugares. Una comparacion de dinero con tolerancia.
 
 2. **Alguien ve lo que no le toca.** Un listado que trae todo y filtra
    en memoria. Un endpoint sin dependencia de rol. Un Profesor que llega
@@ -72,14 +66,14 @@ lo reportes.
 ## Forma del hallazgo
 
 ```
-**[GRAVE] El % de la categoria se aplica a la tarifa base, no al valor del no socio**
+**[GRAVE] El descuento del tramo se aplica a un solo hijo**
 `backend/app/services/calculo_cargo.py:48`
-    total = base * (1 - pct_categoria / 100)
+    pct = tabla[cat].mes[tramo - 1] if alumno.es_el_mayor else 0
 
-Familia socia, 3 hijos en el turno mañana, modalidad Mes. Tarifa base
-100000, tramo de 3 hijos 15%, socio 50%. El total correcto es 42500
-(100000 x 0,85 x 0,50). Esta linea devuelve 50000, porque descarta la
-escala de hijos: 7500 de mas por hijo y por mes, 22500 por familia.
+Familia de 3 hijos en el turno mañana, categoria empleado, modalidad
+Mes. Tarifa base 85000, tramo 3 = 30%. Deberia cobrarse 59500 por cada
+uno de los tres. Se cobra 59500 por el mayor y 85000 por los otros dos:
+51000 de mas por mes y por familia.
 ```
 
 Que esta mal, donde, y **que pasa concretamente si sale asi**: entrada,

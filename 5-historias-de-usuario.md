@@ -124,7 +124,7 @@ Como Admin, quiero registrar un cargo a una familia (tipo, alumno, turno, modali
 
 *Criterios de aceptación* (incluyen el cálculo de HU-TAR-04):
 
-**Contexto común.** Son las precondiciones que dependen del bloque Tarifario (HU-TAR-01 a HU-TAR-03), que en el lote 1 aporta el script de datos. Los montos y porcentajes son de ejemplo, elegidos para que cada escenario distinga un resultado correcto de uno plausible pero equivocado.
+**Contexto común.** Son las precondiciones que dependen del bloque Tarifario (HU-TAR-01 a HU-TAR-03). Los montos y porcentajes son de ejemplo: los porcentajes del Mes siguen el ejemplo del PRD, y el resto se eligió para los escenarios.
 - **Dado** que la temporada vigente es 2026-27
 - **Y** que el Admin cargó esta tarifa base:
 
@@ -133,19 +133,13 @@ Como Admin, quiero registrar un cargo a una familia (tipo, alumno, turno, modali
   | Mañana | $ 100.000 | $ 55.000 | $ 30.000 | $ 8.000 |
   | Tarde | $ 80.000 | $ 45.000 | $ 25.000 | $ 7.000 |
 
-- **Y** que cargó esta escala por cantidad de hijos, que **solo corre en el Mes** y es la del no socio:
+- **Y** que cargó esta tabla de descuentos:
 
-  | 1 hijo | 2 hijos | 3 hijos | 4 o más |
-  |---|---|---|---|
-  | 0 % | 10 % | 15 % | 20 % |
-
-- **Y** que cargó este porcentaje por categoría, que se aplica **sobre el valor que dio la escala anterior**:
-
-  | Categoría | Día | Semana | Quincena | Mes |
-  |---|---|---|---|---|
-  | Socio | 50 % | 50 % | 50 % | 50 % |
-  | Empleado | 25 % | 25 % | 25 % | 25 % |
-  | No socio | 0 % | 0 % | 0 % | 0 % |
+  | Categoría | Día | Semana | Quincena | Mes · 1 hijo | Mes · 2 | Mes · 3 | Mes · 4 o más |
+  |---|---|---|---|---|---|---|---|
+  | Socio | 50 % | 50 % | 50 % | 50 % | 50 % | 50 % | 50 % |
+  | Empleado | 10 % | 10 % | 10 % | 10 % | 15 % | 20 % | 25 % |
+  | No socio | 0 % | 0 % | 0 % | 0 % | 10 % | 15 % | 20 % |
 
 - **Y** que definió los tipos de cargo Preinscripción (monto fijo de $ 20.000) y Abono
 - **Y** que definió las fechas del «Mes 1» (04/01/2027 al 29/01/2027), del «Mes 2» (01/02/2027 al 26/02/2027) y de la «Semana 1» (04/01/2027 al 08/01/2027)
@@ -153,52 +147,48 @@ Como Admin, quiero registrar un cargo a una familia (tipo, alumno, turno, modali
 
 Qué hijos cuentan para el tramo del Mes: lo define el PRD («Tarifario y cuenta corriente familiar»). Cada turno se factura por separado, "contando solo a los hermanos anotados en ese turno", y el porcentaje "se aplica a cada hermano sobre el valor base de su modalidad".
 
-**Escenario 1 — Abono · Mes con los dos descuentos** (camino feliz)
+**Escenario 1 — Abono · Mes con descuento por cantidad de hijos** (camino feliz)
 - **Dado** que la familia «Pérez – Ana» es categoría empleado y tiene 2 hijos inscriptos en el turno mañana: Ana y Juan
 - **Cuando** el Admin registra un cargo de tipo Abono para Juan, turno mañana, modalidad Mes, período «Mes 1»
-- **Entonces** el sistema muestra la tarifa base ($ 100.000), el porcentaje del tramo de 2 hijos (10 %), el porcentaje de la categoría empleado (25 %) y el monto final de **$ 67.500**
-- **Y** los dos porcentajes quedan guardados por separado en el cargo, no solo el monto
+- **Entonces** el sistema muestra la tarifa base ($ 100.000), el porcentaje aplicado (15 %: empleado, 2 hijos) y el monto final ($ 85.000)
 - **Y** al confirmar, el cargo queda en la cuenta corriente de la familia con su tipo, alumno, turno, modalidad, período y monto
-- **Y** el saldo pendiente de la familia aumenta en $ 67.500
+- **Y** el saldo pendiente de la familia aumenta en $ 85.000
 
-**Escenario 2 — En Día, Semana y Quincena no corre la escala de hijos** (regla de negocio)
+**Escenario 2 — En Día, Semana y Quincena no cuenta la cantidad de hijos** (regla de negocio)
 - **Dado** que una familia es categoría empleado y tiene 3 hijos inscriptos en el turno mañana
 - **Cuando** el Admin registra un Abono para uno de ellos, turno mañana, modalidad Semana, período «Semana 1»
-- **Entonces** se aplica solo el 25 % de empleado para Semana, sin importar la cantidad de hijos
-- **Y** el monto es **$ 22.500**, y no $ 19.125, que sería haber aplicado también el tramo de 3 hijos
-- **Y** el cargo guarda el porcentaje del tramo de hijos en nulo, no en cero: en esta modalidad no es que la escala dé 0, es que no corre
+- **Entonces** se aplica el 10 % de empleado para Semana, sin importar la cantidad de hijos
+- **Y** el monto es $ 27.000
 
-**Escenario 3 — El % de la categoría se aplica al valor del no socio, no a la tarifa base** (caso límite)
+**Escenario 3 — Se aplica un único porcentaje, nunca acumulado** (caso límite)
 - **Dado** que una familia es categoría socio y tiene 4 hijos inscriptos en el turno mañana
 - **Cuando** el Admin registra un Abono · Mes, turno mañana, para uno de ellos
-- **Entonces** el monto es **$ 40.000**: la tarifa base de $ 100.000, menos el 20 % del tramo de 4 o más hijos, da el valor del no socio de $ 80.000, y el socio paga la mitad de eso
-- **Y** el monto **no** es $ 50.000, que es lo que daría aplicar el 50 % directamente a la tarifa base e ignorar la escala de hijos
-- **Y** el monto **no** es $ 30.000, que es lo que daría sumar los dos porcentajes (20 % + 50 % = 70 %) en lugar de multiplicarlos
+- **Entonces** se aplica solo el 50 % de la celda «socio · Mes · 4 o más»
+- **Y** el monto es $ 50.000: no se suman porcentajes de otras celdas ni se aplican descuentos en cascada
 
 **Escenario 4 — El tramo alcanza a todos los hijos** (caso límite)
 - **Dado** que una familia es categoría no socio y tiene 4 hijos inscriptos en el turno mañana
 - **Cuando** el Admin registra un Abono · Mes, turno mañana, «Mes 1», para cada uno de los 4 hijos
-- **Entonces** los 4 cargos son de $ 80.000 (tramo de 4 o más al 20 %, y no socio al 0 %), incluido el del primer hijo
+- **Entonces** los 4 cargos son de $ 80.000 (20 %), incluido el del primer hijo
 
 **Escenario 5 — Los hijos se cuentan por turno** (caso límite)
 - **Dado** que la familia «Pérez – Ana» es categoría empleado, que Ana está inscripta solo en el turno mañana y que Juan está inscripto en los turnos mañana y tarde
 - **Cuando** el Admin registra para Juan un Abono · Mes en el turno mañana y otro en el turno tarde, ambos del «Mes 1»
-- **Entonces** el de la mañana cuenta 2 hijos: $ 100.000 × 0,90 × 0,75, es decir **$ 67.500**
-- **Y** el de la tarde cuenta 1 hijo: $ 80.000 × 1,00 × 0,75, es decir **$ 60.000**, porque el tramo de 1 hijo es 0 % por definición
+- **Entonces** el de la mañana cuenta 2 hijos: 15 % sobre $ 100.000, es decir $ 85.000
+- **Y** el de la tarde cuenta 1 hijo: 10 % sobre $ 80.000, es decir $ 72.000
 
 **Escenario 6 — Hijo que se suma a mitad de temporada** (caso límite)
-- **Dado** que la familia «Pérez – Ana», categoría empleado, ya tiene registrado un Abono · Mes de Juan, turno mañana, «Mes 1», por $ 67.500 (2 hijos)
+- **Dado** que la familia «Pérez – Ana», categoría empleado, ya tiene registrado un Abono · Mes de Juan, turno mañana, «Mes 1», por $ 85.000 (2 hijos)
 - **Y** que después se inscribe a Tomás en el turno mañana, y la familia pasa a tener 3 hijos en ese turno
 - **Cuando** el Admin registra un Abono · Mes para Juan, turno mañana, «Mes 2»
-- **Entonces** el cargo nuevo usa el tramo de 3 hijos: $ 100.000 × 0,85 × 0,75, es decir **$ 63.750**
-- **Y** el cargo del «Mes 1», ya registrado, sigue siendo de $ 67.500: no se recalcula
+- **Entonces** el cargo nuevo usa el tramo de 3 hijos: 20 %, es decir $ 80.000
+- **Y** el cargo del «Mes 1», ya registrado, sigue siendo de $ 85.000: no se recalcula
 
 **Escenario 7 — Preinscripción: monto fijo, sin descuento** (regla de negocio)
 - **Dado** que una familia es categoría socio
 - **Cuando** el Admin registra un cargo de tipo Preinscripción para uno de sus hijos
-- **Entonces** el monto es $ 20.000, sin ninguno de los dos descuentos y sin pasar por el tarifario
+- **Entonces** el monto es $ 20.000, sin descuento y sin pasar por el tarifario
 - **Y** el monto sería el mismo si la familia fuera empleado o no socio
-- **Y** el cargo guarda el porcentaje de la categoría en 0 y el del tramo de hijos en nulo
 
 **Escenario 8 — La ficha incompleta no impide registrar el cargo** (caso límite)
 - **Dado** que la ficha de Juan tiene documentación obligatoria pendiente
@@ -211,7 +201,6 @@ Qué hijos cuentan para el tramo del Mes: lo define el PRD («Tarifario y cuenta
 - **Entonces** el sistema no calcula ni registra el cargo
 - **Y** indica que falta la tarifa base de esa combinación de turno y modalidad
 
-
 **Escenario 10 — Temporada anterior, solo consulta** (error)
 - **Dado** que la temporada 2025-26 ya cerró
 - **Cuando** el Admin intenta registrar un cargo en esa temporada
@@ -222,9 +211,9 @@ Qué hijos cuentan para el tramo del Mes: lo define el PRD («Tarifario y cuenta
 - **Cuando** intenta registrar un cargo o ver la cuenta corriente de una familia
 - **Entonces** no tiene esa opción en pantalla
 - **Y** si la solicitud llega igual (por ejemplo, por la API), se rechaza y no se registra nada
-**Escenario 12 — La tarifa base es el valor del no socio con un hijo** (invariante del modelo)
+**Escenario 12 — El no socio con un hijo paga la tarifa base** (caso límite)
 - **Dado** que una familia es categoría no socio y tiene **un solo** hijo inscripto en el turno mañana
 - **Cuando** el Admin registra un Abono · Mes, turno mañana, «Mes 1»
-- **Entonces** el monto es **exactamente la tarifa base, $ 100.000**, sin ningún descuento
-- **Y** eso es lo que hace que los porcentajes de socio y empleado se puedan leer como "la mitad" y "tres cuartos" de lo que paga el no socio
+- **Entonces** el monto es **exactamente la tarifa base, $ 100.000**, porque la celda «no socio · Mes · 1 hijo» es 0 %
+- **Y** el cálculo no toma el tramo de 2 hijos: un error de índice en el tramo daría $ 90.000, que es un monto plausible y pasaría inadvertido
 

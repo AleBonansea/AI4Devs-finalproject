@@ -45,7 +45,7 @@ flowchart LR
 
 Crear con Alembic las tablas que necesita el cargo, con los constraints que sostienen las reglas de negocio en la base y no solo en la API.
 
-- **Tablas:** `tarifa_base`, `descuento_hijos`, `descuento_categoria`, `periodo_cobro`, `tipo_cargo` y `cargo`.
+- **Tablas:** `tarifa_base`, `descuento_modalidad`, `descuento_mes`, `periodo_cobro`, `tipo_cargo` y `cargo`.
 - **Tipos enumerados nuevos:** `modalidad` (`mes`, `quincena`, `semana`, `dia`) y `calculo_cargo` (`monto_fijo`, `tarifario`).
 - **Además, `pago` y la vista `v_cuenta_corriente`.** La respuesta de `POST /api/v1/cargos` devuelve `saldo_pendiente`, que sale de esa vista, y la vista necesita la tabla `pago`. `pago` se crea con su estructura del modelo, pero su endpoint es de HU-CC-02 y no entra en este corte. Hay que crearla acá y no en una migración posterior, porque `pago` tiene una FK a `cargo` y la vista tiene que existir para TK-02.
 
@@ -58,8 +58,8 @@ Crear con Alembic las tablas que necesita el cargo, con los constraints que sost
 
 **Constraints del tarifario** (ver `3-modelo-de-datos.md`, «Tarifario»)
 - [ ] `tarifa_base`: la PK es `(temporada_id, turno, modalidad)`, y `CHECK (monto > 0)`.
-- [ ] `descuento_hijos`: la PK es `(temporada_id, tramo_hijos)` —**sin categoría**, porque es la escala del no socio—, con `CHECK (tramo_hijos BETWEEN 1 AND 4)` y `CHECK (tramo_hijos <> 1 OR porcentaje = 0)`.
-- [ ] `descuento_categoria`: la PK es `(temporada_id, categoria, modalidad)`, con las cuatro modalidades (el Mes incluido) y `CHECK (categoria <> 'no_socio' OR porcentaje = 0)`.
+- [ ] `descuento_modalidad`: la PK es `(temporada_id, categoria, modalidad)`, y `CHECK (modalidad <> 'mes')`.
+- [ ] `descuento_mes`: la PK es `(temporada_id, categoria, tramo_hijos)`, y `CHECK (tramo_hijos BETWEEN 1 AND 4)`.
 - [ ] En las dos tablas de descuento, `porcentaje` es `numeric(5,2)` con `CHECK (porcentaje BETWEEN 0 AND 100)`.
 - [ ] `periodo_cobro` tiene:
   - `CHECK (modalidad <> 'dia')` y `CHECK (fecha_desde <= fecha_hasta)`;
@@ -68,15 +68,14 @@ Crear con Alembic las tablas que necesita el cargo, con los constraints que sost
 - [ ] `tipo_cargo` tiene `UNIQUE (temporada_id, nombre)` y `CHECK ((calculo = 'monto_fijo') = (monto_fijo IS NOT NULL))`.
 
 **Constraints de `cargo`** (ver `3-modelo-de-datos.md`, «Cuenta corriente familiar»)
-- [ ] **El total coincide con la base y los dos porcentajes:** `CHECK (monto_total = round(monto_base * (1 - coalesce(porcentaje_hijos_aplicado, 0) / 100) * (1 - porcentaje_categoria_aplicado / 100), 2))`. Un solo `round`, al final.
-- [ ] **La escala de hijos solo corre en el Mes:** `CHECK (porcentaje_hijos_aplicado IS NULL OR modalidad = 'mes')`.
+- [ ] **El total coincide con la base y el porcentaje:** `CHECK (monto_total = round(monto_base * (1 - porcentaje_aplicado / 100), 2))`.
 - [ ] **El período es de la misma modalidad que el cargo:** hay una FK compuesta `(periodo_cobro_id, modalidad)` → `periodo_cobro (id, modalidad)`, con `MATCH SIMPLE`. Si alguna de las dos columnas es NULL, la FK no se evalúa. Eso es lo correcto para la Preinscripción, que no tiene modalidad ni período, y para el Día, que no tiene período.
 - [ ] **La forma del cargo es coherente con la modalidad:**
   - `(modalidad IS NULL) = (inscripcion_id IS NULL)`;
   - si `modalidad = 'dia'`, `fecha_dia` es NOT NULL y `periodo_cobro_id` es NULL;
   - si la modalidad es `mes`, `quincena` o `semana`, `periodo_cobro_id` es NOT NULL y `fecha_dia` es NULL;
   - `(cantidad_hijos_aplicada IS NOT NULL) = (modalidad = 'mes')`, con `cantidad_hijos_aplicada >= 1`.
-- [ ] `porcentaje_hijos_aplicado` y `porcentaje_categoria_aplicado` tienen `CHECK` entre 0 y 100.
+- [ ] `porcentaje_aplicado` tiene `CHECK` entre 0 y 100.
 - [ ] Hay un índice en `cargo (familia_id, temporada_id)`, que es el filtro de `v_cuenta_corriente`.
 - [ ] Ninguna FK usa `ON DELETE CASCADE`, porque en el sistema nada se borra.
 
@@ -85,13 +84,10 @@ Crear con Alembic las tablas que necesita el cargo, con los constraints que sost
 - [ ] `v_cuenta_corriente` expone `familia_id`, `temporada_id`, `total_cargos`, `total_pagos` y `saldo_pendiente`. Los pagos anulados no cuentan. Una familia con cargos y sin pagos tiene `total_pagos = 0`, no NULL.
 
 **Tests (pytest, contra PostgreSQL real, no SQLite).** Usar PostgreSQL porque SQLite no evalúa igual los `CHECK` ni las FK compuestas. Cada test inserta una fila inválida y espera `IntegrityError`:
-- [ ] un `cargo` con `monto_total` que no coincide con la base y los dos porcentajes;
-- [ ] un `cargo` que aplica el % de la categoría a la tarifa base ignorando la escala de hijos (es el modelo viejo: tiene que rechazarlo el `CHECK`);
+- [ ] un `cargo` con `monto_total` que no coincide con la base y el porcentaje;
 - [ ] un `cargo` con modalidad `mes` apuntando a un `periodo_cobro` de modalidad `semana`;
-- [ ] un `descuento_hijos` con tramo 5;
-- [ ] un `descuento_hijos` con tramo 1 y porcentaje distinto de 0;
-- [ ] un `descuento_categoria` de categoría `no_socio` con porcentaje distinto de 0;
-- [ ] un `cargo` con `porcentaje_hijos_aplicado` y modalidad `semana`;
+- [ ] un `descuento_modalidad` con modalidad `mes`;
+- [ ] un `descuento_mes` con tramo 5;
 - [ ] un `cargo` de modalidad `dia` sin `fecha_dia`.
 
 Un test adicional comprueba que `v_cuenta_corriente` devuelve 85000.00 para una familia con un cargo de 85000.00 y sin pagos.
@@ -99,7 +95,7 @@ Un test adicional comprueba que `v_cuenta_corriente` devuelve 85000.00 para una 
 ### Referencias
 
 - **Historia:** HU-CC-01, en `5-historias-de-usuario.md` (Historia de Usuario 3) y en `docs/product/historias-backlog.md`.
-- **Tablas:** `3-modelo-de-datos.md`, entidades `tarifa_base`, `descuento_hijos`, `descuento_categoria`, `periodo_cobro`, `tipo_cargo`, `cargo` y `pago`, y la vista `v_cuenta_corriente`.
+- **Tablas:** `3-modelo-de-datos.md`, entidades `tarifa_base`, `descuento_modalidad`, `descuento_mes`, `periodo_cobro`, `tipo_cargo`, `cargo` y `pago`, y la vista `v_cuenta_corriente`.
 - **Reglas:** Acl. 5 (tarifa, descuentos y tipos de cargo) y Acl. 6 (anulaciones), en `docs/prd/aclaraciones-cliente.md`.
 
 ---
@@ -123,19 +119,17 @@ Implementar `POST /api/v1/cargos` tal como está especificado en `4-especificaci
 **Estructura:**
 - **Router** en `app/api/v1/cargos.py`. Declara el rol con una dependencia de FastAPI (`require_rol("admin")`), como pide el documento técnico.
 - **Esquemas Pydantic:** `CargoCreate`, `CargoCalculo`, `Cargo` y `CargoRegistrado`, con los mismos nombres y campos que la especificación.
-- **Motor de cálculo** en `app/services/calculo_cargo.py`. Es una **función pura**: recibe los datos ya resueltos (tipo de cargo, tarifa base, categoría, modalidad, cantidad de hijos y porcentajes) y devuelve `monto_base`, `porcentaje_hijos_aplicado`, `porcentaje_categoria_aplicado` y `monto_total`. No toca la base, y por eso se puede testear con tablas de casos.
+- **Motor de cálculo** en `app/services/calculo_cargo.py`. Es una **función pura**: recibe los datos ya resueltos (tipo de cargo, tarifa base, categoría, modalidad, cantidad de hijos y porcentajes) y devuelve `monto_base`, `porcentaje_aplicado` y `monto_total`. No toca la base, y por eso se puede testear con tablas de casos.
 - **Servicio** en `app/services/cargos.py`. Resuelve los datos desde la base, llama al motor e inserta el cargo. Con `simular=true` no inserta nada.
 
 ### Criterios de aceptación técnicos
 
 **Cálculo**
-- [ ] **Preinscripción** (`calculo = 'monto_fijo'`): `monto_base` es `tipo_cargo.monto_fijo`, `porcentaje_categoria_aplicado` es 0 y `porcentaje_hijos_aplicado` es `None`, para cualquier categoría.
+- [ ] **Preinscripción** (`calculo = 'monto_fijo'`): `monto_base` es `tipo_cargo.monto_fijo` y `porcentaje_aplicado` es 0, para cualquier categoría.
 - [ ] **Abono:**
   - `monto_base` sale de `tarifa_base` (temporada, turno de la inscripción, modalidad);
-  - el porcentaje del tramo sale de `descuento_hijos` (`min(hijos, 4)`) **solo si la modalidad es Mes**; en Día, Semana y Quincena es `None`;
-  - el porcentaje de la categoría sale de `descuento_categoria` (categoría y modalidad), siempre;
-  - los dos se **multiplican**: `base × (1 − % hijos) × (1 − % categoría)`, con **un solo redondeo al final**. El de la categoría se aplica sobre el valor que dejó el de hijos, no sobre la tarifa base;
-  - un caso de prueba comprueba que una familia socia con 4 hijos en el Mes paga $ 40.000 y no $ 50.000, que es lo que daría el modelo anterior.
+  - el porcentaje sale de `descuento_mes` (categoría y `min(hijos, 4)`) si la modalidad es Mes, o de `descuento_modalidad` en los demás casos;
+  - se aplica **un solo** porcentaje, nunca acumulado.
 - [ ] **Cantidad de hijos** (solo en el Mes): son las inscripciones de alumnos de la familia en la misma temporada y turno, contadas **al momento del cargo**. Queda guardada en `cantidad_hijos_aplicada`.
 - [ ] **Redondeo:** `monto_total` usa `Decimal` con `ROUND_HALF_UP` a 2 decimales. Es el mismo redondeo que `round()` de PostgreSQL sobre `numeric`, así que el `CHECK` de TK-01 nunca rechaza un cargo que calculó la API. Nada se calcula con `float`.
 - [ ] `categoria_aplicada` y `cantidad_hijos_aplicada` se guardan con el valor del momento. Los cargos ya registrados no se recalculan.
@@ -225,8 +219,7 @@ Antes de confirmar, la pantalla muestra el **desglose del cálculo** con `POST /
   - `monto_base`;
   - `categoria_aplicada`;
   - `cantidad_hijos_aplicada`, solo en el Mes;
-  - `porcentaje_hijos_aplicado`, solo en el Mes;
-  - `porcentaje_categoria_aplicado`;
+  - `porcentaje_aplicado`;
   - `monto_total`.
 
   Los montos se muestran con formato de pesos argentinos. Se usan los strings `Decimal` de la API tal como llegan, sin convertirlos a `float` para calcular nada.

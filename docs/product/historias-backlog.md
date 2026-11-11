@@ -128,11 +128,11 @@ Como Admin, quiero definir las fechas desde/hasta de cada Mes, Quincena y Semana
 *Sustento:* Acl. 5.
 
 **HU-TAR-03** · `Lote 2`
-Como Admin, quiero configurar las dos tablas de descuentos de la temporada —la escala por cantidad de hijos (1, 2, 3, 4 o más, solo para el Mes, con 0% en el tramo de 1 hijo) y el % de cada categoría por modalidad, que se aplica sobre el valor del no socio— para reflejar la política de descuentos sin tocar código.
+Como Admin, quiero configurar la tabla de descuentos de la temporada —un % por categoría para Día, Semana y Quincena, y un % por categoría y tramo de cantidad de hijos (1, 2, 3, 4 o más) para el Mes— para reflejar la política de descuentos sin tocar código.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar»; Acl. 2, 5.
 
 **HU-TAR-04** · `Lote 1`
-Como Admin, quiero que al cargar un cargo el sistema calcule el monto solo: tarifa base del turno y la modalidad, por el porcentaje del tramo de hijos (solo en el Mes, según los hijos anotados en ese turno) y por el porcentaje de la categoría de la familia, con un solo redondeo al final, para no calcularlo a mano.
+Como Admin, quiero que al cargar un cargo el sistema calcule el monto solo: tarifa base del turno y la modalidad, menos el único porcentaje que corresponda según la categoría de la familia (y, en el Mes, la cantidad de hijos anotados en ese turno), para no calcularlo a mano.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar» (facturación por turno); Acl. 5.
 
 **HU-TAR-05** · `Backlog`

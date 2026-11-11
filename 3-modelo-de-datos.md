@@ -102,14 +102,15 @@ erDiagram
         modalidad modalidad PK
         numeric monto
     }
-    descuento_categoria {
+    descuento_modalidad {
         bigint temporada_id PK, FK
         categoria_familia categoria PK
         modalidad modalidad PK
         numeric porcentaje
     }
-    descuento_hijos {
+    descuento_mes {
         bigint temporada_id PK, FK
+        categoria_familia categoria PK
         smallint tramo_hijos PK
         numeric porcentaje
     }
@@ -141,8 +142,7 @@ erDiagram
         categoria_familia categoria_aplicada
         smallint cantidad_hijos_aplicada
         numeric monto_base
-        numeric porcentaje_hijos_aplicado
-        numeric porcentaje_categoria_aplicado
+        numeric porcentaje_aplicado
         numeric monto_total
         bigint creado_por FK
         timestamptz creado_en
@@ -218,8 +218,8 @@ erDiagram
 
     temporada ||--o{ grupo : "tiene"
     temporada ||--o{ tarifa_base : "configura"
-    temporada ||--o{ descuento_categoria : "configura"
-    temporada ||--o{ descuento_hijos : "configura"
+    temporada ||--o{ descuento_modalidad : "configura"
+    temporada ||--o{ descuento_mes : "configura"
     temporada ||--o{ periodo_cobro : "define"
     temporada ||--o{ tipo_cargo : "define"
     temporada ||--o{ temporada_documento_obligatorio : "exige"
@@ -272,7 +272,7 @@ erDiagram
 | Usuarios y temporadas | `usuario`, `temporada` | — |
 | Grupos y asistencia | `grupo`, `grupo_profesor`, `inscripcion`, `asistencia` | — |
 | Familias y alumnos | `familia`, `alumno`, `persona`, `familia_persona` | — |
-| Tarifario | `tarifa_base`, `descuento_categoria`, `descuento_hijos`, `periodo_cobro`, `tipo_cargo` | — |
+| Tarifario | `tarifa_base`, `descuento_modalidad`, `descuento_mes`, `periodo_cobro`, `tipo_cargo` | — |
 | Cuenta corriente | `cargo`, `pago` | — |
 | Documentación | — | `tipo_documento`, `temporada_documento_obligatorio`, `documento`, `documento_evento` |
 | Tesorería y canon | `tesoreria_movimiento` (el dato, sin pantalla) | `cierre_canon`, `cierre_canon_pago` |
@@ -574,39 +574,32 @@ Todas las tablas de esta sección cuelgan de `temporada`: cada verano tiene su p
 
 **Regla:** son 8 combinaciones por temporada (2 turnos × 4 modalidades). Si falta la que se necesita, el cargo no se puede calcular (escenario 9 de HU-CC-01).
 
-##### `descuento_hijos` · Lote 1
+##### `descuento_modalidad` · Entrega 1
 
-**Para qué existe.** Es la **escala del no socio por cantidad de hijos**, solo para la modalidad Mes (Acl. 5). No tiene columna de categoría: es la referencia que se aplica a todos **antes** del porcentaje de la categoría.
+**Para qué existe.** Es la **primera parte** de la tabla de descuentos: un % por categoría para Día, Semana y Quincena. **La cantidad de hijos no interviene** (Acl. 5).
 
-| Campo | Tipo | Restricciones | Descripción |
-|---|---|---|---|
-| `temporada_id` | bigint | PK, FK → temporada | |
-| `tramo_hijos` | smallint | PK, `CHECK (tramo_hijos BETWEEN 1 AND 4)` | El tramo 4 significa "4 o más". |
-| `porcentaje` | numeric(5,2) | NOT NULL, CHECK 0–100, `CHECK (tramo_hijos <> 1 OR porcentaje = 0)` | Libre a partir del tramo 2: el Admin decide hasta dónde escala (Acl. 5). |
+| Campo | Tipo | Restricciones |
+|---|---|---|
+| `temporada_id` | bigint | PK, FK → temporada |
+| `categoria` | categoria_familia | PK |
+| `modalidad` | modalidad | PK, `CHECK (modalidad <> 'mes')` |
+| `porcentaje` | numeric(5,2) | NOT NULL, CHECK 0–100 |
 
-El `CHECK` del tramo 1 no es decoración: la tarifa base **es** el valor del no socio con un hijo, y eso es lo que permite leer los porcentajes de socio y empleado como "la mitad" y "tres cuartos" de lo que paga el no socio. Si alguien cargara un porcentaje ahí, esa lectura dejaría de ser cierta y nadie se enteraría hasta ver una factura. Un `CHECK` es un candado, no una red: a diferencia de un hook, no se esquiva.
+##### `descuento_mes` · Entrega 1
 
-##### `descuento_categoria` · Lote 1
-
-**Para qué existe.** Es el porcentaje de cada categoría por modalidad, que se aplica **al valor que dio `descuento_hijos`**, no a la tarifa base (Acl. 5, decisión del 11/11/2026).
+**Para qué existe.** Es la **segunda parte** de la tabla de descuentos: un % por categoría y tramo de hijos, solo para el Mes (Acl. 5).
 
 | Campo | Tipo | Restricciones | Descripción |
 |---|---|---|---|
 | `temporada_id` | bigint | PK, FK → temporada | |
 | `categoria` | categoria_familia | PK | |
-| `modalidad` | modalidad | PK | Las cuatro, el Mes incluido. |
-| `porcentaje` | numeric(5,2) | NOT NULL, CHECK 0–100, `CHECK (categoria <> 'no_socio' OR porcentaje = 0)` | Temporada 2026-27: socio 50, empleado 25, no socio 0. |
-
-No lleva columna de tramo de hijos **a propósito**: si la llevara, la escala de hijos se aplicaría dos veces. Que el no socio sea 0% tampoco es un valor que el Admin elija: es lo que lo convierte en la referencia, y por eso va en un `CHECK`.
-
-Es configurable **por modalidad** aunque la temporada 2026-27 cargue el mismo porcentaje en las cuatro. Es una decisión de diseño, no un pedido del cliente: el ABM es el mismo trabajo con una celda o con cuatro, y evita una migración si alguna temporada quieren dar 50% en el Mes y 40% en el Día.
+| `tramo_hijos` | smallint | PK, `CHECK (tramo_hijos BETWEEN 1 AND 4)` | El tramo 4 significa "4 o más". |
+| `porcentaje` | numeric(5,2) | NOT NULL, CHECK 0–100 | Libre: el Admin decide hasta dónde escala (Acl. 5). |
 
 **Reglas de las dos tablas de descuento:**
-- Los dos porcentajes **se multiplican**, y es deliberado:
-  `total = base × (1 − % hijos) × (1 − % categoría)`, con **un solo redondeo al final**, al peso. Un redondeo intermedio entre los dos factores da un importe distinto.
-- `descuento_hijos` **solo interviene en el Mes**. En Día, Semana y Quincena el factor es 1.
+- La partición es la que pide Acl. 5: el Mes está solo en `descuento_mes`, y las otras tres modalidades solo en `descuento_modalidad`. Así ningún cargo puede encontrar dos porcentajes.
+- Se aplica **un único porcentaje**, nunca acumulado.
 - El % del tramo se aplica a **todos** los hijos, no solo al que supera el tramo.
-- Hasta el 10/11/2026 la regla era **un único porcentaje sobre la tarifa base, nunca acumulado**. Quedó sin efecto el 11/11/2026. Se deja escrito porque es el error que un cálculo nuevo va a cometer por inercia, y porque los dos modelos dan números plausibles: solo se distinguen comparando contra el valor del no socio.
 
 ##### `periodo_cobro` · Entrega 1
 
@@ -646,7 +639,7 @@ Es configurable **por modalidad** aunque la temporada 2026-27 cargue el mismo po
 
 ##### `cargo` · Entrega 1
 
-**Para qué existe.** Es lo que una familia tiene que pagar por un alumno. **Guarda el resultado del cálculo** (base, los dos % aplicados y total), no solo la referencia al tarifario. El tarifario puede cambiar después, y lo ya registrado no se recalcula (Acl. 5, "hijo que se suma a mitad de temporada").
+**Para qué existe.** Es lo que una familia tiene que pagar por un alumno. **Guarda el resultado del cálculo** (base, % aplicado y total), no solo la referencia al tarifario. El tarifario puede cambiar después, y lo ya registrado no se recalcula (Acl. 5, "hijo que se suma a mitad de temporada").
 
 | Campo | Tipo | Restricciones | Descripción |
 |---|---|---|---|
@@ -662,23 +655,20 @@ Es configurable **por modalidad** aunque la temporada 2026-27 cargue el mismo po
 | `categoria_aplicada` | categoria_familia | NOT NULL | Copia de la categoría de la familia al momento del cálculo. |
 | `cantidad_hijos_aplicada` | smallint | NULL, `CHECK (cantidad_hijos_aplicada >= 1)` | Solo en el Mes: hijos de la familia inscriptos en ese turno al momento del cálculo. |
 | `monto_base` | numeric(12,2) | NOT NULL | Tarifa base del turno y la modalidad, o el monto fijo de la Preinscripción. |
-| `porcentaje_hijos_aplicado` | numeric(5,2) | NULL, CHECK 0–100 | El % del tramo de hijos. Solo en el Abono · Mes; NULL en las demás modalidades y en la Preinscripción. |
-| `porcentaje_categoria_aplicado` | numeric(5,2) | NOT NULL, CHECK 0–100 | El % de la categoría. Es 0 en la Preinscripción. |
+| `porcentaje_aplicado` | numeric(5,2) | NOT NULL, CHECK 0–100 | El único % aplicado. Es 0 en la Preinscripción. |
 | `monto_total` | numeric(12,2) | NOT NULL | |
 | `creado_por` | bigint | FK → usuario, NOT NULL | Solo un Admin registra cargos (Acl. 9). |
 
 **Reglas:**
-- `CHECK (monto_total = round(monto_base * (1 - coalesce(porcentaje_hijos_aplicado, 0) / 100) * (1 - porcentaje_categoria_aplicado / 100), 2))`.
-  Un solo `round`, al final. Es la regla del cálculo escrita en la base: aunque el servicio se equivoque, la fila no entra.
-- `CHECK (porcentaje_hijos_aplicado IS NULL OR modalidad = 'mes')`: la escala de hijos no corre en Día, Semana ni Quincena.
-- **Preinscripción** (`tipo_cargo.calculo = 'monto_fijo'`): sin inscripción, modalidad, período ni cantidad de hijos. `monto_base` es el monto fijo, `porcentaje_categoria_aplicado` es 0 y `porcentaje_hijos_aplicado` es NULL, igual para las tres categorías (Acl. 5).
+- `CHECK (monto_total = round(monto_base * (1 - porcentaje_aplicado / 100), 2))`.
+- **Preinscripción** (`tipo_cargo.calculo = 'monto_fijo'`): sin inscripción, modalidad, período ni cantidad de hijos. `monto_base` es el monto fijo y `porcentaje_aplicado` es 0, igual para las tres categorías (Acl. 5).
 - **Abono** (`calculo = 'tarifario'`): exige `inscripcion_id` y `modalidad`, y además:
   - `periodo_cobro_id` si la modalidad es Mes, Quincena o Semana; `fecha_dia` si es Día;
   - `cantidad_hijos_aplicada` si y solo si la modalidad es Mes.
 
   Los `CHECK` de forma (qué columnas son nulas según la modalidad) van en la tabla. La coherencia con `tipo_cargo.calculo` se valida en la API, porque está en otra tabla.
 - **Cómo se calcula el Abono:**
-  - Se multiplican dos factores: el de `descuento_hijos` (`least(cantidad_hijos, 4)`) **solo si la modalidad es Mes**, y el de `descuento_categoria` (categoría y modalidad) siempre. Un solo redondeo, al final.
+  - El % sale de `descuento_mes` (categoría y `least(cantidad_hijos, 4)`) si la modalidad es Mes, o de `descuento_modalidad` en los demás casos.
   - La cantidad de hijos se cuenta **por turno**, "contando solo a los hermanos anotados en ese turno" (PRD).
 - Un cargo no se recalcula nunca. Si cambia el tarifario, la categoría o la cantidad de hijos, solo afecta a los cargos nuevos.
 - No se pueden registrar cargos en una temporada `cerrada`.

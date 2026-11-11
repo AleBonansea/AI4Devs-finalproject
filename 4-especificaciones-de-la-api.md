@@ -444,30 +444,24 @@ paths:
           de la familia en ese turno y temporada al momento del cargo. Se
           cuenta por turno, "contando solo a los hermanos anotados en ese
           turno" (PRD).
-        - `monto_base`, `porcentaje_hijos_aplicado`, `porcentaje_categoria_aplicado`
-          y `monto_total`.
+        - `monto_base`, `porcentaje_aplicado` y `monto_total`.
 
         Cómo se calcula según el tipo de cargo:
 
         - Preinscripción (`tipo_cargo.calculo = monto_fijo`):
-          - `monto_base` es `tipo_cargo.monto_fijo`, `porcentaje_categoria_aplicado`
-            es 0 y `porcentaje_hijos_aplicado` es `null`.
+          - `monto_base` es `tipo_cargo.monto_fijo` y `porcentaje_aplicado` es 0.
           - No lleva inscripción, modalidad ni período.
         - Abono (`tipo_cargo.calculo = tarifario`):
           - Exige `inscripcion_id`, que da el turno, y `modalidad`.
           - Además exige `periodo_cobro_id` (Mes, Quincena, Semana) o
             `fecha_dia` (Día).
           - `monto_base` sale de `tarifa_base` (turno, modalidad).
-          - Se **multiplican dos** porcentajes, con un solo redondeo al
-            final: el de `descuento_hijos` (`least(hijos, 4)`), **solo si la
-            modalidad es Mes**, y el de `descuento_categoria` (categoría y
-            modalidad), siempre.
-          - El de la categoría se aplica **sobre el valor que dejó el de
-            hijos**, no sobre la tarifa base: la categoría no socio es la
-            referencia y está siempre en 0%.
+          - Se aplica un único porcentaje: el de `descuento_mes` (categoría y
+            `least(hijos, 4)`) si la modalidad es Mes, o el de
+            `descuento_modalidad` en los demás casos. Nunca se acumulan.
 
         Con `simular=true` devuelve el cálculo sin guardar nada. Es lo que usa
-        la pantalla para mostrar base, los dos porcentajes y total antes de confirmar
+        la pantalla para mostrar base, porcentaje y total antes de confirmar
         (escenario 1). Es una concesión al límite de 3 endpoints de la
         entrega: sin ese límite sería `GET /api/v1/cargos/simulacion`. La
         previsualización tiene que pasar por la API porque el precio no puede
@@ -547,12 +541,11 @@ paths:
                     categoria_aplicada: empleado
                     cantidad_hijos_aplicada: 2
                     monto_base: '100000.00'
-                    porcentaje_hijos_aplicado: '10.00'
-                    porcentaje_categoria_aplicado: '25.00'
-                    monto_total: '67500.00'
+                    porcentaje_aplicado: '15.00'
+                    monto_total: '85000.00'
                     creado_por: 2
                     creado_en: '2026-12-20T10:31:05-03:00'
-                    saldo_pendiente: '67500.00'
+                    saldo_pendiente: '85000.00'
                 abono_semana:
                   summary: 10 % sobre $ 30.000 = $ 27.000
                   value:
@@ -568,12 +561,11 @@ paths:
                     categoria_aplicada: empleado
                     cantidad_hijos_aplicada: null
                     monto_base: '30000.00'
-                    porcentaje_hijos_aplicado: null
-                    porcentaje_categoria_aplicado: '25.00'
-                    monto_total: '22500.00'
+                    porcentaje_aplicado: '10.00'
+                    monto_total: '27000.00'
                     creado_por: 2
                     creado_en: '2026-12-20T10:33:47-03:00'
-                    saldo_pendiente: '90000.00'
+                    saldo_pendiente: '112000.00'
                 preinscripcion:
                   summary: Monto fijo de $ 20.000, sin descuento
                   value:
@@ -589,12 +581,11 @@ paths:
                     categoria_aplicada: empleado
                     cantidad_hijos_aplicada: null
                     monto_base: '20000.00'
-                    porcentaje_hijos_aplicado: null
-                    porcentaje_categoria_aplicado: '0.00'
+                    porcentaje_aplicado: '0.00'
                     monto_total: '20000.00'
                     creado_por: 2
                     creado_en: '2026-12-20T10:35:12-03:00'
-                    saldo_pendiente: '110000.00'
+                    saldo_pendiente: '132000.00'
         '200':
           description: Solo con `simular=true`. Devuelve el cálculo sin guardarlo.
           content:
@@ -613,9 +604,8 @@ paths:
                 categoria_aplicada: empleado
                 cantidad_hijos_aplicada: 2
                 monto_base: '100000.00'
-                porcentaje_hijos_aplicado: '10.00'
-                porcentaje_categoria_aplicado: '25.00'
-                monto_total: '67500.00'
+                porcentaje_aplicado: '15.00'
+                monto_total: '85000.00'
         '401':
           $ref: '#/components/responses/NoAutenticado'
         '403':
@@ -652,7 +642,7 @@ paths:
                 falta_descuento:
                   summary: Falta el porcentaje que corresponde
                   value:
-                    detail: 'Falta el descuento_hijos de la temporada 2026-27 para el tramo 3.'
+                    detail: 'Falta el descuento_mes de la temporada 2026-27 para categoría empleado y tramo 3.'
         '422':
           description: Los campos no cumplen la forma que corresponde al tipo de cargo y la modalidad.
           content:
@@ -934,7 +924,7 @@ components:
     CargoCalculo:
       type: object
       description: Resultado del cálculo, tal como queda guardado en `cargo`.
-      required: [temporada_id, familia_id, alumno_id, tipo_cargo_id, categoria_aplicada, monto_base, porcentaje_hijos_aplicado, porcentaje_categoria_aplicado, monto_total]
+      required: [temporada_id, familia_id, alumno_id, tipo_cargo_id, categoria_aplicada, monto_base, porcentaje_aplicado, monto_total]
       properties:
         temporada_id:
           type: integer
@@ -963,12 +953,7 @@ components:
           description: Solo en el Mes.
         monto_base:
           $ref: '#/components/schemas/Decimal'
-        porcentaje_hijos_aplicado:
-          oneOf:
-            - $ref: '#/components/schemas/Decimal'
-            - type: 'null'
-          description: El % del tramo de hijos. Solo en el Abono · Mes; null en las demás modalidades y en la Preinscripción.
-        porcentaje_categoria_aplicado:
+        porcentaje_aplicado:
           $ref: '#/components/schemas/Decimal'
         monto_total:
           $ref: '#/components/schemas/Decimal'
