@@ -1,11 +1,13 @@
 """Corta los colores a pelo en el frontend.
 
-Un agente sin catalogo inventa un gris nuevo cada vez. A los dos meses
-hay catorce grises y ninguno es el del sistema. Los colores salen del
-tema, con nombre.
+Un agente sin catalogo inventa un gris nuevo cada vez. A los dos meses hay
+catorce grises y ninguno es el del sistema. Los colores salen del tema, con
+nombre.
 
-Solo mira `frontend/src/`. No mira el tema en si, que es donde los
-valores reales tienen que vivir.
+Solo mira `frontend/src/`, y deja pasar los archivos de PERMITIDOS, que son
+donde los valores reales tienen que vivir. La lista es de rutas exactas, no
+de nombres parecidos: con coincidencia por nombre, cualquier
+`ayudanteDeTema.tsx` quedaba exento sin motivo.
 """
 
 import json
@@ -15,8 +17,13 @@ import sys
 
 PATRON = re.compile(r"#[0-9a-fA-F]{3,8}\b|\brgba?\s*\(|\bhsla?\s*\(")
 EXTENSIONES = (".ts", ".tsx", ".js", ".jsx", ".css")
-# Donde los valores si pueden vivir.
-EXENTOS = ("theme", "tokens", "colores", "palette")
+
+# El catalogo. Un archivo nuevo aca es una decision, no un descuido: si el
+# tema se parte en varios, se agregan a mano.
+PERMITIDOS = (
+    "frontend/src/tema.ts",
+    "frontend/src/index.css",
+)
 
 
 def main() -> int:
@@ -28,7 +35,7 @@ def main() -> int:
     ruta = ((datos.get("tool_input") or {}).get("file_path", "") or "").replace("\\", "/")
     if "frontend/src/" not in ruta or not ruta.endswith(EXTENSIONES):
         return 0
-    if any(parte in os.path.basename(ruta).lower() for parte in EXENTOS):
+    if any(ruta.endswith(p) for p in PERMITIDOS):
         return 0
     if not os.path.exists(ruta):
         return 0
@@ -50,8 +57,10 @@ def main() -> int:
     print(f"Colores a pelo en {ruta}:", file=sys.stderr)
     print("\n".join(hallazgos[:10]), file=sys.stderr)
     print(
-        "\nUsa un token con nombre del tema. Si el color que necesitas no existe,"
-        "\nagregalo al tema con un nombre que diga para que es, y despues usalo aca.",
+        "\nUsa un nombre del tema: theme.palette, sx o la constante `colores`"
+        "\nde frontend/src/tema.ts. Si el color que necesitas no existe, agregalo"
+        "\nahi con un nombre que diga PARA QUE sirve (`deuda`, no `rojo`), y"
+        "\ndespues usalo aca.",
         file=sys.stderr,
     )
     return 2

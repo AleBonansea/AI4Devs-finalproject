@@ -1,0 +1,35 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Escuelita de Verano",
+    "description": "API de administracion de la escuelita de verano del club sede.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/salud": {
+      "get": {
+        "tags": [
+          "infraestructura"
+        ],
+        "summary": "Salud",
+        "operationId": "salud_salud_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Salud Salud Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

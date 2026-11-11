@@ -50,6 +50,7 @@ backend/
     conftest.py        fixtures; aislamiento por transacción
     functional/        tests de contrato, por capability
 frontend/src/
+  tema.ts              el catálogo de color — único lugar con valores
   lib/api.ts           único punto de contacto con el backend
   components/  pages/  routes/
 scripts/seed.py        datos de ejemplo
@@ -103,9 +104,13 @@ Antes de dar por buena una firma de memoria, comprobala en el paquete instalado 
 
 ## Frontend
 
-El único punto de contacto con el backend es `src/lib/api.ts`: envuelve `fetch`, adjunta el token, y traduce los errores de FastAPI a un error con mensaje en castellano y errores por campo. Toda llamada nueva se agrega ahí, nunca en un componente.
+React 18 + Vite + TypeScript, con **MUI 6** y `@mui/x-data-grid` para los listados. Se eligió MUI sobre Mantine porque tiene mucho más material de entrenamiento, así que un agente genera MUI correcto con bastante más fiabilidad.
 
-La librería de componentes está **pendiente de elegir** (MUI o Mantine). Hasta que se decida no se escriben pantallas nuevas. Cuando se elija: los colores son tokens con nombre, nunca valores a pelo, y una pieza de interfaz nueva sale del catálogo o se declara como nueva con su porqué.
+El único punto de contacto con el backend es `src/lib/api.ts`: envuelve `fetch`, adjunta el token, y traduce los errores de FastAPI a un error con mensaje en castellano más los errores por campo que las pantallas pegan al lado de cada campo. Toda llamada nueva se agrega ahí, nunca en un componente — hay una regla de eslint que corta un `fetch` suelto.
+
+Los colores salen de `src/tema.ts`, el único archivo del frontend donde un valor de color puede estar escrito; un hook corta los valores a pelo en el resto. Los nombres dicen **para qué** sirve el color, no cómo se ve: `deuda`, no `rojo`.
+
+Una pieza de interfaz nueva sale del catálogo de `src/components/` o se crea ahí con nombre propio, nunca improvisada dentro de una pantalla.
 
 ## Roles
 

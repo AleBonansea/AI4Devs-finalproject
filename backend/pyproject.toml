@@ -1,0 +1,66 @@
+[project]
+name = "escuelita-backend"
+version = "0.1.0"
+description = "API de administracion de la escuelita de verano"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi==0.115.6",
+    "uvicorn[standard]==0.34.0",
+    "sqlalchemy==2.0.36",
+    "psycopg[binary]==3.2.3",
+    "alembic==1.14.0",
+    "pydantic==2.10.4",
+    "pydantic-settings==2.7.0",
+    "pyjwt==2.10.1",
+    "pwdlib[argon2]==0.2.1",
+    "python-multipart==0.0.20",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.4",
+    "httpx==0.28.1",
+    "ruff==0.8.4",
+    "mypy==1.14.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.isort]
+# Sin esto, ruff ve el directorio alembic/ y trata `alembic` como paquete
+# propio, asi que ordena `from alembic import context` junto a los imports
+# de app/.
+known-first-party = ["app", "tests"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+strict = true
+# Alembic genera codigo que no vale la pena tipar estrictamente.
+exclude = ["alembic/"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# CLAUDE.md dice que el stack va por delante de la documentacion conocida.
+# Esto lo hace cumplir: usar la API 1.x de SQLAlchemy (session.query, Column)
+# falla el test en vez de emitir un aviso que nadie lee.
+#
+# No se convierte DeprecationWarning entero en error: las dependencias emiten
+# avisos entre si (anyio, starlette) que no son nuestro problema y solo
+# generarian ruido.
+filterwarnings = [
+    "error::sqlalchemy.exc.LegacyAPIWarning",
+    "error::sqlalchemy.exc.MovedIn20Warning",
+]

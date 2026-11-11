@@ -5,12 +5,6 @@ description: Construye una pantalla del frontend contra la API ya existente, con
 
 # Pantalla del frontend
 
-## 0. Condicion previa
-
-La libreria de componentes todavia esta **pendiente de elegir** (MUI o
-Mantine; ver `CLAUDE.md`). Hasta que se decida y exista un tema con
-tokens, **esta skill no arranca**. Decilo y pará.
-
 ## 1. El contrato manda
 
 Lee `docs/api/openapi.json` para los endpoints que la pantalla usa. Lo
