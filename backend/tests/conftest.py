@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from httpx import Response
 from sqlalchemy import Connection, create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -77,6 +78,10 @@ def conexion(motor_de_pruebas) -> Iterator[Connection]:  # type: ignore[no-untyp
 
 @pytest.fixture
 def sesion(conexion: Connection) -> Iterator[Session]:
+    """La sesion del TEST, para preparar el estado y comprobarlo despues.
+
+    La API no la usa: tiene la suya (ver `cliente`).
+    """
     fabrica = sessionmaker(bind=conexion, autoflush=False, expire_on_commit=False)
     s = fabrica(join_transaction_mode="create_savepoint")
     try:
@@ -85,21 +90,62 @@ def sesion(conexion: Connection) -> Iterator[Session]:
         s.close()
 
 
-@pytest.fixture
-def cliente(sesion: Session) -> Iterator[TestClient]:
-    """Cliente de la API atado a la misma transaccion que la fixture `sesion`.
+class ClienteDePruebas(TestClient):
+    """TestClient que, despues de cada peticion, expira los objetos que el
+    test tenia cargados.
 
-    Los tests comprueban por la API, no llamando a los servicios por dentro:
-    lo que se verifica es el contrato. La sesion compartida permite preparar
-    el estado con `sesion` y despues leerlo por HTTP.
+    Sin esto, un objeto leido antes de la peticion devuelve el valor viejo
+    aunque la API lo haya cambiado. Lo peligroso es la direccion contraria a
+    la que uno espera: un test que afirma que un contador NO cambio pasaria
+    igual aunque la API lo hubiera incrementado.
     """
 
-    def sesion_de_pruebas() -> Iterator[Session]:
-        yield sesion
+    def __init__(self, app_de_prueba: object, sesion: Session) -> None:
+        super().__init__(app_de_prueba)  # type: ignore[arg-type]
+        self._sesion = sesion
 
-    app.dependency_overrides[obtener_sesion] = sesion_de_pruebas
+    def request(self, *args: object, **kwargs: object) -> Response:
+        respuesta = super().request(*args, **kwargs)  # type: ignore[arg-type]
+        self._sesion.expire_all()
+        return respuesta
+
+
+@pytest.fixture
+def cliente(conexion: Connection, sesion: Session) -> Iterator[TestClient]:
+    """Cliente de la API, con su PROPIA sesion, distinta de la del test.
+
+    Las dos sesiones comparten la conexion y la transaccion externa, asi que
+    la API ve lo que el test preparo con `sesion`. Pero la de la API se abre
+    y se cierra en cada peticion, igual que `obtener_sesion` en produccion:
+    si el codigo no hizo commit, su escritura se revierte y el test no la ve.
+
+    **Por que no una sola sesion compartida.** Es lo que habia antes, y hacia
+    indistinguible un servicio que commitea de uno que no: el test veia el
+    cambio igual, porque era la misma sesion. Comprobado: con sesion
+    compartida, un endpoint que incrementa un contador y lanza un 401 sin
+    commitear dejaba el test en verde; en produccion el incremento se perdia
+    y el bloqueo por intentos no se activaba nunca. Con sesion propia, ese
+    test falla, que es lo que tiene que pasar.
+
+    Por eso "el contador en la base es 3" solo es comprobable asi.
+    """
+    fabrica = sessionmaker(
+        bind=conexion,
+        autoflush=False,
+        expire_on_commit=False,
+        join_transaction_mode="create_savepoint",
+    )
+
+    def sesion_de_la_api() -> Iterator[Session]:
+        s = fabrica()
+        try:
+            yield s
+        finally:
+            s.close()
+
+    app.dependency_overrides[obtener_sesion] = sesion_de_la_api
     try:
-        with TestClient(app) as c:
+        with ClienteDePruebas(app, sesion) as c:
             yield c
     finally:
         app.dependency_overrides.clear()

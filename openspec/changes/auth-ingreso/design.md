@@ -48,6 +48,8 @@ Ninguno de los dos devuelve datos de alumnos, así que no aplica el filtro de co
 
 `username` se normaliza con `strip().lower()` antes de buscar: los usuarios se generan en minúsculas (documento técnico) y el teclado del celular capitaliza la primera letra. La contraseña no se toca.
 
+**Asimetría deliberada entre username y contraseña vacíos.** `min_length=1` se valida sobre el valor crudo. Una contraseña vacía da 422. Un username hecho solo de espacios, en cambio, pasa la validación, queda vacío al normalizarse, no encuentra a nadie y termina en el 401 genérico. Es una decisión, no un descuido: el 401 no revela nada que el 422 no revelara, y validar después de normalizar obligaría a un validador propio para un caso que solo produce un pedido inválido. Se puede revisar cuando HU-UT-02 agregue la normalización del username al darlo de alta, y validar los dos con la misma regla.
+
 **Invariante: `usuario.username` se guarda siempre en minúsculas.** El login busca por igualdad exacta (`Usuario.username == entrada_normalizada`), no con `lower()` sobre la columna, para usar el índice único tal cual. Eso solo es correcto si el invariante se cumple: si la base tuviera `JPerez`, ese usuario no podría ingresar nunca y el login respondería el 401 genérico, sin ninguna pista de por qué. Hoy nada en la base lo impide. El `CHECK (username = lower(username))` lo agrega HU-UT-02, que es la que escribe usuarios; hasta entonces la semilla lo respeta, y los tests crean usuarios en minúsculas.
 
 ### El token lleva solo el id

@@ -153,7 +153,7 @@ Todo endpoint protegido SHALL identificar a quien llama por el encabezado `Autho
 Un usuario con `debe_cambiar_password` en true SHALL poder ingresar y recibir su token, con `usuario.debe_cambiar_password` en true en la respuesta. Con ese token, todo endpoint protegido SHALL responder 403 con `detail` igual a `Tenés que cambiar tu contraseña antes de continuar.`, salvo dos exentos: `GET /api/v1/auth/yo` y el cambio de contraseña.
 
 #### Scenario: Ingresa con el cambio pendiente
-- **GIVEN** un usuario activo `jperez` con contraseña `Verano2026` y `debe_cambiar_password` en true
+- **GIVEN** un usuario activo `jperez` con contraseña `Verano2026`, `debe_cambiar_password` en true e `intentos_fallidos` en 2
 - **WHEN** se llama a `POST /api/v1/auth/login` con la contraseña `Verano2026`
 - **THEN** la respuesta es 200 con un `access_token` y `usuario.debe_cambiar_password` en true
 - **AND** `intentos_fallidos` de `jperez` en la base es 0
