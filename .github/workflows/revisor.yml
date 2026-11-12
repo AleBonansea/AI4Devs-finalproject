@@ -21,6 +21,10 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      # Requerido para que la accion se autentique como la app de GitHub,
+      # que es como publica el comentario. Sin esto el paso falla aunque el
+      # secreto este bien cargado.
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
