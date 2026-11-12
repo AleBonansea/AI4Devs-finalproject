@@ -28,13 +28,13 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Regenerar el contrato
-        run: make openapi-generate
+        run: python tasks.py openapi-generate
 
       - name: Comprobar que estaba al dia
         run: |
           if ! git diff --exit-code -- docs/api/openapi.json; then
             echo ""
             echo "::error::docs/api/openapi.json no coincide con el codigo."
-            echo "Corre 'make openapi-generate' y agrega el archivo al commit."
+            echo "Corre 'python tasks.py openapi-generate' y agrega el archivo al commit."
             exit 1
           fi

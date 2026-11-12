@@ -62,5 +62,5 @@ operations:
       - "Si un paso de la skill te estorba o no tiene sentido en este proyecto, decilo y pará. No lo resuelvas por tu cuenta: es evidencia para revisar el arnés."
   archive:
     guidance:
-      - "Antes de archivar, comprobá que docs/api/openapi.json está regenerado y que make test, make lint y make typecheck están en verde."
+      - "Antes de archivar, comprobá que docs/api/openapi.json está regenerado y que python tasks.py test, python tasks.py lint y python tasks.py typecheck están en verde."
       - "Al archivar, si la historia del backlog tenía criterios en 5-historias-de-usuario.md, reemplazalos ahí por un puntero a la spec. Una sola fuente."

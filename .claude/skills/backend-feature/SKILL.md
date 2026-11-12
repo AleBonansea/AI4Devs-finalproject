@@ -71,7 +71,7 @@ que no leyo la implementacion, y que hay un test por Scenario.
 ## 4. Ver el rojo — vos, no el subagente
 
 ```bash
-make test
+python tasks.py test
 ```
 
 Mira la salida completa, test por test:
@@ -158,22 +158,22 @@ Las dos cosas, en este orden:
 ```bash
 git add backend/tests/functional/<capability> backend/tests/conftest.py
 git ls-files -s -- backend/tests/functional/<capability> backend/tests/conftest.py | diff - .claude/tmp/congelados.txt
-make test
-make lint
-make typecheck
+python tasks.py test
+python tasks.py lint
+python tasks.py typecheck
 ```
 
 - Si el `diff` devuelve algo, **los tests se tocaron**. No importa que
   este todo en verde: ese verde no vale. Mira que cambio, revertilo y
   volve al paso 6.
-- Si `make test` tiene rojo, volve al paso 6.
+- Si `python tasks.py test` tiene rojo, volve al paso 6.
 
 ## 8. Contrato y cierre
 
 Si tocaste rutas, esquemas o modelos:
 
 ```bash
-make openapi-generate
+python tasks.py openapi-generate
 ```
 
 y el `docs/api/openapi.json` regenerado entra en el mismo commit. El CI

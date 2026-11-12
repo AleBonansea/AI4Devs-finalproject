@@ -14,8 +14,8 @@
 
 ## 4. Contrato y calidad
 
-- [ ] 4.1 Regenerar `docs/api/openapi.json` con `make openapi-generate` y comprobar que aparecen `POST /api/v1/auth/login`, `GET /api/v1/auth/yo` y el esquema de seguridad bearer, sin ninguna ruta de sonda; `make openapi-check` pasa.
-- [ ] 4.2 Correr `make test`, `make lint` y `make typecheck` en verde, con la suite completa (incluidos `test_salud.py` y `test_migracion_inicial.py`).
+- [ ] 4.1 Regenerar `docs/api/openapi.json` con `python tasks.py openapi-generate` y comprobar que aparecen `POST /api/v1/auth/login`, `GET /api/v1/auth/yo` y el esquema de seguridad bearer, sin ninguna ruta de sonda; `python tasks.py openapi-check` pasa.
+- [ ] 4.2 Correr `python tasks.py test`, `python tasks.py lint` y `python tasks.py typecheck` en verde, con la suite completa (incluidos `test_salud.py` y `test_migracion_inicial.py`).
 
 ## 5. Revisión adversarial
 

@@ -13,7 +13,7 @@ Artefacto de trabajo derivado de las fuentes. **No** es parte del PRD.
 
 **Prioridades:**
 - **Lote 1**: se construye en la Entrega 2 (11 historias, ver «Alcance de la implementación»). Tres de ellas, además, se documentan con criterios en `5-historias-de-usuario.md` para cumplir con la consigna del curso.
-- **Lote 2**: se construye después del lote 1 (10 historias). Son las que `make seed` sustituye durante el lote 1 y que el sistema necesita antes de ser productivo, más la mitigación del bloqueo disparado desde afuera (HU-UT-08), que no hace falta para las entregas académicas pero sí para salir a producción.
+- **Lote 2**: se construye después del lote 1 (10 historias). Son las que `python tasks.py seed` sustituye durante el lote 1 y que el sistema necesita antes de ser productivo, más la mitigación del bloqueo disparado desde afuera (HU-UT-08), que no hace falta para las entregas académicas pero sí para salir a producción.
 - **Should-have**: valiosa, pero no imprescindible para demostrar el sistema en esta entrega.
 - **Backlog**: necesaria para el sistema en producción, pero fuera de esta entrega académica.
 
@@ -262,7 +262,7 @@ Como Admin, quiero que nadie pueda dejar al staff afuera bloqueando cuentas desd
 
 ## Alcance de la implementación (decisión del 11/11/2026)
 
-**Hay script de datos.** `make seed` deja la temporada vigente, los usuarios de los tres roles, los grupos de los dos turnos con sus profesores y el tarifario completo. Eso cambia el tamaño del primer lote: la decisión anterior (19/10/2026) era no usar semilla, y por eso el lote tenía que armarse en cadena —sin ABM de usuarios no había con qué entrar, sin ABM de grupos no había dónde inscribir, sin ABM de tarifario no había con qué calcular—. Con semilla la cadena se corta y el primer lote puede ser la espina del producto en lugar de su andamiaje.
+**Hay script de datos.** `python tasks.py seed` deja la temporada vigente, los usuarios de los tres roles, los grupos de los dos turnos con sus profesores y el tarifario completo. Eso cambia el tamaño del primer lote: la decisión anterior (19/10/2026) era no usar semilla, y por eso el lote tenía que armarse en cadena —sin ABM de usuarios no había con qué entrar, sin ABM de grupos no había dónde inscribir, sin ABM de tarifario no había con qué calcular—. Con semilla la cadena se corta y el primer lote puede ser la espina del producto en lugar de su andamiaje.
 
 El motivo del cambio es el feedback de la Entrega 1: el lote de 20 historias era demasiado para el plazo, y el ABM de usuarios, grupos y tarifario son formularios que no ejercitan ninguna regla de negocio.
 
@@ -292,7 +292,7 @@ Once historias. Es el flujo que se demuestra de punta a punta: entrar, cargar un
 
 ### Lote 2 — el ABM que la semilla sustituye
 
-Diez historias. Nueve son las que `make seed` cubre durante el lote 1 y que el sistema necesita antes de ser productivo, porque en producción no hay semilla: alguien tiene que poder crear un usuario y configurar la temporada desde la aplicación. La décima, HU-UT-08, no la sustituye la semilla: es endurecimiento que tiene que estar antes de producción.
+Diez historias. Nueve son las que `python tasks.py seed` cubre durante el lote 1 y que el sistema necesita antes de ser productivo, porque en producción no hay semilla: alguien tiene que poder crear un usuario y configurar la temporada desde la aplicación. La décima, HU-UT-08, no la sustituye la semilla: es endurecimiento que tiene que estar antes de producción.
 
 - HU-UT-02: alta y modificación de usuarios. El ABM de profesores es este mismo, con rol Profesor.
 - HU-UT-03: baja, es decir, desactivar un usuario.
@@ -311,7 +311,7 @@ Diez historias. Nueve son las que `make seed` cubre durante el lote 1 y que el s
 
 **Puesta en marcha.** El primer Admin y la primera temporada vigente se crean al instalar el sistema (Acl. 9, 10) y no son historias de usuario. Abrir una temporada **nueva**, con la copia de grupos y los reseteos, sigue en Backlog (HU-UT-04).
 
-**Qué es y qué no es la semilla.** `make seed` es una herramienta de desarrollo y de demostración. Carga datos inventados, nunca datos reales de familias ni de alumnos, y no se ejecuta en producción. La puesta en marcha real de la temporada es el lote 2.
+**Qué es y qué no es la semilla.** `python tasks.py seed` es una herramienta de desarrollo y de demostración. Carga datos inventados, nunca datos reales de familias ni de alumnos, y no se ejecuta en producción. La puesta en marcha real de la temporada es el lote 2.
 
 ### Lote de desarrollo vs. historias documentadas
 
@@ -327,7 +327,7 @@ Las otras ocho del lote 1 se construyen igual, pero quedan listadas acá sin cri
 
 **Cambios respecto de las versiones anteriores:**
 - **12/11/2026.** HU-UT-08 se reescribe y pasa de Should-have a Lote 2. Antes pedía el bloqueo tras 5 intentos, que ahora construye HU-UT-01 al hacer cumplir Acl. 9. Al diseñar HU-UT-01 apareció que el bloqueo se puede disparar desde internet (usuarios predecibles, solo el Admin desbloquea), y la mitigación no tenía dueño. HU-UT-08 pasa a ser esa mitigación.
-- **11/11/2026.** Se incorpora el script de datos (`make seed`) y el lote de 20 se parte en dos: lote 1, la espina del dinero más asistencia (11 historias); lote 2, el ABM que la semilla sustituye (9 historias). Ninguna historia cambia de contenido y ninguna sale del alcance: solo cambia el orden. Motivo: el feedback de la Entrega 1 sobre el tamaño del lote.
+- **11/11/2026.** Se incorpora el script de datos (`python tasks.py seed`) y el lote de 20 se parte en dos: lote 1, la espina del dinero más asistencia (11 historias); lote 2, el ABM que la semilla sustituye (9 historias). Ninguna historia cambia de contenido y ninguna sale del alcance: solo cambia el orden. Motivo: el feedback de la Entrega 1 sobre el tamaño del lote.
 - El bloque de cobro (HU-CC-01 a HU-CC-03) vuelve a MVP-Entrega1.
 - HU-TAR-01 a HU-TAR-04 suben a MVP-Entrega1 como un bloque nuevo de Tarifario, antes del Cobro, porque sin datos semilla el cálculo del cargo los necesita. HU-TAR-01 incorpora los dos tipos de cargo de la temporada (Preinscripción y Abono). El ABM libre de tipos de cargo (HU-TAR-05) sigue en Backlog.
 - HU-UT-03 pasa de Backlog a MVP, como la baja del ABM.
