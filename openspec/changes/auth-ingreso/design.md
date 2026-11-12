@@ -49,8 +49,10 @@ Ninguno de los dos devuelve datos de alumnos, así que no aplica el filtro de co
 `username` se normaliza con `strip().lower()` en el propio esquema, antes de validarlo: los usuarios se generan en minúsculas (documento técnico) y el teclado del celular capitaliza la primera letra. La contraseña no se toca. Las validaciones corren sobre el valor ya normalizado, así username y contraseña se comportan igual: vacío da 422, también un username hecho solo de espacios.
 
 - `username`: largo 1 a 60, el ancho de la columna `usuario.username`. Sin caracteres de control: un NUL llegaba a Postgres, que lo rechaza, y el login público respondía 500. Es entrada malformada, como la contraseña vacía, y no un usuario inexistente: por eso 422 y no el 401 genérico.
-- `password`: largo 1 a 128. argon2 no tiene el tope de 72 bytes de bcrypt y procesa cualquier tamaño, así que sin tope una contraseña de megabytes cuesta CPU en un endpoint público. 128 deja margen de sobra para cualquier frase de paso.
-- **El límite del cuerpo de la petición es de despliegue, no de la aplicación.** FastAPI lee el cuerpo entero antes de validar, así que el `max_length` corta el costo de argon2 pero no el de recibir un cuerpo enorme. Ese tope va en la configuración de Render (o del proxy que tenga delante) al desplegar.
+- **El largo se mide después de normalizar.** El tipo `Username` de `app/schemas/auth.py` aplica `strip().lower()` en un `BeforeValidator` y recién después el `max_length`. El orden importa porque `lower()` puede alargar el texto: «İ» en minúsculas son dos caracteres, así que 31 «İ» son 62 normalizados y dan 422, mientras que medido sobre la entrada cruda pasarían. En este change es benigno, porque el login solo hace un `SELECT` y un username de 62 caracteres da 401. **HU-UT-02, que inserta usuarios, tiene que usar este mismo tipo `Username`:** si midiera antes de normalizar, el `INSERT` de 62 caracteres en una columna de 60 rompería con 500.
+- `password`: largo 1 a 128. argon2 no tiene el tope de 72 bytes de bcrypt y procesa cualquier tamaño, así que sin tope una contraseña de megabytes cuesta CPU en un endpoint público. 128 deja margen de sobra para cualquier frase de paso. **Este tope protege a argon2, no al servidor:** cuando Pydantic lo comprueba, el cuerpo ya se leyó entero y ya está en memoria.
+- **El límite del cuerpo de la petición es de despliegue, no de la aplicación.** FastAPI lee el cuerpo entero antes de validar, así que el `max_length` corta el costo de argon2 pero no el de recibir un cuerpo enorme. Ese tope va en la configuración de Render (o del proxy que tenga delante). Queda como pendiente en «Pendientes técnicos» del documento técnico.
+- **Surrogates sueltos.** Un `\ud800` escrito como escape en el JSON no se puede codificar en UTF-8. Pydantic ya lo rechaza (`string_unicode`), pero el 422 de FastAPI repetía el valor recibido en `input` y la respuesta rompía al codificarse: el login público respondía 500. Lo resuelve el manejador de «El 422 no repite lo recibido», más abajo.
 
 **Invariante: `usuario.username` se guarda siempre en minúsculas.** El login busca por igualdad exacta (`Usuario.username == entrada_normalizada`), no con `lower()` sobre la columna, para usar el índice único tal cual. Eso solo es correcto si el invariante se cumple: si la base tuviera `JPerez`, ese usuario no podría ingresar nunca y el login respondería el 401 genérico, sin ninguna pista de por qué. Hoy nada en la base lo impide. El `CHECK (username = lower(username))` lo agrega HU-UT-02, que es la que escribe usuarios; hasta entonces la semilla lo respeta, y los tests crean usuarios en minúsculas.
 
@@ -99,7 +101,11 @@ La puesta en 0 sí puede ser una asignación: con la fila bloqueada nadie más l
 
 ### Errores en castellano y con forma de FastAPI
 
-Todos los rechazos son `HTTPException` con `detail` string, que es lo que `src/lib/api.ts` ya sabe traducir. El 422 de validación queda como lo emite FastAPI.
+Todos los rechazos son `HTTPException` con `detail` string, que es lo que `src/lib/api.ts` ya sabe traducir. El 422 de validación conserva la forma de FastAPI (`detail` como lista con `loc`, `msg` y `type`), salvo el campo `input`.
+
+### El 422 no repite lo recibido
+
+Un manejador de `RequestValidationError` registrado en `app/main.py` arma el mismo 422 que FastAPI pero sin el campo `input` de cada error. Por dos motivos: el 422 del login repetía la contraseña rechazada, que así queda escrita en cualquier proxy o log que guarde respuestas, y repetir un surrogate suelto hacía romper la respuesta con 500. Es global, no solo del login: ningún endpoint necesita que le devuelvan lo que mandó, y los que reciban datos sensibles (contraseñas nuevas, datos médicos) quedan cubiertos sin acordarse. `loc` alcanza para que `src/lib/api.ts` pegue el error al lado de su campo.
 
 ### Cómo se prueba `exigir_rol` sin endpoints de negocio
 

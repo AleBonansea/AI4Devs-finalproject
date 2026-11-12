@@ -28,7 +28,7 @@ El sistema SHALL ofrecer `POST /api/v1/auth/login`, que recibe `username` y `pas
 - **THEN** la respuesta es 401
 
 ### Requirement: Pedido de ingreso malformado
-`username` se normaliza (sin espacios alrededor y en minúsculas) antes de validarse. El sistema SHALL responder 422, sin token, si `username` queda vacío después de normalizar, supera 60 caracteres o contiene un carácter de control, o si `password` está vacía o supera 128 caracteres.
+`username` se normaliza (sin espacios alrededor y en minúsculas) antes de validarse, y su largo se mide sobre el valor normalizado. El sistema SHALL responder 422, sin token, si `username` queda vacío después de normalizar, supera 60 caracteres, contiene un carácter de control o un surrogate suelto (un carácter que no se puede codificar en UTF-8), o si `password` está vacía, supera 128 caracteres o contiene un surrogate suelto.
 
 #### Scenario: Faltan datos en el pedido
 - **WHEN** se llama a `POST /api/v1/auth/login` con `{"username": "jperez", "password": ""}`
@@ -41,6 +41,39 @@ El sistema SHALL ofrecer `POST /api/v1/auth/login`, que recibe `username` y `pas
 #### Scenario: El usuario es solo espacios
 - **WHEN** se llama a `POST /api/v1/auth/login` con `{"username": "   ", "password": "Verano2026"}`
 - **THEN** la respuesta es 422 y no se emite ningún token
+
+#### Scenario: El usuario trae un surrogate suelto
+- **WHEN** se llama a `POST /api/v1/auth/login` con el cuerpo JSON `{"username": "jp\ud800erez", "password": "Verano2026"}`, con el surrogate escrito como el escape `\ud800` en el texto del JSON
+- **THEN** la respuesta es 422, no 500, y no se emite ningún token
+
+#### Scenario: El usuario de 60 caracteres ingresa
+- **GIVEN** un usuario activo cuyo `username` tiene 60 caracteres, con contraseña `Verano2026`
+- **WHEN** se llama a `POST /api/v1/auth/login` con ese `username` y `Verano2026`
+- **THEN** la respuesta es 200
+
+#### Scenario: El usuario de 61 caracteres es rechazado
+- **WHEN** se llama a `POST /api/v1/auth/login` con un `username` de 61 caracteres y `Verano2026`
+- **THEN** la respuesta es 422 y no se emite ningún token
+
+#### Scenario: La contraseña de 128 caracteres ingresa
+- **GIVEN** un usuario activo `jperez` cuya contraseña tiene 128 caracteres
+- **WHEN** se llama a `POST /api/v1/auth/login` con `jperez` y esa contraseña
+- **THEN** la respuesta es 200
+
+#### Scenario: La contraseña de 129 caracteres es rechazada
+- **GIVEN** un usuario activo `jperez`
+- **WHEN** se llama a `POST /api/v1/auth/login` con `jperez` y una contraseña de 129 caracteres
+- **THEN** la respuesta es 422 y no se emite ningún token
+
+### Requirement: El rechazo por pedido malformado no repite lo recibido
+El 422 de validación SHALL conservar la forma de FastAPI (`detail` como lista de errores con `loc`, `msg` y `type`), pero MUST NOT incluir el campo `input` ni repetir en ningún lugar del cuerpo el valor recibido. Una contraseña rechazada no vuelve en la respuesta.
+
+#### Scenario: El 422 del login no repite la contraseña
+- **GIVEN** una contraseña de 129 caracteres que empieza con `Secreta`
+- **WHEN** se llama a `POST /api/v1/auth/login` con `{"username": "jperez", "password": <esa contraseña>}`
+- **THEN** la respuesta es 422 y `detail` es una lista de errores, cada uno con `loc`, `msg` y `type`
+- **AND** el cuerpo no tiene ningún campo `input`, en ningún nivel
+- **AND** el texto del cuerpo no contiene la contraseña enviada
 
 ### Requirement: Credenciales rechazadas sin revelar la causa
 Cuando el usuario no existe, la contraseña no coincide o el usuario está desactivado, el sistema SHALL responder 401 con el mismo mensaje en los tres casos, `Usuario o contraseña incorrectos.`, sin token. La respuesta MUST NOT permitir distinguir cuál de los tres casos ocurrió.

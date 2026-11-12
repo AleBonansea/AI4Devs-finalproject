@@ -87,5 +87,6 @@ No se usa ningún gestor de tickets. Para la entrega del curso, las unidades de 
 - [ ] **Plan del workspace de Render**: Hobby o Pro (define si la recuperación de la base cubre 3 o 7 días).
 - [ ] **Región de Render**: elegir la más cercana disponible.
 - [ ] **Dominio**: registrar el nombre.
+- [ ] **Límite del tamaño del cuerpo de la petición**: configurarlo en Render o en el proxy que tenga delante. FastAPI lee el cuerpo entero antes de validar, así que los topes de los esquemas (por ejemplo, los 128 caracteres de la contraseña del login) no protegen al servidor de un cuerpo enorme. Ver el design del change `auth-ingreso`.
 - [ ] **Librería de UI**: MUI o Mantine.
 - [ ] **Gestor de issues para el proyecto real**: adoptar GitHub Issues o seguir sin gestor. No afecta a la entrega del curso.

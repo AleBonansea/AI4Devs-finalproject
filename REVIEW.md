@@ -40,6 +40,16 @@ menores, las cinco que mas valen. No seis.
 El tope no es por ahorrar. Un informe de cuarenta puntos no se lee: se
 cierra. Cinco se arreglan.
 
+## Cuando se deja de revisar
+
+El primer pase puede reabrir el change por cualquier hallazgo. **A partir
+del segundo pase, solo un hallazgo grave reabre el change.** Los menores
+se anotan en el design del change, como diferidos, y van a un change de
+seguimiento.
+
+Sin este corte, un change de auth se revisa para siempre: cada arreglo
+toca la entrada, y cada pase encuentra un borde nuevo de la entrada.
+
 ## Donde no se reporta
 
 - **Lo que ya cubre otra comprobacion.** El formato lo arregla `ruff
