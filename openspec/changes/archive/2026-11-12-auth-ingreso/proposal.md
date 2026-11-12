@@ -42,7 +42,7 @@ Ninguna: no hay specs previas.
 ## Impact
 
 - **Código nuevo**: router `app/api/v1/auth.py`, esquemas `app/schemas/auth.py`, servicio `app/services/auth.py`, dependencias en `app/core/deps.py`. Se reutilizan `hashear`, `verificar`, `crear_token` y `leer_token` de `app/core/security.py`.
-- **API**: dos rutas nuevas; `docs/api/openapi.json` se regenera.
+- **API**: dos rutas nuevas; `docs/api/openapi.json` se regenera. Además, un manejador global en `app/main.py` quita el campo `input` de todo 422 de validación, no solo del login.
 - **Dependencias de paquetes**: ninguna nueva (`pyjwt` y `pwdlib[argon2]` ya están).
 - **Esquema**: sin cambios.
 - **Historias que vienen después**: todas usan `exigir_rol` y la dependencia de usuario actual.
