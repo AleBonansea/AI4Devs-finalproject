@@ -7,19 +7,15 @@ Permite que cada persona del staff ingrese con su usuario y contraseña personal
 ## ADDED Requirements
 
 ### Requirement: Ingreso con usuario y contraseña
-El sistema SHALL ofrecer `POST /api/v1/auth/login`, que recibe `username` y `password`. Si el usuario existe, está activo, no está bloqueado y la contraseña coincide, responde 200 con un token de acceso, `token_type` igual a `bearer`, el indicador `debe_cambiar_password` y los datos públicos del usuario (id, username, nombre, apellido, rol). La respuesta MUST NOT incluir el hash de la contraseña ni el contador de intentos.
+El sistema SHALL ofrecer `POST /api/v1/auth/login`, que recibe `username` y `password`. Si el usuario existe, está activo, no está bloqueado y la contraseña coincide, responde 200 con `access_token`, `token_type` igual a `bearer` y `usuario`, con los mismos campos que `GET /api/v1/auth/yo` (id, username, nombre, apellido, rol, debe_cambiar_password). `debe_cambiar_password` va solo dentro de `usuario`. La respuesta MUST NOT incluir el hash de la contraseña ni el contador de intentos.
 
 #### Scenario: Ingreso correcto
 - **GIVEN** un usuario activo `jperez`, rol `coordinador`, con contraseña `Verano2026`, `intentos_fallidos` en 0 y `debe_cambiar_password` en false
 - **WHEN** se llama a `POST /api/v1/auth/login` con `{"username": "jperez", "password": "Verano2026"}`
 - **THEN** la respuesta es 200
-- **AND** el cuerpo trae `access_token` no vacío, `token_type` igual a `bearer`, `debe_cambiar_password` en false y `usuario.rol` igual a `coordinador`
+- **AND** el cuerpo trae `access_token` no vacío, `token_type` igual a `bearer`, `usuario.rol` igual a `coordinador` y `usuario.debe_cambiar_password` en false
+- **AND** el primer nivel del cuerpo tiene exactamente las claves `access_token`, `token_type` y `usuario`
 - **AND** el cuerpo no tiene ningún campo `password_hash`, `password_hash_anterior` ni `intentos_fallidos`, en ningún nivel
-
-#### Scenario: El token del ingreso sirve para identificarse
-- **GIVEN** un usuario activo `jperez` que acaba de ingresar y recibió un `access_token`
-- **WHEN** se llama a `GET /api/v1/auth/yo` con el encabezado `Authorization: Bearer <access_token>`
-- **THEN** la respuesta es 200 y `username` es `jperez`
 
 #### Scenario: El usuario se escribe con mayúsculas o espacios
 - **GIVEN** un usuario activo `jperez` con contraseña `Verano2026`
@@ -104,7 +100,12 @@ Un usuario activo con `intentos_fallidos` en 5 o más SHALL recibir 403 con `det
 - **THEN** la respuesta es 200 con un `access_token`
 
 ### Requirement: Identificación del usuario actual por token
-Todo endpoint protegido SHALL identificar a quien llama por el encabezado `Authorization: Bearer <token>` y releer el usuario de la base en cada petición. SHALL responder 401 si falta el token, si no es válido, si venció, si el usuario no existe o está desactivado, o si está bloqueado. `GET /api/v1/auth/yo` devuelve los datos públicos del usuario actual.
+Todo endpoint protegido SHALL identificar a quien llama por el encabezado `Authorization: Bearer <token>` y releer el usuario de la base en cada petición. SHALL responder 401 si falta el token, si no es válido, si venció, si el `sub` del token no corresponde a ningún usuario, si el usuario está desactivado o si está bloqueado. `GET /api/v1/auth/yo` devuelve los datos públicos del usuario actual y su `debe_cambiar_password`.
+
+#### Scenario: El token del ingreso sirve para identificarse
+- **GIVEN** un usuario activo `jperez` que acaba de ingresar y recibió un `access_token`
+- **WHEN** se llama a `GET /api/v1/auth/yo` con el encabezado `Authorization: Bearer <access_token>`
+- **THEN** la respuesta es 200 y `username` es `jperez`
 
 #### Scenario: Sin token
 - **WHEN** se llama a `GET /api/v1/auth/yo` sin encabezado `Authorization`
@@ -125,6 +126,11 @@ Todo endpoint protegido SHALL identificar a quien llama por el encabezado `Autho
 - **WHEN** se llama a `GET /api/v1/auth/yo` con ese token
 - **THEN** la respuesta es 401
 
+#### Scenario: Token cuyo sub no corresponde a ningún usuario
+- **GIVEN** un token firmado con la clave del sistema, con vencimiento futuro y `sub` igual a un id que no existe en la tabla `usuario`
+- **WHEN** se llama a `GET /api/v1/auth/yo` con ese token
+- **THEN** la respuesta es 401
+
 #### Scenario: Token vigente de un usuario desactivado después del ingreso
 - **GIVEN** `jperez` ingresó y recibió un `access_token`
 - **AND** después se puso `activo` en false
@@ -138,24 +144,30 @@ Todo endpoint protegido SHALL identificar a quien llama por el encabezado `Autho
 - **THEN** la respuesta es 401
 
 #### Scenario: Los datos del usuario actual no exponen secretos
-- **GIVEN** un `access_token` vigente de `jperez`, rol `profesor`
+- **GIVEN** un `access_token` vigente de `jperez`, rol `profesor`, con `debe_cambiar_password` en false
 - **WHEN** se llama a `GET /api/v1/auth/yo`
-- **THEN** la respuesta es 200 con `id`, `username`, `nombre`, `apellido` y `rol` igual a `profesor`
+- **THEN** la respuesta es 200 con `id`, `username`, `nombre`, `apellido`, `rol` igual a `profesor` y `debe_cambiar_password` en false
 - **AND** el cuerpo no tiene `password_hash`, `password_hash_anterior` ni `intentos_fallidos`
 
 ### Requirement: Cambio obligatorio de contraseña pendiente
-Un usuario con `debe_cambiar_password` en true SHALL poder ingresar y recibir su token, con `debe_cambiar_password` en true en la respuesta. Con ese token, todo endpoint protegido distinto del cambio de contraseña SHALL responder 403 con `detail` igual a `Tenés que cambiar tu contraseña antes de continuar.`
+Un usuario con `debe_cambiar_password` en true SHALL poder ingresar y recibir su token, con `usuario.debe_cambiar_password` en true en la respuesta. Con ese token, todo endpoint protegido SHALL responder 403 con `detail` igual a `Tenés que cambiar tu contraseña antes de continuar.`, salvo dos exentos: `GET /api/v1/auth/yo` y el cambio de contraseña.
 
 #### Scenario: Ingresa con el cambio pendiente
 - **GIVEN** un usuario activo `jperez` con contraseña `Verano2026` y `debe_cambiar_password` en true
 - **WHEN** se llama a `POST /api/v1/auth/login` con la contraseña `Verano2026`
-- **THEN** la respuesta es 200 con un `access_token` y `debe_cambiar_password` en true
+- **THEN** la respuesta es 200 con un `access_token` y `usuario.debe_cambiar_password` en true
 - **AND** `intentos_fallidos` de `jperez` en la base es 0
 
 #### Scenario: Con el cambio pendiente no puede hacer nada más
+- **GIVEN** un endpoint protegido declarado para los roles `admin`, `coordinador` y `profesor`
+- **AND** un `access_token` vigente de `jperez`, rol `profesor`, que tiene `debe_cambiar_password` en true
+- **WHEN** `jperez` llama a ese endpoint
+- **THEN** la respuesta es 403 con `detail` igual a `Tenés que cambiar tu contraseña antes de continuar.`
+
+#### Scenario: Con el cambio pendiente igual puede saber quién es
 - **GIVEN** un `access_token` vigente de `jperez`, que tiene `debe_cambiar_password` en true
 - **WHEN** se llama a `GET /api/v1/auth/yo` con ese token
-- **THEN** la respuesta es 403 con `detail` igual a `Tenés que cambiar tu contraseña antes de continuar.`
+- **THEN** la respuesta es 200 con `username` igual a `jperez` y `debe_cambiar_password` en true
 
 #### Scenario: Con el cambio pendiente tampoco pasa un endpoint de su rol
 - **GIVEN** un endpoint protegido declarado para el rol `admin`

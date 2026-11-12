@@ -13,7 +13,7 @@ Artefacto de trabajo derivado de las fuentes. **No** es parte del PRD.
 
 **Prioridades:**
 - **Lote 1**: se construye en la Entrega 2 (11 historias, ver «Alcance de la implementación»). Tres de ellas, además, se documentan con criterios en `5-historias-de-usuario.md` para cumplir con la consigna del curso.
-- **Lote 2**: se construye después del lote 1 (9 historias). Son las que `make seed` sustituye durante el lote 1 y que el sistema necesita antes de ser productivo.
+- **Lote 2**: se construye después del lote 1 (10 historias). Son las que `make seed` sustituye durante el lote 1 y que el sistema necesita antes de ser productivo, más la mitigación del bloqueo disparado desde afuera (HU-UT-08), que no hace falta para las entregas académicas pero sí para salir a producción.
 - **Should-have**: valiosa, pero no imprescindible para demostrar el sistema en esta entrega.
 - **Backlog**: necesaria para el sistema en producción, pero fuera de esta entrega académica.
 
@@ -239,9 +239,10 @@ Como staff, quiero que el sistema me obligue a cambiar la contraseña en el prim
 Como Admin, quiero blanquear la contraseña de un usuario, para que pueda volver a ingresar si la olvidó o si quedó bloqueado. Al blanquearla se activa el cambio obligatorio (HU-UT-06) y se desbloquea el usuario.
 *Sustento:* Acl. 9 (Acceso al sistema: blanqueo).
 
-**HU-UT-08** · `Should-have`
-Como Admin, quiero que un usuario quede bloqueado después de 5 intentos de ingreso fallidos seguidos, hasta que yo le blanquee la contraseña (HU-UT-07), para que nadie pueda adivinar una contraseña probando.
-*Sustento:* Acl. 9 (Acceso al sistema: bloqueo).
+**HU-UT-08** · `Lote 2`
+Como Admin, quiero que nadie pueda dejar al staff afuera bloqueando cuentas desde internet, para que el bloqueo por intentos fallidos proteja las contraseñas sin convertirse en una forma de sacar del sistema a quien sea. La mitigación es un límite de intentos por origen, un desbloqueo automático pasado un tiempo, o ambos, según lo que se responda en la pregunta abierta.
+*Sustento:* el riesgo «Bloqueo disparado desde afuera» del design del change `auth-ingreso`, y la pregunta abierta «Desbloqueo de una cuenta bloqueada» de `aclaraciones-cliente.md`. El bloqueo en sí (5 intentos fallidos seguidos, hasta el blanqueo de HU-UT-07) lo construye HU-UT-01, según Acl. 9; esta historia no lo vuelve a hacer.
+*No bloquea las entregas académicas, pero sí la puesta en producción: el sistema no sale con datos de familias reales sin esto.*
 
 ---
 
@@ -256,8 +257,8 @@ Como Admin, quiero que un usuario quede bloqueado después de 5 intentos de ingr
 | Cuenta corriente familiar | 6 | 3 | 0 | 2 | 1 |
 | Tesorería general | 3 | 1 | 0 | 2 | 0 |
 | Canon al club | 5 | 0 | 0 | 0 | 5 |
-| Usuarios y temporadas | 8 | 1 | 4 | 1 | 2 |
-| **Total** | **49** | **11** | **9** | **16** | **13** |
+| Usuarios y temporadas | 8 | 1 | 5 | 0 | 2 |
+| **Total** | **49** | **11** | **10** | **15** | **13** |
 
 ## Alcance de la implementación (decisión del 11/11/2026)
 
@@ -291,12 +292,13 @@ Once historias. Es el flujo que se demuestra de punta a punta: entrar, cargar un
 
 ### Lote 2 — el ABM que la semilla sustituye
 
-Nueve historias. Son las que `make seed` cubre durante el lote 1 y que el sistema necesita antes de ser productivo, porque en producción no hay semilla: alguien tiene que poder crear un usuario y configurar la temporada desde la aplicación.
+Diez historias. Nueve son las que `make seed` cubre durante el lote 1 y que el sistema necesita antes de ser productivo, porque en producción no hay semilla: alguien tiene que poder crear un usuario y configurar la temporada desde la aplicación. La décima, HU-UT-08, no la sustituye la semilla: es endurecimiento que tiene que estar antes de producción.
 
 - HU-UT-02: alta y modificación de usuarios. El ABM de profesores es este mismo, con rol Profesor.
 - HU-UT-03: baja, es decir, desactivar un usuario.
 - HU-UT-06: cambio obligatorio de contraseña en el primer ingreso y después de un blanqueo.
 - HU-UT-07: blanqueo de contraseña por un Admin.
+- HU-UT-08: que nadie pueda dejar al staff afuera bloqueando cuentas desde internet. No bloquea las entregas académicas, pero sí la puesta en producción.
 - HU-GA-01: ABM de grupos.
 - HU-GA-02: asignar profesores a grupos.
 - HU-TAR-01: tarifa base por turno y modalidad, y los tipos de cargo Preinscripción y Abono.
@@ -324,6 +326,7 @@ Son dos cosas distintas y no tienen por qué coincidir:
 Las otras ocho del lote 1 se construyen igual, pero quedan listadas acá sin criterios.
 
 **Cambios respecto de las versiones anteriores:**
+- **12/11/2026.** HU-UT-08 se reescribe y pasa de Should-have a Lote 2. Antes pedía el bloqueo tras 5 intentos, que ahora construye HU-UT-01 al hacer cumplir Acl. 9. Al diseñar HU-UT-01 apareció que el bloqueo se puede disparar desde internet (usuarios predecibles, solo el Admin desbloquea), y la mitigación no tenía dueño. HU-UT-08 pasa a ser esa mitigación.
 - **11/11/2026.** Se incorpora el script de datos (`make seed`) y el lote de 20 se parte en dos: lote 1, la espina del dinero más asistencia (11 historias); lote 2, el ABM que la semilla sustituye (9 historias). Ninguna historia cambia de contenido y ninguna sale del alcance: solo cambia el orden. Motivo: el feedback de la Entrega 1 sobre el tamaño del lote.
 - El bloque de cobro (HU-CC-01 a HU-CC-03) vuelve a MVP-Entrega1.
 - HU-TAR-01 a HU-TAR-04 suben a MVP-Entrega1 como un bloque nuevo de Tarifario, antes del Cobro, porque sin datos semilla el cálculo del cargo los necesita. HU-TAR-01 incorpora los dos tipos de cargo de la temporada (Preinscripción y Abono). El ABM libre de tipos de cargo (HU-TAR-05) sigue en Backlog.

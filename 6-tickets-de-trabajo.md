@@ -117,7 +117,7 @@ Un test adicional comprueba que `v_cuenta_corriente` devuelve 85000.00 para una 
 Implementar `POST /api/v1/cargos` tal como está especificado en `4-especificaciones-de-la-api.md`, incluido `simular=true`. El cliente solo dice **qué** se cobra. La API resuelve la familia, la categoría, la cantidad de hijos, la tarifa y el porcentaje, calcula el monto y lo guarda congelado en el cargo.
 
 **Estructura:**
-- **Router** en `app/api/v1/cargos.py`. Declara el rol con una dependencia de FastAPI (`require_rol("admin")`), como pide el documento técnico.
+- **Router** en `app/api/v1/cargos.py`. Declara el rol con una dependencia de FastAPI (`exigir_rol("admin")`), como pide el documento técnico.
 - **Esquemas Pydantic:** `CargoCreate`, `CargoCalculo`, `Cargo` y `CargoRegistrado`, con los mismos nombres y campos que la especificación.
 - **Motor de cálculo** en `app/services/calculo_cargo.py`. Es una **función pura**: recibe los datos ya resueltos (tipo de cargo, tarifa base, categoría, modalidad, cantidad de hijos y porcentajes) y devuelve `monto_base`, `porcentaje_aplicado` y `monto_total`. No toca la base, y por eso se puede testear con tablas de casos.
 - **Servicio** en `app/services/cargos.py`. Resuelve los datos desde la base, llama al motor e inserta el cargo. Con `simular=true` no inserta nada.
