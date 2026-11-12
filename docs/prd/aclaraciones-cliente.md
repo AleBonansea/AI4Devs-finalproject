@@ -181,7 +181,8 @@ Fuente complementaria de `prd-escuelita-de-verano.md`. Recoge las respuestas a l
 
 ## Preguntas abiertas
 
-No hay preguntas abiertas.
+Abiertas:
+- **Desbloqueo de una cuenta bloqueada** (sección 9): ¿una cuenta bloqueada se desbloquea sola después de un rato, o sigue dependiendo de que un Admin le blanquee la contraseña, sabiendo que cualquiera puede bloquearla desde internet? Los nombres de usuario son predecibles (inicial + apellido) y el ingreso es público, así que con 5 intentos se puede dejar afuera a cualquier persona del staff, incluidos todos los Admin. La sección 9 dice que depende del Admin, pero se decidió sin este riesgo a la vista. Mientras no se responda rige la sección 9; la mitigación se resuelve con HU-UT-08.
 
 Resueltas:
 - **Grupos por temporada y copia de grupos:** sección 4.

@@ -1,0 +1,4 @@
+# El contrato se genera y se compara byte a byte en el CI (openapi-check).
+# Sin esto depende de core.autocrlf de cada quien: con CRLF en el repositorio,
+# la comprobacion falla siempre en Linux.
+docs/api/openapi.json text eol=lf

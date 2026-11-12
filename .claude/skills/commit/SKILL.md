@@ -39,7 +39,7 @@ se puede revertir solo.
 Si se toco backend:
 
 ```bash
-make test && make lint && make typecheck
+python tasks.py test && python tasks.py lint && python tasks.py typecheck
 ```
 
 Si se tocaron rutas, esquemas o modelos, `docs/api/openapi.json`

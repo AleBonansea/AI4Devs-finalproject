@@ -16,21 +16,23 @@ Sistema de administración para la escuelita de verano del club sede: gestiona f
 
 ## Comandos
 
-Todo con `make` desde la raíz. `pytest`, `alembic` y `uv`/`pip` se ejecutan dentro de `backend/`; `npm` dentro de `frontend/`.
+Todo con `python tasks.py <tarea>` desde la raíz. `python tasks.py` sola lista las tareas.
+
+No es un `Makefile` porque `make` no viene con Windows, que es donde se programa esto: todo comando documentado que no se puede correr es una regla que no se cumple. El lanzador no tiene dependencias propias y las resuelve del entorno virtual de `backend/`. `pytest`, `alembic` y `uv`/`pip` se ejecutan dentro de `backend/`; `npm` dentro de `frontend/`.
 
 | Qué | Comando |
 |---|---|
-| Levantar todo en local | `make up` |
-| Instalar dependencias | `make install` |
-| Tests del backend | `make test` |
+| Levantar todo en local | `python tasks.py up` |
+| Instalar dependencias | `python tasks.py install` |
+| Tests del backend | `python tasks.py test` |
 | Un solo test | `cd backend && pytest tests/functional/<archivo>.py::<test> -x` |
-| Lint y formato del backend | `make lint` (ruff check + ruff format) |
-| Tipos del backend | `make typecheck` (mypy) |
+| Lint y formato del backend | `python tasks.py lint` (ruff check + ruff format) |
+| Tipos del backend | `python tasks.py typecheck` (mypy) |
 | Nueva migración | `cd backend && alembic revision --autogenerate -m "<mensaje>"` |
-| Aplicar migraciones | `make migrate` |
-| Datos de ejemplo | `make seed` |
-| Regenerar el contrato OpenAPI | `make openapi-generate` |
-| Comprobar que el contrato está al día | `make openapi-check` |
+| Aplicar migraciones | `python tasks.py migrate` |
+| Datos de ejemplo | `python tasks.py seed` |
+| Regenerar el contrato OpenAPI | `python tasks.py openapi-generate` |
+| Comprobar que el contrato está al día | `python tasks.py openapi-check` |
 | Frontend en desarrollo | `cd frontend && npm run dev` |
 | Lint y build del frontend | `cd frontend && npm run lint && npm run build` |
 
@@ -209,7 +211,7 @@ Los datos se conservan entre temporadas: no se borra nada.
 2. **El commit sí es por petición**: al cerrar cada una, usar la skill `/commit`.
 3. **Toda unidad de trabajo es un change de OpenSpec.** Arranca con `/openspec-propose`, se construye con `/openspec-apply-change`, se comprueba con `/openspec-verify-change` y se cierra con `/openspec-archive-change`, que funde el delta en la spec. No se escribe código de producción fuera de un change: sin spec no hay contra qué escribir el test.
 4. **Dentro del change, cada tarea de backend usa la skill `backend-feature`** y cada pieza de interfaz usa `frontend-feature`, aunque nadie lo pida. Definen el orden tests → rojo → congelar → implementar → verde.
-5. **Un cambio que toque rutas, esquemas o modelos se cierra en el mismo commit con `docs/api/openapi.json` regenerado** (`make openapi-generate`). El CI lo comprueba.
+5. **Un cambio que toque rutas, esquemas o modelos se cierra en el mismo commit con `docs/api/openapi.json` regenerado** (`python tasks.py openapi-generate`). El CI lo comprueba.
 6. **El pase del subagente `adversarial-reviewer` va una sola vez, al terminar la change**, antes de abrir el pull request. No al cerrar cada tarea.
 7. **Los pull requests se abren dentro de este fork**, de `feat/*` hacia la rama de entrega. Ahí corre el revisor automático; en los PR hacia el repositorio de LIDR no corre, porque un fork no recibe los secretos.
 8. Todo en español: código comentado en español, mensajes de error en español, nombres de dominio en español (`familia`, `cargo`, `tarifa`).

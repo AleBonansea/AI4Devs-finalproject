@@ -13,7 +13,7 @@ Artefacto de trabajo derivado de las fuentes. **No** es parte del PRD.
 
 **Prioridades:**
 - **Lote 1**: se construye en la Entrega 2 (11 historias, ver «Alcance de la implementación»). Tres de ellas, además, se documentan con criterios en `5-historias-de-usuario.md` para cumplir con la consigna del curso.
-- **Lote 2**: se construye después del lote 1 (9 historias). Son las que `make seed` sustituye durante el lote 1 y que el sistema necesita antes de ser productivo.
+- **Lote 2**: se construye después del lote 1 (10 historias). Son las que `python tasks.py seed` sustituye durante el lote 1 y que el sistema necesita antes de ser productivo, más la mitigación del bloqueo disparado desde afuera (HU-UT-08), que no hace falta para las entregas académicas pero sí para salir a producción.
 - **Should-have**: valiosa, pero no imprescindible para demostrar el sistema en esta entrega.
 - **Backlog**: necesaria para el sistema en producción, pero fuera de esta entrega académica.
 
@@ -239,9 +239,10 @@ Como staff, quiero que el sistema me obligue a cambiar la contraseña en el prim
 Como Admin, quiero blanquear la contraseña de un usuario, para que pueda volver a ingresar si la olvidó o si quedó bloqueado. Al blanquearla se activa el cambio obligatorio (HU-UT-06) y se desbloquea el usuario.
 *Sustento:* Acl. 9 (Acceso al sistema: blanqueo).
 
-**HU-UT-08** · `Should-have`
-Como Admin, quiero que un usuario quede bloqueado después de 5 intentos de ingreso fallidos seguidos, hasta que yo le blanquee la contraseña (HU-UT-07), para que nadie pueda adivinar una contraseña probando.
-*Sustento:* Acl. 9 (Acceso al sistema: bloqueo).
+**HU-UT-08** · `Lote 2`
+Como Admin, quiero que nadie pueda dejar al staff afuera bloqueando cuentas desde internet, para que el bloqueo por intentos fallidos proteja las contraseñas sin convertirse en una forma de sacar del sistema a quien sea. La mitigación es un límite de intentos por origen, un desbloqueo automático pasado un tiempo, o ambos, según lo que se responda en la pregunta abierta.
+*Sustento:* el riesgo «Bloqueo disparado desde afuera» del design del change `auth-ingreso`, y la pregunta abierta «Desbloqueo de una cuenta bloqueada» de `aclaraciones-cliente.md`. El bloqueo en sí (5 intentos fallidos seguidos, hasta el blanqueo de HU-UT-07) lo construye HU-UT-01, según Acl. 9; esta historia no lo vuelve a hacer.
+*No bloquea las entregas académicas, pero sí la puesta en producción: el sistema no sale con datos de familias reales sin esto.*
 
 ---
 
@@ -256,12 +257,12 @@ Como Admin, quiero que un usuario quede bloqueado después de 5 intentos de ingr
 | Cuenta corriente familiar | 6 | 3 | 0 | 2 | 1 |
 | Tesorería general | 3 | 1 | 0 | 2 | 0 |
 | Canon al club | 5 | 0 | 0 | 0 | 5 |
-| Usuarios y temporadas | 8 | 1 | 4 | 1 | 2 |
-| **Total** | **49** | **11** | **9** | **16** | **13** |
+| Usuarios y temporadas | 8 | 1 | 5 | 0 | 2 |
+| **Total** | **49** | **11** | **10** | **15** | **13** |
 
 ## Alcance de la implementación (decisión del 11/11/2026)
 
-**Hay script de datos.** `make seed` deja la temporada vigente, los usuarios de los tres roles, los grupos de los dos turnos con sus profesores y el tarifario completo. Eso cambia el tamaño del primer lote: la decisión anterior (19/10/2026) era no usar semilla, y por eso el lote tenía que armarse en cadena —sin ABM de usuarios no había con qué entrar, sin ABM de grupos no había dónde inscribir, sin ABM de tarifario no había con qué calcular—. Con semilla la cadena se corta y el primer lote puede ser la espina del producto en lugar de su andamiaje.
+**Hay script de datos.** `python tasks.py seed` deja la temporada vigente, los usuarios de los tres roles, los grupos de los dos turnos con sus profesores y el tarifario completo. Eso cambia el tamaño del primer lote: la decisión anterior (19/10/2026) era no usar semilla, y por eso el lote tenía que armarse en cadena —sin ABM de usuarios no había con qué entrar, sin ABM de grupos no había dónde inscribir, sin ABM de tarifario no había con qué calcular—. Con semilla la cadena se corta y el primer lote puede ser la espina del producto en lugar de su andamiaje.
 
 El motivo del cambio es el feedback de la Entrega 1: el lote de 20 historias era demasiado para el plazo, y el ABM de usuarios, grupos y tarifario son formularios que no ejercitan ninguna regla de negocio.
 
@@ -289,14 +290,49 @@ Once historias. Es el flujo que se demuestra de punta a punta: entrar, cargar un
 
 **Dónde está el riesgo.** De las once, dos concentran casi todo: HU-TAR-04, el cálculo, y HU-CC-01, el cargo. Ahí viven el porcentaje único no acumulado, el tramo que alcanza a todos los hijos, el conteo de hermanos por turno y la persistencia del cálculo en el cargo. El resto son altas y consultas. El tiempo de revisión se reparte en consecuencia.
 
+### Plan de changes del lote 1
+
+Las historias dicen **qué** hay que construir; esta tabla dice **en qué orden y agrupadas cómo**. Cada fila es un change de OpenSpec: se propone con `/openspec-propose`, se construye con `/openspec-apply-change` y se cierra con `verify` y `archive`.
+
+| # | Change | Historias | Qué queda funcionando al cerrarlo |
+|---|---|---|---|
+| 1 | `auth-ingreso` | HU-UT-01 (backend) | Entrar por la API, saber quién llama y declarar qué rol usa cada endpoint |
+| 2 | `tarifario-y-semilla` | — (infraestructura) | Las tablas de grupos y tarifario, y `python tasks.py seed` cargando una temporada completa |
+| 3 | `pantalla-de-ingreso` | HU-UT-01 (frontend) | Entrar desde el navegador |
+| 4 | `familias-y-alumnos` | HU-AF-02, HU-AF-04, HU-AF-03, HU-AF-01 | Cargar una familia con su categoría, su tutor y un hijo inscripto en un grupo |
+| 5 | `asistencia` | HU-GA-04 | Tomar asistencia por grupo, día y turno |
+| 6 | `cobro` | HU-TAR-04, HU-CC-01 | Registrar un cargo con su cálculo de tarifa y descuento |
+| 7 | `cuenta-corriente` | HU-CC-02, HU-CC-03, HU-TES-01 | Pagar en cuotas, ver el saldo de la familia y el ingreso en tesorería |
+
+**Del 4 en adelante, cada change incluye su pantalla.** Un change es una tajada vertical —modelo, API y pantalla— y no una capa. Así cada uno se puede demostrar solo, que es lo que pide la Entrega 2: «el flujo principal operativo».
+
+#### Por qué este orden
+
+Las tres razones que lo determinan, por si hay que replanificar:
+
+1. **Primero lo que desbloquea al resto.** El change 2 no tiene historias: son las tablas que la semilla llena y el script que las llena. Sin eso no hay con qué entrar, dónde inscribir ni con qué calcular, y los changes 4 a 7 no se pueden demostrar. Un change técnico sin historia es legítimo cuando desbloquea a otros; lo que no es legítimo es que agregue comportamiento que nadie pidió.
+2. **Las dependencias de datos mandan.** Un pago necesita un cargo (7 después de 6); un cargo necesita un alumno inscripto y un tarifario (6 después de 4 y de 2); una pantalla de ingreso necesita usuarios (3 después de 2).
+3. **Lo riesgoso, ni primero ni último.** El cálculo del cargo (change 6) concentra casi todo el riesgo del sistema. Va cuando el arnés ya está rodado y todavía queda tiempo para arreglar lo que aparezca. Por la misma razón el change 3 es chico: es el estreno de `frontend-feature`, que nunca corrió, y conviene estrenarla en una pantalla sin reglas de negocio.
+
+#### Cómo arrancar el que sigue
+
+Cuando un change está archivado, el siguiente arranca así:
+
+```
+/openspec-propose <nombre del change de la tabla>: <las historias que cubre>
+```
+
+El `config.yaml` de OpenSpec ya aporta el contexto: las fuentes de verdad, las reglas que ningún change puede contradecir y lo que cada artefacto tiene que incluir.
+
 ### Lote 2 — el ABM que la semilla sustituye
 
-Nueve historias. Son las que `make seed` cubre durante el lote 1 y que el sistema necesita antes de ser productivo, porque en producción no hay semilla: alguien tiene que poder crear un usuario y configurar la temporada desde la aplicación.
+Diez historias. Nueve son las que `python tasks.py seed` cubre durante el lote 1 y que el sistema necesita antes de ser productivo, porque en producción no hay semilla: alguien tiene que poder crear un usuario y configurar la temporada desde la aplicación. La décima, HU-UT-08, no la sustituye la semilla: es endurecimiento que tiene que estar antes de producción.
 
 - HU-UT-02: alta y modificación de usuarios. El ABM de profesores es este mismo, con rol Profesor.
 - HU-UT-03: baja, es decir, desactivar un usuario.
 - HU-UT-06: cambio obligatorio de contraseña en el primer ingreso y después de un blanqueo.
 - HU-UT-07: blanqueo de contraseña por un Admin.
+- HU-UT-08: que nadie pueda dejar al staff afuera bloqueando cuentas desde internet. No bloquea las entregas académicas, pero sí la puesta en producción.
 - HU-GA-01: ABM de grupos.
 - HU-GA-02: asignar profesores a grupos.
 - HU-TAR-01: tarifa base por turno y modalidad, y los tipos de cargo Preinscripción y Abono.
@@ -309,7 +345,7 @@ Nueve historias. Son las que `make seed` cubre durante el lote 1 y que el sistem
 
 **Puesta en marcha.** El primer Admin y la primera temporada vigente se crean al instalar el sistema (Acl. 9, 10) y no son historias de usuario. Abrir una temporada **nueva**, con la copia de grupos y los reseteos, sigue en Backlog (HU-UT-04).
 
-**Qué es y qué no es la semilla.** `make seed` es una herramienta de desarrollo y de demostración. Carga datos inventados, nunca datos reales de familias ni de alumnos, y no se ejecuta en producción. La puesta en marcha real de la temporada es el lote 2.
+**Qué es y qué no es la semilla.** `python tasks.py seed` es una herramienta de desarrollo y de demostración. Carga datos inventados, nunca datos reales de familias ni de alumnos, y no se ejecuta en producción. La puesta en marcha real de la temporada es el lote 2.
 
 ### Lote de desarrollo vs. historias documentadas
 
@@ -324,7 +360,8 @@ Son dos cosas distintas y no tienen por qué coincidir:
 Las otras ocho del lote 1 se construyen igual, pero quedan listadas acá sin criterios.
 
 **Cambios respecto de las versiones anteriores:**
-- **11/11/2026.** Se incorpora el script de datos (`make seed`) y el lote de 20 se parte en dos: lote 1, la espina del dinero más asistencia (11 historias); lote 2, el ABM que la semilla sustituye (9 historias). Ninguna historia cambia de contenido y ninguna sale del alcance: solo cambia el orden. Motivo: el feedback de la Entrega 1 sobre el tamaño del lote.
+- **12/11/2026.** HU-UT-08 se reescribe y pasa de Should-have a Lote 2. Antes pedía el bloqueo tras 5 intentos, que ahora construye HU-UT-01 al hacer cumplir Acl. 9. Al diseñar HU-UT-01 apareció que el bloqueo se puede disparar desde internet (usuarios predecibles, solo el Admin desbloquea), y la mitigación no tenía dueño. HU-UT-08 pasa a ser esa mitigación.
+- **11/11/2026.** Se incorpora el script de datos (`python tasks.py seed`) y el lote de 20 se parte en dos: lote 1, la espina del dinero más asistencia (11 historias); lote 2, el ABM que la semilla sustituye (9 historias). Ninguna historia cambia de contenido y ninguna sale del alcance: solo cambia el orden. Motivo: el feedback de la Entrega 1 sobre el tamaño del lote.
 - El bloque de cobro (HU-CC-01 a HU-CC-03) vuelve a MVP-Entrega1.
 - HU-TAR-01 a HU-TAR-04 suben a MVP-Entrega1 como un bloque nuevo de Tarifario, antes del Cobro, porque sin datos semilla el cálculo del cargo los necesita. HU-TAR-01 incorpora los dos tipos de cargo de la temporada (Preinscripción y Abono). El ABM libre de tipos de cargo (HU-TAR-05) sigue en Backlog.
 - HU-UT-03 pasa de Backlog a MVP, como la baja del ABM.

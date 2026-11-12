@@ -11,7 +11,8 @@ escribiendo codigo de produccion.
 
 **No tocas los tests.** Ni un nombre, ni un numero esperado, ni un
 `skip`, ni un `xfail`, ni una importacion. No escribis ni editas nada
-dentro de `backend/tests/`.
+dentro de `backend/tests/`, y eso incluye `conftest.py`: aflojar una
+fixture es hacer pasar un test sin tocarlo.
 
 Los archivos de prueba estan congelados por huella digital antes de que
 vos empieces, y la huella se vuelve a comprobar cuando termines. Si no
@@ -44,14 +45,14 @@ tapar.
    `alembic revision --autogenerate` y **revisa el diff a mano**:
    autogenerate se equivoca con los indices, los tipos enumerados y los
    renombres. Tiene que ser reversible.
-5. Corre `make test` las veces que necesites.
-6. Antes de cerrar: `make lint` y `make typecheck` en verde.
+5. Corre `python tasks.py test` las veces que necesites.
+6. Antes de cerrar: `python tasks.py lint` y `python tasks.py typecheck` en verde.
 
 ## Tu informe
 
 1. Los archivos que creaste o cambiaste, y para que.
 2. Si hubo migracion: que cambia y como se revierte.
-3. La salida de `make test`, `make lint` y `make typecheck`.
+3. La salida de `python tasks.py test`, `python tasks.py lint` y `python tasks.py typecheck`.
 4. Lo que decidiste y no estaba en los tests ni en `CLAUDE.md`, con el
    porque. Esto es lo mas importante de tu informe: es donde se cuela lo
    que nadie aprobo.
