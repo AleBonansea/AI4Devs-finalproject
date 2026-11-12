@@ -34,6 +34,32 @@
               }
             }
           },
+          "401": {
+            "description": "Usuario o contraseña incorrectos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Usuario o contraseña incorrectos."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Usuario bloqueado. Pedile a un Admin que blanquee tu contraseña.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Usuario bloqueado. Pedile a un Admin que blanquee tu contraseña."
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -61,6 +87,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UsuarioActual"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Sesión inválida o vencida."
                 }
               }
             }
@@ -156,6 +195,20 @@
           "usuario"
         ],
         "title": "LoginRespuesta"
+      },
+      "MensajeError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "MensajeError",
+        "description": "Un rechazo con `detail` en castellano, que src/lib/api.ts muestra tal\ncual."
       },
       "RolUsuario": {
         "type": "string",
