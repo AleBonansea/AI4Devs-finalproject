@@ -7,6 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.db import obtener_sesion
+from app.core.deps import obtener_usuario_actual
+from app.models.usuario import Usuario
 from app.schemas.auth import LoginEntrada, LoginRespuesta, UsuarioActual
 from app.services.auth import CredencialesInvalidas, UsuarioBloqueado, ingresar
 
@@ -35,3 +37,10 @@ def login(
         access_token=ingreso.token,
         usuario=UsuarioActual.model_validate(ingreso.usuario),
     )
+
+
+@router.get("/yo", response_model=UsuarioActual)
+def yo(usuario: Annotated[Usuario, Depends(obtener_usuario_actual)]) -> UsuarioActual:
+    # Exento del cambio de contrasena pendiente: el frontend lo necesita para
+    # saber que tiene que mandar a la pantalla de cambio.
+    return UsuarioActual.model_validate(usuario)

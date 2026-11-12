@@ -6,7 +6,7 @@
 
 ## 2. Usuario actual
 
-- [ ] 2.1 Con la skill `backend-feature`, construir `obtener_usuario_actual` en `app/core/deps.py` y `GET /api/v1/auth/yo` con respuesta `UsuarioActual`, según el requirement «Identificación del usuario actual por token» y el Scenario «Con el cambio pendiente igual puede saber quién es» de `specs/auth/spec.md` (10 Scenarios). Los tokens vencidos, los firmados con otra clave y los de `sub` inexistente se fabrican en el test con PyJWT. Tests en `backend/tests/functional/auth/test_usuario_actual.py`; se verifica con `pytest` de ese archivo en verde tras el rojo.
+- [x] 2.1 Con la skill `backend-feature`, construir `obtener_usuario_actual` en `app/core/deps.py` y `GET /api/v1/auth/yo` con respuesta `UsuarioActual`, según el requirement «Identificación del usuario actual por token» y el Scenario «Con el cambio pendiente igual puede saber quién es» de `specs/auth/spec.md` (10 Scenarios). Los tokens vencidos, los firmados con otra clave y los de `sub` inexistente se fabrican en el test con PyJWT. Tests en `backend/tests/functional/auth/test_usuario_actual.py`; se verifica con `pytest` de ese archivo en verde tras el rojo.
 
 ## 3. Cambio pendiente y declaración de roles
 
