@@ -10,7 +10,7 @@
 
 ## 3. Cambio pendiente y declaración de roles
 
-- [ ] 3.1 Con la skill `backend-feature`, construir `usuario_habilitado` y `exigir_rol(*roles)` en `app/core/deps.py` según el requirement «Declaración de roles por endpoint» y los Scenarios «Con el cambio pendiente no puede hacer nada más» y «Con el cambio pendiente tampoco pasa un endpoint de su rol» (6 Scenarios). Los tests montan un router de sonda en una app de FastAPI propia del test (ver design, «Cómo se prueba `exigir_rol`»), sin agregar rutas a la aplicación real. Tests en `backend/tests/functional/auth/test_roles.py`; se verifica con `pytest` de ese archivo en verde tras el rojo.
+- [x] 3.1 Con la skill `backend-feature`, construir `usuario_habilitado` y `exigir_rol(*roles)` en `app/core/deps.py` según el requirement «Declaración de roles por endpoint» y los Scenarios «Con el cambio pendiente no puede hacer nada más» y «Con el cambio pendiente tampoco pasa un endpoint de su rol» (6 Scenarios). Los tests montan un router de sonda en una app de FastAPI propia del test (ver design, «Cómo se prueba `exigir_rol`»), sin agregar rutas a la aplicación real. Tests en `backend/tests/functional/auth/test_roles.py`; se verifica con `pytest` de ese archivo en verde tras el rojo.
 
 ## 4. Contrato y calidad
 

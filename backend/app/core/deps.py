@@ -5,6 +5,7 @@ de la base en cada peticion, para que desactivarlo o bloquearlo corte su
 sesion en el acto y no recien cuando el token venza.
 """
 
+from collections.abc import Callable
 from typing import Annotated
 
 import jwt
@@ -14,9 +15,11 @@ from sqlalchemy.orm import Session
 
 from app.core.db import obtener_sesion
 from app.core.security import leer_token
-from app.models.usuario import Usuario
+from app.models.usuario import RolUsuario, Usuario
 
 MENSAJE_SESION_INVALIDA = "Sesión inválida o vencida."
+MENSAJE_CAMBIO_PENDIENTE = "Tenés que cambiar tu contraseña antes de continuar."
+MENSAJE_SIN_PERMISO = "No tenés permiso para esta operación."
 
 # auto_error=False: sin token, HTTPBearer devolveria su propio error con otro
 # mensaje. Asi el 401 es uno solo y lo arma esta dependencia.
@@ -58,3 +61,41 @@ def obtener_usuario_actual(
     if usuario is None or not usuario.activo or usuario.bloqueado:
         raise _sesion_invalida()
     return usuario
+
+
+def usuario_habilitado(
+    usuario: Annotated[Usuario, Depends(obtener_usuario_actual)],
+) -> Usuario:
+    """El usuario del token, siempre que no tenga el cambio de contraseña
+    pendiente. Va encadenada despues de `obtener_usuario_actual`, asi el 401
+    gana a este 403.
+    """
+    if usuario.debe_cambiar_password:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=MENSAJE_CAMBIO_PENDIENTE,
+        )
+    return usuario
+
+
+def exigir_rol(*roles: RolUsuario) -> Callable[[Usuario], Usuario]:
+    """Fabrica de la dependencia que deja pasar solo a los roles declarados.
+
+    Va sobre `usuario_habilitado`: un usuario con el cambio pendiente recibe
+    ese 403 antes que el de rol, y no se entera de que roles usa el endpoint.
+    Sirve como parametro (`Annotated[Usuario, Depends(exigir_rol(...))]`) o
+    en `dependencies=[Depends(exigir_rol(...))]` del decorador.
+    """
+    permitidos = frozenset(roles)
+
+    def _verificar_rol(
+        usuario: Annotated[Usuario, Depends(usuario_habilitado)],
+    ) -> Usuario:
+        if usuario.rol not in permitidos:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=MENSAJE_SIN_PERMISO,
+            )
+        return usuario
+
+    return _verificar_rol
