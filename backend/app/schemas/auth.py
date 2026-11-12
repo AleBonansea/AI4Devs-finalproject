@@ -24,6 +24,15 @@ def _sin_caracteres_de_control(valor: str) -> str:
     return valor
 
 
+def _sin_surrogates(valor: str) -> str:
+    # FastAPI decodifica el cuerpo con json.loads, que acepta un surrogate
+    # suelto escrito como escape, y Pydantic valida el str ya decodificado
+    # sin rechazarlo. Llegaba a Postgres y el login respondia 500.
+    if any(unicodedata.category(c) == "Cs" for c in valor):
+        raise ValueError("El texto tiene un caracter invalido.")
+    return valor
+
+
 # Orden: BeforeValidator (normaliza) -> largo de Field -> AfterValidator.
 # El largo se mide sobre el valor ya normalizado. 60 es el ancho de la
 # columna usuario.username.
@@ -32,6 +41,7 @@ Username = Annotated[
     BeforeValidator(_normalizar_username),
     Field(min_length=1, max_length=60),
     AfterValidator(_sin_caracteres_de_control),
+    AfterValidator(_sin_surrogates),
 ]
 
 
@@ -39,7 +49,7 @@ class LoginEntrada(BaseModel):
     # JSON y no formulario OAuth2: src/lib/api.ts habla JSON en todo lo demas.
     username: Username
     # Sin normalizar. El tope acota el costo de argon2 en un endpoint publico.
-    password: str = Field(min_length=1, max_length=128)
+    password: Annotated[str, Field(min_length=1, max_length=128), AfterValidator(_sin_surrogates)]
 
 
 class UsuarioActual(BaseModel):

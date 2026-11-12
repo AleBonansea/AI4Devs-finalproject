@@ -3,7 +3,8 @@
 Un test por Scenario de la spec delta
 `openspec/changes/auth-ingreso/specs/auth/spec.md`, requirements:
 - Ingreso con usuario y contraseña
-- Pedido de ingreso malformado
+- Pedido de ingreso malformado (los límites de largo y el surrogate, tarea 5.5)
+- El rechazo por pedido malformado no repite lo recibido (tarea 5.5)
 - Credenciales rechazadas sin revelar la causa
 - Contador de intentos fallidos
 - Usuario bloqueado no ingresa
@@ -140,6 +141,98 @@ def test_el_usuario_de_solo_espacios_responde_422_sin_token(cliente: TestClient)
     # El 422 exacto: un 401 de credenciales no cumple el Scenario.
     assert respuesta.status_code == 422, respuesta.text
     assert "access_token" not in claves_en_todos_los_niveles(respuesta.json())
+
+
+def test_el_usuario_con_un_surrogate_suelto_responde_422_sin_token(
+    cliente: TestClient, sesion: Session
+) -> None:
+    # Existe `jperez`: si el surrogate se descartara en silencio, el pedido
+    # entraría con 200. El 422 tiene que venir del surrogate.
+    crear_usuario(sesion, "jperez")
+    # El cliente HTTP no puede codificar un `\ud800` real con `json=`: el cuerpo
+    # va como texto JSON crudo, con el escape escrito literalmente.
+    cuerpo_crudo = '{"username": "jp\\ud800erez", "password": "Verano2026"}'
+    assert "\\ud800" in cuerpo_crudo
+
+    respuesta = cliente.post(
+        URL_LOGIN,
+        content=cuerpo_crudo.encode("ascii"),
+        headers={"Content-Type": "application/json"},
+    )
+
+    # El 422 exacto: no basta con que no sea 500.
+    assert respuesta.status_code == 422, respuesta.text
+    assert "access_token" not in claves_en_todos_los_niveles(respuesta.json())
+
+
+def test_el_usuario_de_60_caracteres_ingresa(cliente: TestClient, sesion: Session) -> None:
+    username = "a" * 60
+    assert len(username) == 60
+    crear_usuario(sesion, username)
+
+    respuesta = cliente.post(URL_LOGIN, json={"username": username, "password": CONTRASENA})
+
+    assert respuesta.status_code == 200, respuesta.text
+
+
+def test_el_usuario_de_61_caracteres_responde_422_sin_token(
+    cliente: TestClient, sesion: Session
+) -> None:
+    # Existe el usuario de 60 caracteres que es prefijo del enviado: si el
+    # largo se truncara en silencio, el pedido entraría con 200.
+    crear_usuario(sesion, "a" * 60)
+    username = "a" * 61
+    assert len(username) == 61
+
+    respuesta = cliente.post(URL_LOGIN, json={"username": username, "password": CONTRASENA})
+
+    assert respuesta.status_code == 422, respuesta.text
+    assert "access_token" not in claves_en_todos_los_niveles(respuesta.json())
+
+
+def test_la_contrasena_de_128_caracteres_ingresa(cliente: TestClient, sesion: Session) -> None:
+    contrasena = CONTRASENA + "x" * (128 - len(CONTRASENA))
+    assert len(contrasena) == 128
+    crear_usuario(sesion, "jperez", contrasena=contrasena)
+
+    respuesta = cliente.post(URL_LOGIN, json={"username": "jperez", "password": contrasena})
+
+    assert respuesta.status_code == 200, respuesta.text
+
+
+def test_la_contrasena_de_129_caracteres_responde_422_sin_token(
+    cliente: TestClient, sesion: Session
+) -> None:
+    # `jperez` tiene como contraseña los primeros 128 caracteres de la enviada:
+    # si la contraseña se truncara en silencio, el pedido entraría con 200.
+    contrasena_valida = CONTRASENA + "x" * (128 - len(CONTRASENA))
+    crear_usuario(sesion, "jperez", contrasena=contrasena_valida)
+    contrasena = contrasena_valida + "x"
+    assert len(contrasena) == 129
+
+    respuesta = cliente.post(URL_LOGIN, json={"username": "jperez", "password": contrasena})
+
+    assert respuesta.status_code == 422, respuesta.text
+    assert "access_token" not in claves_en_todos_los_niveles(respuesta.json())
+
+
+# --- Requirement: El rechazo por pedido malformado no repite lo recibido -----
+
+
+def test_el_422_del_login_no_repite_la_contrasena(cliente: TestClient) -> None:
+    contrasena = "Secreta" + "z" * (129 - len("Secreta"))
+    assert len(contrasena) == 129
+
+    respuesta = cliente.post(URL_LOGIN, json={"username": "jperez", "password": contrasena})
+
+    assert respuesta.status_code == 422, respuesta.text
+    cuerpo = respuesta.json()
+    detalle = cuerpo["detail"]
+    assert isinstance(detalle, list) and len(detalle) > 0
+    for error in detalle:
+        assert {"loc", "msg", "type"} <= set(error.keys())
+    assert "input" not in claves_en_todos_los_niveles(cuerpo)
+    assert contrasena not in respuesta.text
 
 
 # --- Requirement: Credenciales rechazadas sin revelar la causa ---------------
