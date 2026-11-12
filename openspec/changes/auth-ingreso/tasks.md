@@ -14,7 +14,7 @@
 
 ## 4. Contrato y calidad
 
-- [x] 4.1 Regenerar `docs/api/openapi.json` con `python tasks.py openapi-generate` y comprobar que aparecen `POST /api/v1/auth/login`, `GET /api/v1/auth/yo` el esquema de seguridad bearer y, declarados con `responses=`, el 401 y el 403 del login y el 401 de `/yo` con sus mensajes exactos (`/yo` no tiene 403: está exento del cambio pendiente y no exige rol), sin ninguna ruta de sonda; `python tasks.py openapi-check` pasa.
+- [x] 4.1 Regenerar `docs/api/openapi.json` con `python tasks.py openapi-generate` y comprobar que aparecen `POST /api/v1/auth/login`, `GET /api/v1/auth/yo`, el esquema de seguridad bearer y, declarados con `responses=`, el 401 y el 403 del login y el 401 de `/yo` con sus mensajes exactos (`/yo` no tiene 403: está exento del cambio pendiente y no exige rol), sin ninguna ruta de sonda; `python tasks.py openapi-check` pasa.
 - [x] 4.2 Correr `python tasks.py test`, `python tasks.py lint` y `python tasks.py typecheck` en verde, con la suite completa (incluidos `test_salud.py` y `test_migracion_inicial.py`).
 
 ## 5. Revisión adversarial
