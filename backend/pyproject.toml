@@ -2,15 +2,17 @@
 name = "escuelita-backend"
 version = "0.1.0"
 description = "API de administracion de la escuelita de verano"
+# Las versiones fijadas tienen paquete compilado para Windows, Linux y macOS
+# en 3.12, 3.13 y 3.14. Si se cambia un pin, comprobarlo para las tres.
 requires-python = ">=3.12"
 dependencies = [
     "fastapi==0.115.6",
     "uvicorn[standard]==0.34.0",
     "sqlalchemy==2.0.36",
-    "psycopg[binary]==3.2.3",
+    "psycopg[binary]==3.2.13",
     "alembic==1.14.0",
-    "pydantic==2.10.4",
-    "pydantic-settings==2.7.0",
+    "pydantic==2.12.5",
+    "pydantic-settings==2.12.0",
     "pyjwt==2.10.1",
     "pwdlib[argon2]==0.2.1",
     "python-multipart==0.0.20",
