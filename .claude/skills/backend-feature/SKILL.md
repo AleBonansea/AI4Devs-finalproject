@@ -88,16 +88,52 @@ Mira la salida completa, test por test:
 
 Una vez visto fallar, quita el control positivo y volve a correr.
 
+Guarda la salida completa del rojo en `.claude/tmp/rojo-<capability>.txt`.
+Despues de implementar ya no se puede reproducir, y es la unica evidencia
+de que este paso se hizo de verdad.
+
+### Lee los tests, no solo el rojo
+
+El rojo dice que los tests fallan. No dice que comprueben algo. Antes de
+congelar, leelos buscando dos cosas que el rojo no muestra:
+
+1. **Aserciones que se aprueban con una constante.** Si el estado inicial
+   que prepara el test ya es el valor que despues afirma, el test pasa
+   aunque el codigo no haga nada. Un test que crea el usuario con el
+   contador en 0 y comprueba que quedo en 0 no prueba que el login lo
+   resetee.
+2. **Efectos que las fixtures no pueden distinguir.** Si la spec dice
+   "quedo guardado en la base", comproba que el test lo pueda ver fallar.
+   Una fixture que comparte estado con la API hace indistinguible un
+   servicio que guarda de uno que no.
+
+Lo que encuentres no lo arregles vos. Si es la spec la que esta floja,
+va por `openspec-update-change`; si es el test, lo corrige `test-writer`.
+
 Si algo de esto no se cumple, volve al paso 3. No sigas.
 
-## 5. Congelar los tests
+## 5. Formatear y congelar
+
+**Formatea primero.** Si no, el primer `ruff format` posterior cambia la
+huella por un espacio y hay que volver a invocar a `test-writer` para
+corregirlo, porque un test solo lo toca quien lo escribio.
 
 ```bash
-git add backend/tests/functional/<capability>
-git ls-files -s -- backend/tests/functional/<capability> > .claude/tmp/congelados.txt
+cd backend && .venv/Scripts/ruff format tests/functional/<capability> tests/conftest.py && cd ..
 ```
 
-Eso deja guardada la huella del contenido de cada archivo de prueba.
+(en Linux y macOS, `.venv/bin/ruff`)
+
+Despues congela:
+
+```bash
+git add backend/tests/functional/<capability> backend/tests/conftest.py
+git ls-files -s -- backend/tests/functional/<capability> backend/tests/conftest.py > .claude/tmp/congelados.txt
+```
+
+**`conftest.py` entra en la huella.** Sin el, la forma mas facil de hacer
+pasar un test sin tocarlo es aflojarle la fixture, y eso quedaba fuera del
+congelado.
 
 Esa huella es la garantia. No hay hook ni permiso que la sustituya: un
 hook mira el texto del comando y se esquiva, la huella mira el
@@ -106,7 +142,8 @@ contenido y no.
 ## 6. Implementar — subagente `implementer`
 
 Invoca al subagente `implementer` pasandole la ruta de los tests y la de
-la spec. Tiene prohibido escribir dentro de `backend/tests/`.
+la spec. Tiene prohibido escribir dentro de `backend/tests/`, `conftest.py`
+incluido.
 
 **Si vuelve diciendo que un test esta mal, no lo arregles vos y no le
 digas que lo arregle el.** Traemelo a mi con el argumento. Lo resuelve
@@ -119,8 +156,8 @@ midiendo es el agujero entero.
 Las dos cosas, en este orden:
 
 ```bash
-git add backend/tests/functional/<capability>
-git ls-files -s -- backend/tests/functional/<capability> | diff - .claude/tmp/congelados.txt
+git add backend/tests/functional/<capability> backend/tests/conftest.py
+git ls-files -s -- backend/tests/functional/<capability> backend/tests/conftest.py | diff - .claude/tmp/congelados.txt
 make test
 make lint
 make typecheck

@@ -11,7 +11,8 @@ escribiendo codigo de produccion.
 
 **No tocas los tests.** Ni un nombre, ni un numero esperado, ni un
 `skip`, ni un `xfail`, ni una importacion. No escribis ni editas nada
-dentro de `backend/tests/`.
+dentro de `backend/tests/`, y eso incluye `conftest.py`: aflojar una
+fixture es hacer pasar un test sin tocarlo.
 
 Los archivos de prueba estan congelados por huella digital antes de que
 vos empieces, y la huella se vuelve a comprobar cuando termines. Si no
