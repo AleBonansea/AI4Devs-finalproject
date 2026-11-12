@@ -21,6 +21,10 @@ MENSAJE_SESION_INVALIDA = "Sesión inválida o vencida."
 MENSAJE_CAMBIO_PENDIENTE = "Tenés que cambiar tu contraseña antes de continuar."
 MENSAJE_SIN_PERMISO = "No tenés permiso para esta operación."
 
+# Tope de la columna BIGINT de usuario.id. Un sub mas grande hacia fallar a
+# Postgres y respondia 500; los ids son positivos.
+_ID_MAXIMO = 2**63 - 1
+
 # auto_error=False: sin token, HTTPBearer devolveria su propio error con otro
 # mensaje. Asi el 401 es uno solo y lo arma esta dependencia.
 _bearer = HTTPBearer(auto_error=False)
@@ -56,6 +60,8 @@ def obtener_usuario_actual(
         id_usuario = int(carga["sub"])
     except (KeyError, TypeError, ValueError):
         raise _sesion_invalida() from None
+    if not 1 <= id_usuario <= _ID_MAXIMO:
+        raise _sesion_invalida()
 
     usuario = sesion.get(Usuario, id_usuario)
     if usuario is None or not usuario.activo or usuario.bloqueado:

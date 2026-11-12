@@ -1,16 +1,45 @@
 """Esquemas de entrada y salida del ingreso."""
 
-from typing import Literal
+import unicodedata
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, BeforeValidator, ConfigDict, Field
 
 from app.models.usuario import RolUsuario
 
 
+def _normalizar_username(valor: object) -> object:
+    # Corre antes de la validacion de tipo y largo, asi un username de solo
+    # espacios queda vacio y da 422. Lo que no es texto pasa sin tocar y lo
+    # rechaza la validacion de tipo.
+    if isinstance(valor, str):
+        return valor.strip().lower()
+    return valor
+
+
+def _sin_caracteres_de_control(valor: str) -> str:
+    # Un NUL llegaba a Postgres, que lo rechaza, y el login respondia 500.
+    if any(unicodedata.category(c) == "Cc" for c in valor):
+        raise ValueError("El usuario no puede tener caracteres de control.")
+    return valor
+
+
+# Orden: BeforeValidator (normaliza) -> largo de Field -> AfterValidator.
+# El largo se mide sobre el valor ya normalizado. 60 es el ancho de la
+# columna usuario.username.
+Username = Annotated[
+    str,
+    BeforeValidator(_normalizar_username),
+    Field(min_length=1, max_length=60),
+    AfterValidator(_sin_caracteres_de_control),
+]
+
+
 class LoginEntrada(BaseModel):
     # JSON y no formulario OAuth2: src/lib/api.ts habla JSON en todo lo demas.
-    username: str = Field(min_length=1)
-    password: str = Field(min_length=1)
+    username: Username
+    # Sin normalizar. El tope acota el costo de argon2 en un endpoint publico.
+    password: str = Field(min_length=1, max_length=128)
 
 
 class UsuarioActual(BaseModel):

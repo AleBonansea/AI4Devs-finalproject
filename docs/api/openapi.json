@@ -157,11 +157,13 @@
         "properties": {
           "username": {
             "type": "string",
+            "maxLength": 60,
             "minLength": 1,
             "title": "Username"
           },
           "password": {
             "type": "string",
+            "maxLength": 128,
             "minLength": 1,
             "title": "Password"
           }

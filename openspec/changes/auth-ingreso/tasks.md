@@ -19,10 +19,10 @@
 
 ## 5. Revisión adversarial
 
-- [ ] 5.1 Un único pase del subagente `adversarial-reviewer` sobre el change terminado, antes de abrir el pull request de `feat/auth-ingreso` hacia `feature/entrega-2-AlexisBonansea`. Se verifica con sus hallazgos resueltos o justificados por escrito.
+- [x] 5.1 Un único pase del subagente `adversarial-reviewer` sobre el change terminado, antes de abrir el pull request de `feat/auth-ingreso` hacia `feature/entrega-2-AlexisBonansea`. Se verifica con sus hallazgos resueltos o justificados por escrito.
 
-- [ ] 5.2 Con la skill `backend-feature`, resolver los hallazgos del pase 5.1 según los Scenarios nuevos de `specs/auth/spec.md`: «El usuario trae un carácter de control» y «El usuario es solo espacios» (requirement «Pedido de ingreso malformado», en `test_login.py`), «Token cuyo sub está fuera del rango de los ids» (en `test_usuario_actual.py`) y «Con el cambio pendiente, el 403 de cambio gana al de rol» (en `test_roles.py`). En el mismo ciclo, sin Scenario: `LoginEntrada` normaliza y valida `username` (1 a 60, sin caracteres de control) y `password` (1 a 128), y el login lee el usuario con `with_for_update()` (design, «Concurrencia»; excepción sin test documentada). Se verifica con la suite completa en verde tras el rojo de los Scenarios nuevos.
-- [ ] 5.3 Regenerar `docs/api/openapi.json` (`python tasks.py openapi-generate`) y comprobar `python tasks.py openapi-check`.
+- [x] 5.2 Con la skill `backend-feature`, resolver los hallazgos del pase 5.1 según los Scenarios nuevos de `specs/auth/spec.md`: «El usuario trae un carácter de control» y «El usuario es solo espacios» (requirement «Pedido de ingreso malformado», en `test_login.py`), «Token cuyo sub está fuera del rango de los ids» (en `test_usuario_actual.py`) y «Con el cambio pendiente, el 403 de cambio gana al de rol» (en `test_roles.py`). En el mismo ciclo, sin Scenario: `LoginEntrada` normaliza y valida `username` (1 a 60, sin caracteres de control) y `password` (1 a 128), y el login lee el usuario con `with_for_update()` (design, «Concurrencia»; excepción sin test documentada). Se verifica con la suite completa en verde tras el rojo de los Scenarios nuevos.
+- [x] 5.3 Regenerar `docs/api/openapi.json` (`python tasks.py openapi-generate`) y comprobar `python tasks.py openapi-check`.
 - [ ] 5.4 Segundo y último pase del `adversarial-reviewer` sobre el change con los hallazgos resueltos; lo que quede se justifica por escrito.
 
 ## Workflow follow-up

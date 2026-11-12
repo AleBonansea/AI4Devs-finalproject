@@ -37,10 +37,14 @@ class Ingreso:
 
 def ingresar(sesion: Session, username: str, contrasena: str) -> Ingreso:
     # Los usernames se guardan en minusculas; se busca por igualdad exacta
-    # para usar el indice unico tal cual.
+    # para usar el indice unico tal cual. LoginEntrada ya normaliza; se repite
+    # aca (es idempotente) para que el servicio no dependa de quien lo llame.
     normalizado = username.strip().lower()
+    # FOR UPDATE serializa los logins simultaneos de la misma cuenta hasta el
+    # commit (design de auth-ingreso, «Concurrencia»). Sin esto el limite de 5
+    # intentos no vale con pedidos simultaneos. Sin test, a proposito.
     usuario = sesion.execute(
-        select(Usuario).where(Usuario.username == normalizado)
+        select(Usuario).where(Usuario.username == normalizado).with_for_update()
     ).scalar_one_or_none()
 
     if usuario is None or not usuario.activo:

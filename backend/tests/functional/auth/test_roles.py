@@ -4,8 +4,9 @@ Un test por Scenario de la spec delta
 `openspec/changes/auth-ingreso/specs/auth/spec.md`:
 - Requirement «Declaración de roles por endpoint» (los 4 Scenarios).
 - Requirement «Cambio obligatorio de contraseña pendiente», los Scenarios
-  «Con el cambio pendiente no puede hacer nada más» y «Con el cambio
-  pendiente tampoco pasa un endpoint de su rol».
+  «Con el cambio pendiente no puede hacer nada más», «Con el cambio
+  pendiente tampoco pasa un endpoint de su rol» y «Con el cambio pendiente,
+  el 403 de cambio gana al de rol».
 
 Todavía no hay endpoints de negocio. Como fija design.md («Cómo se prueba
 `exigir_rol` sin endpoints de negocio»), el test monta un `APIRouter` de
@@ -225,4 +226,19 @@ def test_con_el_cambio_pendiente_el_admin_tampoco_pasa_un_endpoint_de_su_rol(
 
     respuesta = sonda.get(URL_SOLO_ADMIN, headers=con_token(token))
 
+    afirmar_403(respuesta, MENSAJE_CAMBIO_PENDIENTE)
+
+
+def test_con_el_cambio_pendiente_el_403_de_cambio_gana_al_de_rol(
+    cliente: TestClient, sonda: TestClient, sesion: Session
+) -> None:
+    crear_usuario(sesion, "profe", rol=RolUsuario.PROFESOR, debe_cambiar_password=True)
+    token = ingresar(cliente, "profe")
+    # El token es válido (el exento /yo lo acepta): el rechazo no es de sesión.
+    assert cliente.get(URL_YO, headers=con_token(token)).status_code == 200
+
+    respuesta = sonda.get(URL_SOLO_ADMIN, headers=con_token(token))
+
+    # El profesor no está declarado en la ruta y además tiene el cambio
+    # pendiente: tiene que ganar el `detail` de cambio pendiente, no el de rol.
     afirmar_403(respuesta, MENSAJE_CAMBIO_PENDIENTE)

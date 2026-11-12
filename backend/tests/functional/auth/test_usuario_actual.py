@@ -2,7 +2,7 @@
 
 Un test por Scenario de la spec delta
 `openspec/changes/auth-ingreso/specs/auth/spec.md`:
-- Requirement «Identificación del usuario actual por token» (los 9 Scenarios).
+- Requirement «Identificación del usuario actual por token» (los 10 Scenarios).
 - Requirement «Cambio obligatorio de contraseña pendiente», solo el Scenario
   «Con el cambio pendiente igual puede saber quién es».
 
@@ -168,6 +168,21 @@ def test_el_token_con_sub_inexistente_responde_401(cliente: TestClient, sesion: 
 
     token = fabricar_token(
         str(id_inexistente),
+        clave=obtener_configuracion().secret_key,
+        vence_en=timedelta(hours=1),
+    )
+
+    respuesta = pedir_yo(cliente, token)
+
+    afirmar_401_de_sesion(respuesta)
+
+
+def test_el_token_con_sub_fuera_del_rango_de_los_ids_responde_401(cliente: TestClient) -> None:
+    sub_fuera_de_rango = "9223372036854775808"
+    assert int(sub_fuera_de_rango) == 2**63  # uno más que el máximo de BIGINT
+
+    token = fabricar_token(
+        sub_fuera_de_rango,
         clave=obtener_configuracion().secret_key,
         vence_en=timedelta(hours=1),
     )

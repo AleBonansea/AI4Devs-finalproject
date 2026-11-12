@@ -3,6 +3,7 @@
 Un test por Scenario de la spec delta
 `openspec/changes/auth-ingreso/specs/auth/spec.md`, requirements:
 - Ingreso con usuario y contraseña
+- Pedido de ingreso malformado
 - Credenciales rechazadas sin revelar la causa
 - Contador de intentos fallidos
 - Usuario bloqueado no ingresa
@@ -115,6 +116,29 @@ def test_la_contrasena_vacia_responde_422_sin_token(cliente: TestClient) -> None
     respuesta = cliente.post(URL_LOGIN, json={"username": "jperez", "password": ""})
 
     assert respuesta.status_code == 422
+    assert "access_token" not in claves_en_todos_los_niveles(respuesta.json())
+
+
+def test_el_usuario_con_un_caracter_de_control_responde_422_sin_token(
+    cliente: TestClient, sesion: Session
+) -> None:
+    # Existe `jperez` con esa contraseña: si el NUL se descartara en silencio,
+    # el pedido entraría con 200. El 422 tiene que venir del carácter de control.
+    crear_usuario(sesion, "jperez")
+    username = "jp\u0000erez"
+    assert "\x00" in username
+
+    respuesta = cliente.post(URL_LOGIN, json={"username": username, "password": CONTRASENA})
+
+    assert respuesta.status_code == 422, respuesta.text
+    assert "access_token" not in claves_en_todos_los_niveles(respuesta.json())
+
+
+def test_el_usuario_de_solo_espacios_responde_422_sin_token(cliente: TestClient) -> None:
+    respuesta = cliente.post(URL_LOGIN, json={"username": "   ", "password": CONTRASENA})
+
+    # El 422 exacto: un 401 de credenciales no cumple el Scenario.
+    assert respuesta.status_code == 422, respuesta.text
     assert "access_token" not in claves_en_todos_los_niveles(respuesta.json())
 
 
