@@ -27,8 +27,19 @@ El sistema SHALL ofrecer `POST /api/v1/auth/login`, que recibe `username` y `pas
 - **WHEN** se llama a `POST /api/v1/auth/login` con `{"username": "jperez", "password": "verano2026"}`
 - **THEN** la respuesta es 401
 
+### Requirement: Pedido de ingreso malformado
+`username` se normaliza (sin espacios alrededor y en minúsculas) antes de validarse. El sistema SHALL responder 422, sin token, si `username` queda vacío después de normalizar, supera 60 caracteres o contiene un carácter de control, o si `password` está vacía o supera 128 caracteres.
+
 #### Scenario: Faltan datos en el pedido
 - **WHEN** se llama a `POST /api/v1/auth/login` con `{"username": "jperez", "password": ""}`
+- **THEN** la respuesta es 422 y no se emite ningún token
+
+#### Scenario: El usuario trae un carácter de control
+- **WHEN** se llama a `POST /api/v1/auth/login` con `{"username": "jp\u0000erez", "password": "Verano2026"}` (un carácter NUL en el medio)
+- **THEN** la respuesta es 422 y no se emite ningún token
+
+#### Scenario: El usuario es solo espacios
+- **WHEN** se llama a `POST /api/v1/auth/login` con `{"username": "   ", "password": "Verano2026"}`
 - **THEN** la respuesta es 422 y no se emite ningún token
 
 ### Requirement: Credenciales rechazadas sin revelar la causa
@@ -100,7 +111,7 @@ Un usuario activo con `intentos_fallidos` en 5 o más SHALL recibir 403 con `det
 - **THEN** la respuesta es 200 con un `access_token`
 
 ### Requirement: Identificación del usuario actual por token
-Todo endpoint protegido SHALL identificar a quien llama por el encabezado `Authorization: Bearer <token>` y releer el usuario de la base en cada petición. SHALL responder 401 si falta el token, si no es válido, si venció, si el `sub` del token no corresponde a ningún usuario, si el usuario está desactivado o si está bloqueado. `GET /api/v1/auth/yo` devuelve los datos públicos del usuario actual y su `debe_cambiar_password`.
+Todo endpoint protegido SHALL identificar a quien llama por el encabezado `Authorization: Bearer <token>` y releer el usuario de la base en cada petición. SHALL responder 401 si falta el token, si no es válido, si venció, si el `sub` del token no es un entero dentro del rango de los ids, si no corresponde a ningún usuario, si el usuario está desactivado o si está bloqueado. `GET /api/v1/auth/yo` devuelve los datos públicos del usuario actual y su `debe_cambiar_password`.
 
 #### Scenario: El token del ingreso sirve para identificarse
 - **GIVEN** un usuario activo `jperez` que acaba de ingresar y recibió un `access_token`
@@ -128,6 +139,11 @@ Todo endpoint protegido SHALL identificar a quien llama por el encabezado `Autho
 
 #### Scenario: Token cuyo sub no corresponde a ningún usuario
 - **GIVEN** un token firmado con la clave del sistema, con vencimiento futuro y `sub` igual a un id que no existe en la tabla `usuario`
+- **WHEN** se llama a `GET /api/v1/auth/yo` con ese token
+- **THEN** la respuesta es 401
+
+#### Scenario: Token cuyo sub está fuera del rango de los ids
+- **GIVEN** un token firmado con la clave del sistema, con vencimiento futuro y `sub` igual a `9223372036854775808` (2^63, uno más que el máximo de BIGINT)
 - **WHEN** se llama a `GET /api/v1/auth/yo` con ese token
 - **THEN** la respuesta es 401
 
@@ -174,6 +190,12 @@ Un usuario con `debe_cambiar_password` en true SHALL poder ingresar y recibir su
 - **AND** un `access_token` vigente de un Admin con `debe_cambiar_password` en true
 - **WHEN** el Admin llama a ese endpoint
 - **THEN** la respuesta es 403 con `detail` igual a `Tenés que cambiar tu contraseña antes de continuar.`
+
+#### Scenario: Con el cambio pendiente, el 403 de cambio gana al de rol
+- **GIVEN** un endpoint protegido declarado solo para el rol `admin`
+- **AND** un `access_token` vigente de un Profesor con `debe_cambiar_password` en true
+- **WHEN** el Profesor llama a ese endpoint
+- **THEN** la respuesta es 403 con `detail` igual a `Tenés que cambiar tu contraseña antes de continuar.`, no el de falta de permiso
 
 ### Requirement: Declaración de roles por endpoint
 Cada endpoint protegido SHALL declarar qué roles pueden usarlo. Un usuario autenticado cuyo rol no esté entre los declarados SHALL recibir 403 con `detail` igual a `No tenés permiso para esta operación.`; uno cuyo rol sí esté declarado SHALL pasar. Sin token válido, la respuesta SHALL ser 401 antes de evaluar el rol.

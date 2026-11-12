@@ -44,11 +44,13 @@ Ninguno de los dos devuelve datos de alumnos, así que no aplica el filtro de co
 
 ### Cuerpo del login: JSON, no formulario OAuth2
 
-`LoginEntrada` es un esquema Pydantic con `username` y `password` (`min_length=1` ambos, para el 422). Alternativa: `OAuth2PasswordRequestForm`, que habilita el botón «Authorize» de Swagger. Se descarta porque obliga a `application/x-www-form-urlencoded` y `src/lib/api.ts` habla JSON en todo lo demás; un único formato de error y de cuerpo pesa más que la comodidad de Swagger. Para leer el token se usa `HTTPBearer(auto_error=False)`, que igual aparece en el contrato como esquema de seguridad.
+`LoginEntrada` es un esquema Pydantic con `username` y `password`. Un pedido malformado da 422 (requirement «Pedido de ingreso malformado»). Alternativa: `OAuth2PasswordRequestForm`, que habilita el botón «Authorize» de Swagger. Se descarta porque obliga a `application/x-www-form-urlencoded` y `src/lib/api.ts` habla JSON en todo lo demás; un único formato de error y de cuerpo pesa más que la comodidad de Swagger. Para leer el token se usa `HTTPBearer(auto_error=False)`, que igual aparece en el contrato como esquema de seguridad.
 
-`username` se normaliza con `strip().lower()` antes de buscar: los usuarios se generan en minúsculas (documento técnico) y el teclado del celular capitaliza la primera letra. La contraseña no se toca.
+`username` se normaliza con `strip().lower()` en el propio esquema, antes de validarlo: los usuarios se generan en minúsculas (documento técnico) y el teclado del celular capitaliza la primera letra. La contraseña no se toca. Las validaciones corren sobre el valor ya normalizado, así username y contraseña se comportan igual: vacío da 422, también un username hecho solo de espacios.
 
-**Asimetría deliberada entre username y contraseña vacíos.** `min_length=1` se valida sobre el valor crudo. Una contraseña vacía da 422. Un username hecho solo de espacios, en cambio, pasa la validación, queda vacío al normalizarse, no encuentra a nadie y termina en el 401 genérico. Es una decisión, no un descuido: el 401 no revela nada que el 422 no revelara, y validar después de normalizar obligaría a un validador propio para un caso que solo produce un pedido inválido. Se puede revisar cuando HU-UT-02 agregue la normalización del username al darlo de alta, y validar los dos con la misma regla.
+- `username`: largo 1 a 60, el ancho de la columna `usuario.username`. Sin caracteres de control: un NUL llegaba a Postgres, que lo rechaza, y el login público respondía 500. Es entrada malformada, como la contraseña vacía, y no un usuario inexistente: por eso 422 y no el 401 genérico.
+- `password`: largo 1 a 128. argon2 no tiene el tope de 72 bytes de bcrypt y procesa cualquier tamaño, así que sin tope una contraseña de megabytes cuesta CPU en un endpoint público. 128 deja margen de sobra para cualquier frase de paso.
+- **El límite del cuerpo de la petición es de despliegue, no de la aplicación.** FastAPI lee el cuerpo entero antes de validar, así que el `max_length` corta el costo de argon2 pero no el de recibir un cuerpo enorme. Ese tope va en la configuración de Render (o del proxy que tenga delante) al desplegar.
 
 **Invariante: `usuario.username` se guarda siempre en minúsculas.** El login busca por igualdad exacta (`Usuario.username == entrada_normalizada`), no con `lower()` sobre la columna, para usar el índice único tal cual. Eso solo es correcto si el invariante se cumple: si la base tuviera `JPerez`, ese usuario no podría ingresar nunca y el login respondería el 401 genérico, sin ninguna pista de por qué. Hoy nada en la base lo impide. El `CHECK (username = lower(username))` lo agrega HU-UT-02, que es la que escribe usuarios; hasta entonces la semilla lo respeta, y los tests crean usuarios en minúsculas.
 
@@ -58,7 +60,7 @@ Ninguno de los dos devuelve datos de alumnos, así que no aplica el filtro de co
 
 ### Tres dependencias encadenadas
 
-1. `obtener_usuario_actual`: lee el bearer, `leer_token`, busca por `sub`. 401 si falta, no valida (`jwt.PyJWTError`, incluido el vencido), `sub` no es un entero, el `sub` no corresponde a ningún usuario, `activo` es false o `bloqueado`. Todas con `WWW-Authenticate: Bearer` y `detail` `Sesión inválida o vencida.` No rechaza el cambio pendiente: la usan los dos exentos, `GET /auth/yo` y el endpoint de HU-UT-06. Ningún otro endpoint la usa directamente.
+1. `obtener_usuario_actual`: lee el bearer, `leer_token`, busca por `sub`. 401 si falta, no valida (`jwt.PyJWTError`, incluido el vencido), `sub` no es un entero dentro del rango de BIGINT (un valor más grande hacía fallar a Postgres y respondía 500), el `sub` no corresponde a ningún usuario, `activo` es false o `bloqueado`. Todas con `WWW-Authenticate: Bearer` y `detail` `Sesión inválida o vencida.` No rechaza el cambio pendiente: la usan los dos exentos, `GET /auth/yo` y el endpoint de HU-UT-06. Ningún otro endpoint la usa directamente.
 2. `usuario_habilitado`: depende de la anterior; 403 `Tenés que cambiar tu contraseña antes de continuar.` si `debe_cambiar_password`.
 3. `exigir_rol(*roles: RolUsuario)`: fábrica que devuelve una dependencia sobre `usuario_habilitado`; 403 `No tenés permiso para esta operación.` si el rol no está. Se usa como `usuario: Usuario = Depends(exigir_rol(RolUsuario.ADMIN))` o en `dependencies=[...]` del decorador. Es la que usa todo endpoint de negocio, así que el cambio pendiente se hace cumplir sin que cada endpoint tenga que acordarse.
 
@@ -74,7 +76,7 @@ Las dependencias devuelven el modelo `Usuario` al endpoint; eso no viola «toda 
 
 ### Orden de las comprobaciones en el login
 
-1. Buscar por `username` normalizado.
+1. Buscar por `username` normalizado, con bloqueo de fila (ver «Concurrencia»).
 2. Inexistente → verificar la contraseña contra un hash ficticio fijo (calculado una vez al importar) y responder 401 genérico. Sin esto, «usuario inexistente» responde mucho más rápido que «contraseña incorrecta» y el tiempo revela qué usuarios existen.
 3. Desactivado → verificar igual (por la misma razón), 401 genérico, contador intacto.
 4. Bloqueado → 403 de bloqueo, **sin verificar la contraseña** y sin tocar el contador. Si el 403 dependiera de que la contraseña fuera correcta, la cuenta bloqueada serviría para adivinarla.
@@ -83,9 +85,17 @@ Las dependencias devuelven el modelo `Usuario` al endpoint; eso no viola «toda 
 
 El 403 de bloqueo sí revela que el usuario existe. Es deliberado: quien quedó bloqueado necesita saber que tiene que ir al Admin, no seguir probando. El costo está en «Risks / Trade-offs», bloqueo disparado desde afuera. El desactivado, en cambio, no se distingue: no hay nada que pueda hacer.
 
-### Incremento atómico
+### Concurrencia: incremento atómico y bloqueo de fila
 
-El incremento es `UPDATE usuario SET intentos_fallidos = intentos_fallidos + 1 WHERE id = :id` con `update()` de SQLAlchemy, no leer-sumar-escribir en Python. Dos intentos simultáneos con la lectura en memoria dejarían el contador en 1 en vez de 2, y con eso un atacante en paralelo esquiva el bloqueo. La puesta en 0 sí puede ser una asignación. El servicio hace `commit` del contador también cuando responde 401: el intento fallido tiene que quedar aunque la petición termine en error, así que el commit va antes de lanzar la excepción HTTP.
+Son dos mecanismos y cada uno garantiza una cosa distinta:
+
+- **El `UPDATE` atómico hace exacta la cuenta.** El incremento es `UPDATE usuario SET intentos_fallidos = intentos_fallidos + 1 WHERE id = :id` con `update()` de SQLAlchemy, no leer-sumar-escribir en Python: dos fallos simultáneos suman 2, no 1. Por sí solo no hace valer el límite: el chequeo de bloqueo se hace antes de verificar la contraseña, y entre ese chequeo y el incremento está argon2. Cincuenta pedidos simultáneos contra una cuenta con 4 fallos leían todos 4, verificaban todos su contraseña y probaban cincuenta claves en vez de una; si una acertaba, la puesta en 0 pisaba los incrementos de las demás y desbloqueaba la cuenta.
+- **El bloqueo de fila hace valer el límite entre pedidos simultáneos de la misma cuenta.** El login lee el usuario con `with_for_update()`, que serializa los logins concurrentes de esa cuenta hasta el `commit`: a partir del quinto fallo, los pedidos que esperaban ven el contador en 5 y responden 403 sin verificar la contraseña. No cambia la respuesta de ningún pedido individual. El costo es que los logins de una misma cuenta se atienden de a uno, lo que para personas reales no se nota.
+- **La defensa contra la fuerza bruta distribuida es el límite por origen de HU-UT-08.** Ninguno de los dos mecanismos frena a quien prueba pocas claves contra muchas cuentas.
+
+La puesta en 0 sí puede ser una asignación: con la fila bloqueada nadie más la modifica en el medio. El servicio hace `commit` del contador también cuando responde 401: el intento fallido tiene que quedar aunque la petición termine en error, así que el commit va antes de lanzar la excepción HTTP, y es el commit el que libera el bloqueo de fila.
+
+**Excepción deliberada: el bloqueo de fila es código de producción sin test.** Un test de concurrencia acá necesitaría varias conexiones reales fuera de la transacción que se revierte, hilos y tiempos, y saldría lento y frágil. Ningún Scenario lo cubre y no se agrega uno. Queda escrito para que nadie lo saque creyendo que sobra: sin él, el límite de 5 intentos no vale bajo pedidos simultáneos.
 
 ### Errores en castellano y con forma de FastAPI
 
