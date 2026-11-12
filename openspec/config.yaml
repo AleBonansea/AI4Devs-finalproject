@@ -5,24 +5,62 @@ context: |
   All artifacts must be written in es.
   Keep OpenSpec structural headings and SHALL/MUST keywords in English.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Sistema de administración de una escuelita de verano: fichas de alumnos
+  (menores), documentación, asistencia, cuenta corriente por familia,
+  tesorería y canon al club, por temporada.
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+  Fuentes de verdad, en este orden. Leelas antes de proponer:
+  - docs/prd/aclaraciones-cliente.md: decisiones del cliente. Prevalece
+    sobre el PRD. Las reglas de dinero están en la sección 5, las de
+    acceso y usuarios en la 9, las de temporada en la 10.
+  - docs/prd/prd-escuelita-de-verano.md: el PRD original. No se modifica.
+  - 3-modelo-de-datos.md: las tablas, con sus restricciones y el porqué.
+  - CLAUDE.md: stack, comandos, convenciones del backend y del frontend,
+    y las reglas de proceso. Las convenciones del backend no son
+    sugerencias.
+  - docs/product/historias-backlog.md: qué historia entra en qué lote.
+
+  Lo que no esté en esas fuentes se marca [SUPUESTO] y se registra como
+  pregunta abierta en aclaraciones-cliente.md. Las decisiones de diseño
+  técnico no son preguntas para el cliente: se deciden y se documentan
+  en el design del change.
+
+  Reglas que ningún change puede contradecir:
+  - El precio nunca viene del cliente: lo calcula y guarda la API.
+  - Todo cargo persiste su cálculo y no se recalcula nunca.
+  - Nada se borra: se anula con contraasiento, o se desactiva.
+  - El estado derivado no se almacena (saldo, bloqueo de usuario).
+  - Toda respuesta pasa por un esquema de Pydantic: nunca un modelo.
+  - Los listados se filtran en la consulta, no después. Un Profesor
+    nunca recibe filas de alumnos de otros grupos.
+  - Los datos médicos y los documentos son de menores (Ley 25.326):
+    acceso por necesidad, archivos privados con enlace que caduca.
+
+rules:
+  proposal:
+    - "Nombrá la historia del backlog que cubre el change (HU-XX-NN) y el lote al que pertenece. Un change sin historia es alcance que nadie aprobó."
+    - "Decí qué queda fuera, con el mismo cuidado que lo que entra. Lo que no se nombra se cuela."
+  specs:
+    - "Un Scenario por caso observable desde afuera: código de estado, campo con valor, fila que aparece o no, mensaje. 'El sistema valida correctamente' no es un THEN, porque no hay cómo escribir el test."
+    - "Para cada regla con límites (un tramo, una fecha de corte, un saldo en cero, un contador) hay un Scenario de adentro y uno de afuera. Un solo caso se aprueba con una constante."
+    - "Para cada capability hay al menos un Scenario de quién NO puede hacerlo, y qué recibe cuando lo intenta."
+    - "Si toca dinero, los montos en los Scenarios son exactos y elegidos para que el resultado correcto se distinga del plausible pero equivocado. El dinero no lleva tolerancia."
+    - "Si toca datos de alumnos, hay un Scenario de un Profesor de otro grupo intentando verlos."
+  design:
+    - "Si el change toca el esquema, el design lleva una sección ## Reversibilidad: qué migración entra, cómo se vuelve atrás, y qué pasa con las filas existentes. Un downgrade vacío no vale."
+    - "Si el change agrega un endpoint, el design dice qué roles lo usan y, para el Profesor, cómo se filtra en la consulta."
+    - "Si el change calcula un importe, el design dice dónde vive la función pura y qué se persiste del cálculo."
+  tasks:
+    - "Cada tarea de backend que agrega o cambia comportamiento se ejecuta con la skill backend-feature. Cada pantalla, con frontend-feature. Decilo en la tarea."
+    - "Si el change toca rutas, esquemas o modelos, hay una tarea explícita de regenerar docs/api/openapi.json."
+    - "La última tarea de todo change es el pase del subagente adversarial-reviewer, una sola vez, antes del pull request."
+
+operations:
+  apply:
+    guidance:
+      - "No saltees el rojo. Antes de implementar, la suite tiene que fallar por el motivo correcto y el control positivo tiene que fallar."
+      - "Si un paso de la skill te estorba o no tiene sentido en este proyecto, decilo y pará. No lo resuelvas por tu cuenta: es evidencia para revisar el arnés."
+  archive:
+    guidance:
+      - "Antes de archivar, comprobá que docs/api/openapi.json está regenerado y que make test, make lint y make typecheck están en verde."
+      - "Al archivar, si la historia del backlog tenía criterios en 5-historias-de-usuario.md, reemplazalos ahí por un puntero a la spec. Una sola fuente."
