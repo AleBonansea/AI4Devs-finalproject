@@ -13,6 +13,7 @@ esquema por test.
 
 import os
 import subprocess
+import sys
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -54,8 +55,13 @@ def motor_de_pruebas() -> Iterator[object]:
     # Las migraciones se aplican una vez por sesion de tests, con el mismo
     # comando que produccion. Si una migracion esta rota, los tests no
     # arrancan, que es exactamente lo que queremos.
+    # `sys.executable -m alembic`, no "alembic" a secas: cuando pytest se
+    # invoca por ruta absoluta sin activar el entorno virtual -como hace
+    # tasks.py- el ejecutable suelto no esta en el PATH y esto reventaba
+    # con FileNotFoundError antes de correr un solo test. Como modulo usa
+    # el mismo interprete que ya esta corriendo, que siempre es el correcto.
     subprocess.run(
-        ["alembic", "upgrade", "head"],
+        [sys.executable, "-m", "alembic", "upgrade", "head"],
         cwd=RAIZ,
         env={**os.environ, "ALEMBIC_URL": url},
         check=True,

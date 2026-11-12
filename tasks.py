@@ -61,7 +61,13 @@ def correr(partes: list[str], cwd: Path = RAIZ, permitir_fallo: bool = False) ->
     entero sin que nadie lo note.
     """
     print(f"$ {' '.join(partes)}", flush=True)
-    codigo = subprocess.run(partes, cwd=cwd).returncode
+    # El bin del entorno virtual al frente del PATH: no alcanza con llamar
+    # al ejecutable por ruta absoluta, porque los hijos de ese proceso
+    # (pytest llamando a alembic, por ejemplo) buscan en el PATH.
+    entorno = dict(os.environ)
+    if BIN.is_dir():
+        entorno["PATH"] = str(BIN) + os.pathsep + entorno.get("PATH", "")
+    codigo = subprocess.run(partes, cwd=cwd, env=entorno).returncode
     if codigo != 0 and not permitir_fallo:
         sys.exit(codigo)
     return codigo
