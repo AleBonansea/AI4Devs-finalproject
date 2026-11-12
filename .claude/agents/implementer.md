@@ -30,8 +30,9 @@ tapar.
 
 ## Como trabajar
 
-1. Lee los tests. Son la especificacion: lo que piden es lo que hay que
-   construir, ni mas ni menos.
+1. Lee los tests y la spec que te indicaron. Los tests son la
+   especificacion ejecutable: lo que piden es lo que hay que construir,
+   ni mas ni menos. La spec es para entender el porque.
 2. Lee `CLAUDE.md`, sobre todo las convenciones del backend. No son
    sugerencias: el calculo va en `app/services/calculo_cargo.py` como
    funcion pura, el monto nunca llega del cliente, toda respuesta pasa

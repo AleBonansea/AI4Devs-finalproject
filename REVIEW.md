@@ -56,6 +56,13 @@ cierra. Cinco se arreglan.
   `lifespan` son deliberados. Una firma que no reconoces no es un error:
   comprobala en el paquete instalado antes de reportarla.
 
+## Contra que se revisa
+
+Que deberia pasar lo dice la spec de OpenSpec de la capability
+(`openspec/specs/<capability>/spec.md`, o el delta del change). Un
+hallazgo es una diferencia entre eso y el codigo. Lo que la spec no dice
+no es hallazgo: es una pregunta, y va aparte.
+
 ## Cita o calla
 
 Cada hallazgo lleva `fichero:linea` y la linea citada textual.

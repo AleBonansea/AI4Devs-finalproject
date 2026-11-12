@@ -19,12 +19,23 @@ punto se cuela un error que despues no se ve.
 
 ---
 
+## 0. De donde viene la tarea
+
+Esta skill se invoca desde una tarea de `tasks.md` de un change de
+OpenSpec (`openspec-apply-change`), nunca suelta. Si no hay change, pará:
+primero `openspec-propose`. El codigo de produccion que no sale de un
+change no tiene spec, y sin spec no hay contra que escribir el test.
+
 ## 1. Entender, sin escribir nada
 
-Lee la historia y sus criterios de aceptacion en
-`5-historias-de-usuario.md`. Lee las reglas que la tocan en
-`docs/prd/aclaraciones-cliente.md`. Mira que hay ya en `backend/app/`
-y en `backend/tests/`.
+Lee el Requirement entero en `openspec/specs/<capability>/spec.md`, o en
+el delta del change (`openspec/changes/<change>/specs/<capability>/spec.md`)
+si la tarea viene de uno. Conta sus Scenarios: habra **un test por
+Scenario**. Si la tarea solo cubre algunos Requirements, anota cuales
+quedan fuera.
+
+Lee las reglas que la tocan en `docs/prd/aclaraciones-cliente.md`. Mira
+que hay ya en `backend/app/` y en `backend/tests/`.
 
 Si algo del criterio de aceptacion es ambiguo, **pará y preguntá
 ahora**. Despues ya es tarde: la ambiguedad se convierte en test, el
@@ -39,7 +50,7 @@ Escribi en no mas de una pantalla:
 - Que cambia en los modelos, y si hace falta migracion.
 - Donde va la regla de negocio (`app/services/`).
 - Que roles pueden usar cada endpoint y como se filtra para el Profesor.
-- Un renglon por test que vas a pedir, apuntando a su criterio.
+- Un renglon por test que vas a pedir, apuntando a su Scenario.
 
 **Presentalo y esperá el visto bueno.** No sigas por tu cuenta. Es la
 parada mas barata del proceso: corregir un plan cuesta un minuto,
@@ -47,14 +58,15 @@ corregir una capability implementada cuesta una tarde.
 
 ## 3. Tests — subagente `test-writer`
 
-Invoca al subagente `test-writer` pasandole la historia, los criterios
-y la ruta `backend/tests/functional/<capability>/`.
+Invoca al subagente `test-writer` pasandole la ruta de la spec (o del
+delta), el nombre de la capability y la ruta
+`backend/tests/functional/<capability>/`.
 
 No le pases rutas de `backend/app/` ni fragmentos de implementacion. Si
 se los pasas, rompiste la separacion con tus propias manos.
 
 Cuando vuelva, comproba que su informe tiene la frase de confirmacion de
-que no leyo la implementacion, y que hay un test por criterio.
+que no leyo la implementacion, y que hay un test por Scenario.
 
 ## 4. Ver el rojo — vos, no el subagente
 
@@ -93,8 +105,8 @@ contenido y no.
 
 ## 6. Implementar — subagente `implementer`
 
-Invoca al subagente `implementer` pasandole la ruta de los tests y la
-historia. Tiene prohibido escribir dentro de `backend/tests/`.
+Invoca al subagente `implementer` pasandole la ruta de los tests y la de
+la spec. Tiene prohibido escribir dentro de `backend/tests/`.
 
 **Si vuelve diciendo que un test esta mal, no lo arregles vos y no le
 digas que lo arregle el.** Traemelo a mi con el argumento. Lo resuelve
@@ -135,7 +147,10 @@ Despues, con la skill `/commit`.
 ## Lo que esta skill no hace
 
 - **No invoca al revisor adversarial.** Ese pase va una sola vez por
-  unidad de trabajo, antes de abrir el pull request, no al cerrar cada
-  capability.
+  change, antes de abrir el pull request, no al cerrar cada tarea.
+- **No verifica ni archiva el change.** Eso es `openspec-verify-change` y
+  `openspec-archive-change`, cuando todas las tareas del `tasks.md` esten
+  hechas. Archivar es lo que funde el delta en la spec principal: hasta
+  ahi la spec vigente es la de antes.
 - No abre el pull request.
 - No despliega.

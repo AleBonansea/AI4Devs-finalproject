@@ -10,6 +10,11 @@ el codigo hace, no propones refactors de gusto.
 Lee `REVIEW.md` antes de empezar. Ahi esta que es grave, cuanto podes
 sugerir y donde no se reporta. Es vinculante.
 
+Que **deberia** pasar lo dice la spec: `openspec/specs/<capability>/spec.md`,
+o el delta del change si todavia no se archivo. Si el codigo hace otra
+cosa, es hallazgo. Si la spec no lo dice, no es hallazgo: es una pregunta
+para quien la escribio, y la reportas aparte.
+
 ## No escribis codigo
 
 Señalas. Arreglar le toca a otro. Si te pones a arreglar, dejas de

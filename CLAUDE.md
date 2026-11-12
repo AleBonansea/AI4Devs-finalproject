@@ -9,8 +9,8 @@ Sistema de administración para la escuelita de verano del club sede: gestiona f
 1. `docs/prd/aclaraciones-cliente.md` — decisiones del cliente posteriores al PRD. **Prevalece** cuando contradice al PRD.
 2. `docs/prd/prd-escuelita-de-verano.md` — transcripción fiel del PRD original. No se modifica.
 3. `docs/architecture/documento-tecnico.md` — stack, despliegue y seguridad.
-4. `5-historias-de-usuario.md` — criterios de aceptación de las historias en curso. Mandan sobre el código.
-5. `docs/product/historias-backlog.md` — alcance: qué entra en este lote y qué no.
+4. `openspec/specs/<capability>/spec.md` — el comportamiento especificado, un Scenario por caso. Es lo que los tests comprueban y manda sobre el código. Mientras una capability está dentro de un change, manda el delta en `openspec/changes/<change>/specs/`.
+5. `docs/product/historias-backlog.md` y `5-historias-de-usuario.md` — las historias y el alcance: qué entra en este lote. Los criterios de las historias ya construidas viven en las specs, no acá.
 
 **El prototipo no es especificación.** Las capturas de `docs/previews/` son de un prototipo anterior al modelo de datos y tienen diferencias conocidas con él (campo de medio de pago, asistencia dentro del cálculo, cargo de día por rango). Sirven para ver la intención visual, nunca para deducir comportamiento.
 
@@ -207,12 +207,13 @@ Los datos se conservan entre temporadas: no se borra nada.
 
 1. **La rama es por unidad de trabajo, no por petición.** Antes de tocar código mirá en qué rama estás: si ya es una rama de trabajo (`feat/*`), seguí en ella. Solo desde `main` o desde una rama de entrega se crea una nueva con `git checkout -b feat/<slug>`. Nunca se commitea directo en `main` ni en una rama de entrega.
 2. **El commit sí es por petición**: al cerrar cada una, usar la skill `/commit`.
-3. **Cualquier tarea de backend usa la skill `backend-feature`**, y cualquier pieza de interfaz usa `frontend-feature`, aunque nadie lo pida. No se escribe código de producción sin pasar por ellas: definen el orden tests → rojo → congelar → implementar → verde.
-4. **Un cambio que toque rutas, esquemas o modelos se cierra en el mismo commit con `docs/api/openapi.json` regenerado** (`make openapi-generate`). El CI lo comprueba.
-5. **El pase del subagente `adversarial-reviewer` va una sola vez, al terminar la unidad de trabajo**, antes de abrir el pull request. No al cerrar cada petición.
-6. **Los pull requests se abren dentro de este fork**, de `feat/*` hacia la rama de entrega. Ahí corre el revisor automático; en los PR hacia el repositorio de LIDR no corre, porque un fork no recibe los secretos.
-7. Todo en español: código comentado en español, mensajes de error en español, nombres de dominio en español (`familia`, `cargo`, `tarifa`).
-8. **Lo que no esté en las fuentes de verdad se marca como [SUPUESTO]**:
+3. **Toda unidad de trabajo es un change de OpenSpec.** Arranca con `/openspec-propose`, se construye con `/openspec-apply-change`, se comprueba con `/openspec-verify-change` y se cierra con `/openspec-archive-change`, que funde el delta en la spec. No se escribe código de producción fuera de un change: sin spec no hay contra qué escribir el test.
+4. **Dentro del change, cada tarea de backend usa la skill `backend-feature`** y cada pieza de interfaz usa `frontend-feature`, aunque nadie lo pida. Definen el orden tests → rojo → congelar → implementar → verde.
+5. **Un cambio que toque rutas, esquemas o modelos se cierra en el mismo commit con `docs/api/openapi.json` regenerado** (`make openapi-generate`). El CI lo comprueba.
+6. **El pase del subagente `adversarial-reviewer` va una sola vez, al terminar la change**, antes de abrir el pull request. No al cerrar cada tarea.
+7. **Los pull requests se abren dentro de este fork**, de `feat/*` hacia la rama de entrega. Ahí corre el revisor automático; en los PR hacia el repositorio de LIDR no corre, porque un fork no recibe los secretos.
+8. Todo en español: código comentado en español, mensajes de error en español, nombres de dominio en español (`familia`, `cargo`, `tarifa`).
+9. **Lo que no esté en las fuentes de verdad se marca como [SUPUESTO]**:
    - Lo **confirmado** en `aclaraciones-cliente.md` es fuente de verdad y no lleva la marca.
    - Lo que ahí figura como **[SUPUESTO]** o como pregunta abierta no es fuente de verdad: se sigue marcando, pero referenciando esa entrada.
    - Una **regla de negocio** que no aparece en ninguna fuente se marca **[SUPUESTO]** y se registra como pregunta abierta en `aclaraciones-cliente.md`.

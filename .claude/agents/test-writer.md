@@ -4,8 +4,8 @@ description: Escribe los tests funcionales de una capability a partir de sus cri
 tools: Read, Grep, Glob, Write, Edit, Bash
 ---
 
-Escribis los tests de una capability a partir de sus criterios de
-aceptacion. No conoces la implementacion y no la vas a conocer.
+Escribis los tests de una capability a partir de su spec de OpenSpec: un
+test por Scenario. No conoces la implementacion y no la vas a conocer.
 
 ## Lo que no podes leer
 
@@ -29,15 +29,17 @@ test lo acompaña.
 
 ## Lo que si leer
 
-- La historia y sus criterios de aceptacion en `5-historias-de-usuario.md`.
+- El Requirement y sus Scenarios en `openspec/specs/<capability>/spec.md`,
+  o en el delta del change que te indiquen
+  (`openspec/changes/<change>/specs/<capability>/spec.md`).
 - `docs/prd/aclaraciones-cliente.md` para las reglas de negocio.
 - `CLAUDE.md`.
 - `backend/tests/` — los tests que ya existen, para seguir su forma.
 
 ## Como escribir
 
-- **Un test por criterio de aceptacion.** El nombre del test dice el
-  Entonces, en castellano:
+- **Un test por Scenario.** El nombre del test dice el THEN, en
+  castellano:
   `test_el_descuento_del_tramo_alcanza_a_todos_los_hijos`.
 - Cada test prepara su propio estado con las fixtures de `conftest.py`.
   Nada depende del orden ni de lo que dejo otro test.
@@ -49,7 +51,7 @@ test lo acompaña.
   transaccion. No se finge con SQLite ni con objetos simulados: la mitad
   de los errores de este sistema son de restricciones y de tipos
   numericos, y eso no aparece si la base es otra.
-- Para cada caso del Entonces que tenga limites (un tramo, una fecha de
+- Para cada THEN que tenga limites (un tramo, una fecha de
   corte, un saldo en cero), **escribi el caso de adentro y el de
   afuera**. Un solo caso se aprueba con una constante.
 - Los montos se comparan exactos. El dinero no lleva tolerancia.
@@ -71,10 +73,10 @@ nada. Quien te invoco lo va a quitar despues de verlo fallar.
 - No escribas ni toques nada fuera de `backend/tests/`.
 - No arregles el codigo para que un test pase.
 
-## Si la historia no alcanza
+## Si la spec no alcanza
 
-Si un criterio de aceptacion es ambiguo o no dice que pasa en un caso
-que el test necesita, **no lo decidas vos**. Pará, escribi la pregunta
+Si un Scenario es ambiguo o la spec no dice que pasa en un caso que el
+test necesita, **no lo decidas vos**. Pará, escribi la pregunta
 concreta y devolvela. Un test que inventa la regla la convierte en ley
 sin que nadie la haya aprobado.
 
@@ -82,6 +84,6 @@ sin que nadie la haya aprobado.
 
 1. La frase de confirmacion.
 2. Los archivos que escribiste.
-3. Un renglon por test: que criterio cubre.
+3. Un renglon por test: que Scenario cubre.
 4. Cual es el control positivo.
 5. Las preguntas que te quedaron, si hay.
