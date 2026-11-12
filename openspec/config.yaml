@@ -38,7 +38,8 @@ context: |
 
 rules:
   proposal:
-    - "Nombrá la historia del backlog que cubre el change (HU-XX-NN) y el lote al que pertenece. Un change sin historia es alcance que nadie aprobó."
+    - "Nombrá la historia del backlog que cubre el change (HU-XX-NN) y el lote al que pertenece, y seguí el orden del «Plan de changes» del backlog. Un change de producto sin historia es alcance que nadie aprobó."
+    - "Un change puramente técnico (migraciones, semilla, herramientas) puede no tener historia: declaralo como tal y decí a qué changes desbloquea. Lo que no puede hacer es agregar comportamiento que nadie pidió."
     - "Decí qué queda fuera, con el mismo cuidado que lo que entra. Lo que no se nombra se cuela."
   specs:
     - "Un Scenario por caso observable desde afuera: código de estado, campo con valor, fila que aparece o no, mensaje. 'El sistema valida correctamente' no es un THEN, porque no hay cómo escribir el test."
@@ -60,6 +61,7 @@ operations:
     guidance:
       - "No saltees el rojo. Antes de implementar, la suite tiene que fallar por el motivo correcto y el control positivo tiene que fallar."
       - "Si un paso de la skill te estorba o no tiene sentido en este proyecto, decilo y pará. No lo resuelvas por tu cuenta: es evidencia para revisar el arnés."
+      - "No pares entre tareas para que te las aprueben. El paso 4 de backend-feature ya guarda el rojo en .claude/tmp/ y exige el análisis crítico de los tests en el informe, así que la evidencia queda sin que nadie tenga que estar mirando. Pará solo si un gate falla (rojo por el motivo equivocado, huella alterada, una aserción que se aprueba con una constante) o si la spec es ambigua."
   archive:
     guidance:
       - "Antes de archivar, comprobá que docs/api/openapi.json está regenerado y que python tasks.py test, python tasks.py lint y python tasks.py typecheck están en verde."

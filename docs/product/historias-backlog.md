@@ -290,6 +290,40 @@ Once historias. Es el flujo que se demuestra de punta a punta: entrar, cargar un
 
 **Dónde está el riesgo.** De las once, dos concentran casi todo: HU-TAR-04, el cálculo, y HU-CC-01, el cargo. Ahí viven el porcentaje único no acumulado, el tramo que alcanza a todos los hijos, el conteo de hermanos por turno y la persistencia del cálculo en el cargo. El resto son altas y consultas. El tiempo de revisión se reparte en consecuencia.
 
+### Plan de changes del lote 1
+
+Las historias dicen **qué** hay que construir; esta tabla dice **en qué orden y agrupadas cómo**. Cada fila es un change de OpenSpec: se propone con `/openspec-propose`, se construye con `/openspec-apply-change` y se cierra con `verify` y `archive`.
+
+| # | Change | Historias | Qué queda funcionando al cerrarlo |
+|---|---|---|---|
+| 1 | `auth-ingreso` | HU-UT-01 (backend) | Entrar por la API, saber quién llama y declarar qué rol usa cada endpoint |
+| 2 | `tarifario-y-semilla` | — (infraestructura) | Las tablas de grupos y tarifario, y `python tasks.py seed` cargando una temporada completa |
+| 3 | `pantalla-de-ingreso` | HU-UT-01 (frontend) | Entrar desde el navegador |
+| 4 | `familias-y-alumnos` | HU-AF-02, HU-AF-04, HU-AF-03, HU-AF-01 | Cargar una familia con su categoría, su tutor y un hijo inscripto en un grupo |
+| 5 | `asistencia` | HU-GA-04 | Tomar asistencia por grupo, día y turno |
+| 6 | `cobro` | HU-TAR-04, HU-CC-01 | Registrar un cargo con su cálculo de tarifa y descuento |
+| 7 | `cuenta-corriente` | HU-CC-02, HU-CC-03, HU-TES-01 | Pagar en cuotas, ver el saldo de la familia y el ingreso en tesorería |
+
+**Del 4 en adelante, cada change incluye su pantalla.** Un change es una tajada vertical —modelo, API y pantalla— y no una capa. Así cada uno se puede demostrar solo, que es lo que pide la Entrega 2: «el flujo principal operativo».
+
+#### Por qué este orden
+
+Las tres razones que lo determinan, por si hay que replanificar:
+
+1. **Primero lo que desbloquea al resto.** El change 2 no tiene historias: son las tablas que la semilla llena y el script que las llena. Sin eso no hay con qué entrar, dónde inscribir ni con qué calcular, y los changes 4 a 7 no se pueden demostrar. Un change técnico sin historia es legítimo cuando desbloquea a otros; lo que no es legítimo es que agregue comportamiento que nadie pidió.
+2. **Las dependencias de datos mandan.** Un pago necesita un cargo (7 después de 6); un cargo necesita un alumno inscripto y un tarifario (6 después de 4 y de 2); una pantalla de ingreso necesita usuarios (3 después de 2).
+3. **Lo riesgoso, ni primero ni último.** El cálculo del cargo (change 6) concentra casi todo el riesgo del sistema. Va cuando el arnés ya está rodado y todavía queda tiempo para arreglar lo que aparezca. Por la misma razón el change 3 es chico: es el estreno de `frontend-feature`, que nunca corrió, y conviene estrenarla en una pantalla sin reglas de negocio.
+
+#### Cómo arrancar el que sigue
+
+Cuando un change está archivado, el siguiente arranca así:
+
+```
+/openspec-propose <nombre del change de la tabla>: <las historias que cubre>
+```
+
+El `config.yaml` de OpenSpec ya aporta el contexto: las fuentes de verdad, las reglas que ningún change puede contradecir y lo que cada artefacto tiene que incluir.
+
 ### Lote 2 — el ABM que la semilla sustituye
 
 Diez historias. Nueve son las que `python tasks.py seed` cubre durante el lote 1 y que el sistema necesita antes de ser productivo, porque en producción no hay semilla: alguien tiene que poder crear un usuario y configurar la temporada desde la aplicación. La décima, HU-UT-08, no la sustituye la semilla: es endurecimiento que tiene que estar antes de producción.
