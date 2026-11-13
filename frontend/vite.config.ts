@@ -21,5 +21,9 @@ export default defineConfig({
     environment: "jsdom",
     include: ["tests/**/*.test.{ts,tsx}"],
     setupFiles: ["./tests/preparar.ts"],
+    // Los tests que completan el alta tardan de 2 a 5 s con la suite entera
+    // (jsdom es lento con las hojas de estilo de MUI) y el de 403 llego a
+    // pasarse de los 5 s por defecto. Lo decidio una persona: ver tarea 9.4.
+    testTimeout: 10000,
   },
 });

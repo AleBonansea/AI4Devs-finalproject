@@ -88,7 +88,7 @@
   - **Se verifica con** los tests nuevos en rojo por el motivo correcto (los de comodines y carrera pueden pasar ya: protegen comportamiento que existe, y se ven fallar quitando a mano el escape o el `except` antes de congelar), en verde después, `docs/api/openapi.json` regenerado si cambió, y `python tasks.py test`, `lint` y `typecheck` en verde.
 - [ ] 9.3 Con la skill `frontend-feature`, el Scenario nuevo de `alumnos` «Corregir la fecha cambia el grupo elegido por la sugerencia» (1).
   - **Se verifica con** el test en rojo por el motivo correcto, después en verde, y `python tasks.py front-test` y `front-lint` en verde.
-- [ ] 9.4 Subir `testTimeout` a 10000 en el bloque `test` de `frontend/vite.config.ts` y actualizar la huella de `frontend/tests/` y `vite.config.ts`. **Se verifica con** `python tasks.py front-test` en verde dos veces seguidas.
+- [x] 9.4 Subir `testTimeout` a 10000 en el bloque `test` de `frontend/vite.config.ts` y actualizar la huella de `frontend/tests/` y `vite.config.ts`. **Se verifica con** `python tasks.py front-test` en verde dos veces seguidas.
 
 ## Workflow follow-up
 
