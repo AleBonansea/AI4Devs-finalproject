@@ -6,7 +6,7 @@
  * Spec: openspec/changes/pantalla-de-ingreso/specs/auth/spec.md
  * Un test por Scenario; el nombre dice el THEN.
  */
-import { screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import {
@@ -95,6 +95,42 @@ function botonIngresar() {
   return screen.getByRole("button", { name: /Ingresar/ });
 }
 
+/** El texto como expresion regular literal, para "contiene" sin comodines. */
+function contiene(texto: string): RegExp {
+  return new RegExp(texto.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+}
+
+/** Los `role="alert"` que hay en pantalla y contienen ese texto. */
+function alertasCon(texto: string): HTMLElement[] {
+  return screen.queryAllByRole("alert").filter((alerta) => alerta.textContent?.includes(texto));
+}
+
+/**
+ * El mensaje esta al lado de `campo`: es su descripcion accesible y el campo
+ * queda marcado como invalido. El `otro` campo no lo tiene como descripcion
+ * y ningun aviso general (`role="alert"`) lo repite.
+ */
+function expectMensajeDelCampo(campo: HTMLElement, otro: HTMLElement, mensaje: string) {
+  expect(campo).toHaveAccessibleDescription(contiene(mensaje));
+  expect(campo).toHaveAttribute("aria-invalid", "true");
+  expect(otro).not.toHaveAccessibleDescription(contiene(mensaje));
+  expect(alertasCon(mensaje)).toHaveLength(0);
+}
+
+/**
+ * Lo que exige el Requirement «Error general del ingreso» para cualquier
+ * rechazo general: el aviso dentro de un `role="alert"`, el usuario
+ * conservado, la contrasena vacia, sin token y en `/ingresar`.
+ */
+async function expectErrorGeneral(aviso: string, usuarioEscrito: string) {
+  expect(await screen.findByText(aviso)).toBeInTheDocument();
+  await waitFor(() => expect(alertasCon(aviso).length).toBeGreaterThan(0));
+  expect(campoUsuario()).toHaveValue(usuarioEscrito);
+  await waitFor(() => expect(campoContrasena()).toHaveValue(""));
+  expect(localStorage.getItem(CLAVE_TOKEN)).toBeNull();
+  expect(direccion()).toBe("/ingresar");
+}
+
 /** Abre `/ingresar` y espera a que el formulario este a la vista. */
 async function abrirIngreso() {
   abrir("/ingresar");
@@ -156,6 +192,8 @@ describe("Campos vacíos no se envían", () => {
 
     expect(await screen.findByText(FALTA_USUARIO)).toBeInTheDocument();
     expect(await screen.findByText(FALTA_CONTRASENA)).toBeInTheDocument();
+    expectMensajeDelCampo(campoUsuario(), campoContrasena(), FALTA_USUARIO);
+    expectMensajeDelCampo(campoContrasena(), campoUsuario(), FALTA_CONTRASENA);
     expect(api).not.toHaveBeenCalled();
   });
 
@@ -167,6 +205,7 @@ describe("Campos vacíos no se envían", () => {
     await ingresar(usuario, "   ", "Verano2026");
 
     expect(await screen.findByText(FALTA_USUARIO)).toBeInTheDocument();
+    expectMensajeDelCampo(campoUsuario(), campoContrasena(), FALTA_USUARIO);
     expect(api).not.toHaveBeenCalled();
   });
 
@@ -258,8 +297,11 @@ describe("Estado de carga del ingreso", () => {
 
   it("un doble clic antes de que la API responda hace una sola llamada al login", async () => {
     const api = apiDeIngreso(() => sinRespuesta());
-    // Sin la comprobacion de pointer-events: el segundo clic tiene que llegar
-    // aunque el boton ya este deshabilitado, como lo haria una persona.
+    // Sin la comprobacion de pointer-events para que user-event no aborte el
+    // segundo clic. Ojo: user-event no despacha `click` sobre un boton
+    // deshabilitado, asi que aca lo que frena el segundo envio es el
+    // `disabled` del boton. El freno en el mismo tick, antes de que React
+    // vuelva a renderizar, lo prueba el test siguiente.
     const usuario = userEvent.setup({ pointerEventsCheck: 0 });
 
     await abrirIngreso();
@@ -267,6 +309,29 @@ describe("Estado de carga del ingreso", () => {
     await usuario.type(campoContrasena(), "Verano2026");
     await usuario.click(botonIngresar());
     await usuario.click(botonIngresar());
+
+    await waitFor(() => expect(llamadasALogin(api).length).toBeGreaterThan(0));
+    expect(await screen.findByRole("progressbar")).toBeInTheDocument();
+    expect(llamadasALogin(api)).toHaveLength(1);
+  });
+
+  it("un doble clic no manda dos ingresos: dos envíos del formulario en el mismo tick hacen una sola llamada al login", async () => {
+    const api = apiDeIngreso(() => sinRespuesta());
+    const usuario = userEvent.setup();
+
+    await abrirIngreso();
+    await usuario.type(campoUsuario(), "jperez");
+    await usuario.type(campoContrasena(), "Verano2026");
+    const formulario = campoUsuario().closest("form");
+    expect(formulario).not.toBeNull();
+
+    // Los dos envios van dentro de un mismo `act`: React no vuelve a
+    // renderizar entre uno y otro, asi que el boton todavia no esta
+    // deshabilitado cuando llega el segundo.
+    act(() => {
+      fireEvent.submit(formulario as HTMLFormElement);
+      fireEvent.submit(formulario as HTMLFormElement);
+    });
 
     await waitFor(() => expect(llamadasALogin(api).length).toBeGreaterThan(0));
     expect(await screen.findByRole("progressbar")).toBeInTheDocument();
@@ -293,35 +358,30 @@ describe("Error general del ingreso", () => {
     await abrirIngreso();
     await ingresar(usuario, "jperez", "Otra1234");
 
-    expect(await screen.findByText(CREDENCIALES_INCORRECTAS)).toBeInTheDocument();
-    expect(campoUsuario()).toHaveValue("jperez");
-    await waitFor(() => expect(campoContrasena()).toHaveValue(""));
-    expect(localStorage.getItem(CLAVE_TOKEN)).toBeNull();
-    expect(direccion()).toBe("/ingresar");
+    await expectErrorGeneral(CREDENCIALES_INCORRECTAS, "jperez");
   });
 
-  it("con el usuario bloqueado se ve el aviso del bloqueo y no se guarda token", async () => {
+  it("con el usuario bloqueado se ve el aviso del bloqueo, se conserva el usuario, se vacía la contraseña, no se guarda token y sigue en /ingresar", async () => {
     apiDeIngreso(async () => respuestaJson(403, { detail: USUARIO_BLOQUEADO }));
     const usuario = userEvent.setup();
 
     await abrirIngreso();
     await ingresar(usuario, "jperez", "Verano2026");
 
-    expect(await screen.findByText(USUARIO_BLOQUEADO)).toBeInTheDocument();
-    expect(localStorage.getItem(CLAVE_TOKEN)).toBeNull();
+    await expectErrorGeneral(USUARIO_BLOQUEADO, "jperez");
   });
 
-  it("sin conexión con el servidor se ve el aviso de conexión", async () => {
+  it("sin conexión con el servidor se ve el aviso de conexión, se conserva el usuario, se vacía la contraseña, no se guarda token y sigue en /ingresar", async () => {
     fingirFetch(() => Promise.reject(new TypeError("Failed to fetch")));
     const usuario = userEvent.setup();
 
     await abrirIngreso();
     await ingresar(usuario, "jperez", "Verano2026");
 
-    expect(await screen.findByText(MENSAJE_SIN_CONEXION)).toBeInTheDocument();
+    await expectErrorGeneral(MENSAJE_SIN_CONEXION, "jperez");
   });
 
-  it("con un error 500 sin cuerpo JSON se ve el aviso de problema del servidor", async () => {
+  it("con un error 500 sin cuerpo JSON se ve el aviso de problema del servidor, se conserva el usuario, se vacía la contraseña, no se guarda token y sigue en /ingresar", async () => {
     apiDeIngreso(
       async () =>
         new Response("Internal Server Error", {
@@ -334,7 +394,7 @@ describe("Error general del ingreso", () => {
     await abrirIngreso();
     await ingresar(usuario, "jperez", "Verano2026");
 
-    expect(await screen.findByText(MENSAJE_ERROR_SERVIDOR)).toBeInTheDocument();
+    await expectErrorGeneral(MENSAJE_ERROR_SERVIDOR, "jperez");
   });
 
   it("al volver a intentar con éxito el aviso ya no está y se ve la zona protegida", async () => {
@@ -373,7 +433,9 @@ describe("Error por campo del ingreso", () => {
     await ingresar(usuario, "jperez", "Verano2026");
 
     expect(await screen.findByText(mensaje)).toBeInTheDocument();
-    expect(screen.queryByText(FALTA_CONTRASENA)).not.toBeInTheDocument();
+    expectMensajeDelCampo(campoUsuario(), campoContrasena(), mensaje);
+    // Al lado de Contrasena no aparece ningun mensaje.
+    expect(campoContrasena()).toHaveAccessibleDescription("");
     expect(campoContrasena()).not.toHaveAttribute("aria-invalid", "true");
     expect(localStorage.getItem(CLAVE_TOKEN)).toBeNull();
   });
@@ -391,6 +453,7 @@ describe("Error por campo del ingreso", () => {
     await ingresar(usuario, "jperez", "Verano2026");
 
     expect(await screen.findByText(mensaje)).toBeInTheDocument();
+    expectMensajeDelCampo(campoContrasena(), campoUsuario(), mensaje);
   });
 });
 

@@ -44,7 +44,14 @@
 
 ## 4. Revisión adversarial
 
-- [ ] 4.1 Un pase del subagente `adversarial-reviewer` sobre el change terminado, antes del pull request. Rige `REVIEW.md`, «Cuándo se deja de revisar». Se verifica con sus hallazgos resueltos o justificados por escrito en esta tarea.
+- [x] 4.1 Un pase del subagente `adversarial-reviewer` sobre el change terminado, antes del pull request. Rige `REVIEW.md`, «Cuándo se deja de revisar». Se verifica con sus hallazgos resueltos o justificados por escrito en esta tarea.
+  - **Primer pase: 1 grave, 4 menores.** El código cumplía los 33 Scenarios. Los problemas estaban en los tests.
+    - Grave, resuelto: los tests de «Error por campo del ingreso» se aprobaban con el mensaje en el aviso general o en el campo equivocado. `test-writer` los ató a la descripción accesible y al `aria-invalid` del campo que corresponde, y verificó que no haya un `role="alert"` con ese texto. Lo mismo para «Campos vacíos no se envían».
+    - Menor 1, resuelto: la ref contra el doble envío no la ejercitaba ningún test (user-event no hace clic sobre un botón deshabilitado). Hay un test nuevo con dos `submit` en el mismo tick, colgado de «Un doble clic no manda dos ingresos».
+    - Menor 3, resuelto: los tests de 403, 500 y sin conexión ahora comprueban, como el de 401, todo el Requirement: el aviso en `role="alert"`, el usuario conservado, la contraseña vacía, sin token y en `/ingresar`.
+    - Menores 2 y 4, diferidos en el design: el 401 fuera de `/yo` (se resuelve a más tardar en el change 4) y los errores 422 de otros campos.
+    - Pregunta sobre el título del Inicio: se aclaró la spec («Además del nombre de la aplicación, no tiene otro contenido»). Las otras dos preguntas, si un 422 vacía la contraseña y si `/ingresar` con sesión vigente muestra el formulario, quedan como están: la spec no lo pide y el design ya lo decide.
+  - **Verificación de los tests endurecidos, con mutaciones de `Ingreso.tsx`.** Sin el reparto por campo caen 2; con el reparto invertido, 2; sin la ref, 1; sin vaciar la contraseña en 403 y 500, 2. Con el código original pasan los 37, la huella se recongeló, y `front-test` y `front-lint` pasan.
 
 ## Workflow follow-up
 
