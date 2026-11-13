@@ -28,9 +28,9 @@
   - Orden de las reglas, juntado de errores del paso 4 y carrera en el DNI según design, «El alta, en un servicio». `ReglaIncumplida` y su manejador según design, «Rechazos de reglas con la forma del 422».
   - Los tests de «no se crea nada» cuentan filas de `familia`, `persona`, `familia_persona`, `alumno` e `inscripcion` antes y después.
   - **Se verifica con** los 29 tests en rojo por el motivo correcto y después en verde, `docs/api/openapi.json` regenerado, y `python tasks.py test`, `lint` y `typecheck` en verde.
-- [ ] 4.2 Con la skill `backend-feature`, traducir los `msg` del 422 en el manejador de `app/main.py`, según el Requirement de `errores-de-la-api` «Mensajes de validación en castellano» (7 Scenarios) y el Scenario «Faltan varios datos mínimos» de `alumnos`: 8 Scenarios.
+- [x] 4.2 Con la skill `backend-feature`, traducir los `msg` del 422 en el manejador de `app/main.py`, según el Requirement de `errores-de-la-api` «Mensajes de validación en castellano» (8 Scenarios) y el Scenario «Faltan varios datos mínimos» de `alumnos`: 9 Scenarios.
   - La tabla por `type` del design, «Traducción de los 422 de Pydantic». El 422 sigue sin `input`: los tests de `auth` sobre el 422 tienen que seguir en verde sin tocarlos.
-  - **Se verifica con** los 8 tests en rojo por el motivo correcto (el `msg` llega en inglés) y después en verde, `docs/api/openapi.json` regenerado si cambió, y `python tasks.py test`, `lint` y `typecheck` en verde.
+  - **Se verifica con** los 9 tests en rojo por el motivo correcto (el `msg` llega en inglés o con el texto de otro caso) y después en verde, `docs/api/openapi.json` regenerado si cambió, y `python tasks.py test`, `lint` y `typecheck` en verde.
 
 ## 5. Contrato
 

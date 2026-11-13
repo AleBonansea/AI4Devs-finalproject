@@ -10,7 +10,7 @@ from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from app.api.v1.router import router as router_v1
 from app.core.config import obtener_configuracion
-from app.core.errores import ReglaIncumplida
+from app.core.errores import ReglaIncumplida, mensaje_en_castellano
 
 
 @asynccontextmanager
@@ -38,9 +38,14 @@ app.add_middleware(
 @app.exception_handler(RequestValidationError)
 async def error_de_validacion(_: Request, exc: RequestValidationError) -> JSONResponse:
     # El mismo 422 que FastAPI pero sin `input`: no repite lo recibido (una
-    # contrasena rechazada, un surrogate que no se puede codificar).
+    # contrasena rechazada, un surrogate que no se puede codificar). El `msg`
+    # se reemplaza por su version en castellano segun el `type`.
     errores = [
-        {clave: valor for clave, valor in e.items() if clave != "input"} for e in exc.errors()
+        {
+            **{clave: valor for clave, valor in e.items() if clave != "input"},
+            "msg": mensaje_en_castellano(e["type"], e["msg"], e.get("ctx")),
+        }
+        for e in exc.errors()
     ]
     return JSONResponse(
         status_code=HTTP_422_UNPROCESSABLE_ENTITY,

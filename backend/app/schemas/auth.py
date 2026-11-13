@@ -4,6 +4,7 @@ import unicodedata
 from typing import Annotated, Literal
 
 from pydantic import AfterValidator, BaseModel, BeforeValidator, ConfigDict, Field
+from pydantic_core import PydanticCustomError
 
 from app.models.usuario import RolUsuario
 
@@ -20,7 +21,10 @@ def _normalizar_username(valor: object) -> object:
 def _sin_caracteres_de_control(valor: str) -> str:
     # Un NUL llegaba a Postgres, que lo rechaza, y el login respondia 500.
     if any(unicodedata.category(c) == "Cc" for c in valor):
-        raise ValueError("El usuario no puede tener caracteres de control.")
+        # Type `regla_de_negocio`: el manejador del 422 deja el mensaje intacto.
+        raise PydanticCustomError(
+            "regla_de_negocio", "El usuario no puede tener caracteres de control."
+        )
     return valor
 
 
@@ -29,7 +33,7 @@ def _sin_surrogates(valor: str) -> str:
     # suelto escrito como escape, y Pydantic valida el str ya decodificado
     # sin rechazarlo. Llegaba a Postgres y el login respondia 500.
     if any(unicodedata.category(c) == "Cs" for c in valor):
-        raise ValueError("El texto tiene un caracter invalido.")
+        raise PydanticCustomError("regla_de_negocio", "El texto tiene un carácter inválido.")
     return valor
 
 

@@ -5,6 +5,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import AfterValidator
+from pydantic_core import PydanticCustomError
 from sqlalchemy.orm import Session
 
 from app.core.db import obtener_sesion
@@ -23,7 +24,8 @@ def _dni_normalizado(texto: str) -> str:
     """Normaliza el DNI pedido; vacio despues de normalizar es un 422."""
     dni = normalizar_dni(texto)
     if not dni:
-        raise ValueError("Ingresá un DNI.")
+        # Type `regla_de_negocio`: el manejador del 422 deja el mensaje intacto.
+        raise PydanticCustomError("regla_de_negocio", "Ingresá un DNI.")
     return dni
 
 
