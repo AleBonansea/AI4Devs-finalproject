@@ -627,7 +627,7 @@ Todas las tablas de esta sección cuelgan de `temporada`: cada verano tiene su p
 | `temporada_id` | bigint | FK → temporada, NOT NULL | |
 | `nombre` | varchar(60) | NOT NULL | |
 | `calculo` | calculo_cargo | NOT NULL | `monto_fijo` (Preinscripción) o `tarifario` (Abono). |
-| `monto_fijo` | numeric(12,2) | NULL | |
+| `monto_fijo` | numeric(12,2) | NULL, `CHECK (monto_fijo > 0)` | |
 
 **Reglas:**
 - `UNIQUE (temporada_id, nombre)`.

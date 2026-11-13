@@ -207,7 +207,11 @@ Los datos se conservan entre temporadas: no se borra nada.
 
 ## Reglas de proceso
 
-1. **La rama es por unidad de trabajo, no por petición.** Antes de tocar código mirá en qué rama estás: si ya es una rama de trabajo (`feat/*`), seguí en ella. Solo desde `main` o desde una rama de entrega se crea una nueva con `git checkout -b feat/<slug>`. Nunca se commitea directo en `main` ni en una rama de entrega.
+1. **Una rama por change, no por petición.** Cada change de OpenSpec, es decir cada fila del «Plan de changes» (una historia, varias o ninguna si es técnico), tiene su propia rama `feat/<nombre-del-change>`. Antes de tocar código mirá en qué rama estás:
+   - Si es la rama `feat/*` del change en curso, seguí en ella.
+   - Si es la rama de **otro** change, aunque ya esté archivado o mergeado, no sigas ahí: se arranca una nueva.
+   - La rama nueva sale de la rama de entrega **actualizada** (`git fetch` y `git merge --ff-only origin/<rama-de-entrega>`), nunca de la rama de otro change: `git checkout -b feat/<nombre-del-change>`. Si el change anterior todavía no se mergeó y el nuevo depende de él, pará y preguntá antes de apilar una rama sobre otra.
+   - Nunca se commitea directo en `main` ni en una rama de entrega.
 2. **El commit sí es por petición**: al cerrar cada una, usar la skill `/commit`.
 3. **Toda unidad de trabajo es un change de OpenSpec.** Arranca con `/openspec-propose`, se construye con `/openspec-apply-change`, se comprueba con `/openspec-verify-change` y se cierra con `/openspec-archive-change`, que funde el delta en la spec. No se escribe código de producción fuera de un change: sin spec no hay contra qué escribir el test.
 4. **Dentro del change, cada tarea de backend usa la skill `backend-feature`** y cada pieza de interfaz usa `frontend-feature`, aunque nadie lo pida. Definen el orden tests → rojo → congelar → implementar → verde.

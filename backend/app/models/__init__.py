@@ -5,7 +5,32 @@ modelo que no se importa no existe para `--autogenerate`. Si falta uno, el
 autogenerate propone borrar su tabla.
 """
 
+from app.models.enums import CalculoCargo, CategoriaFamilia, Modalidad, Turno
+from app.models.grupo import Grupo, GrupoProfesor
+from app.models.tarifario import (
+    DescuentoMes,
+    DescuentoModalidad,
+    PeriodoCobro,
+    TarifaBase,
+    TipoCargo,
+)
 from app.models.temporada import EstadoTemporada, Temporada
 from app.models.usuario import RolUsuario, Usuario
 
-__all__ = ["EstadoTemporada", "RolUsuario", "Temporada", "Usuario"]
+__all__ = [
+    "CalculoCargo",
+    "CategoriaFamilia",
+    "DescuentoMes",
+    "DescuentoModalidad",
+    "EstadoTemporada",
+    "Grupo",
+    "GrupoProfesor",
+    "Modalidad",
+    "PeriodoCobro",
+    "RolUsuario",
+    "TarifaBase",
+    "Temporada",
+    "TipoCargo",
+    "Turno",
+    "Usuario",
+]
