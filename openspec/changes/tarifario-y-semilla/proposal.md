@@ -23,7 +23,7 @@ Hoy la base solo tiene `temporada` y `usuario`, y `scripts/seed.py`, al que ya a
 - `categoria_familia` entra ahora porque la usan los descuentos.
 - La tabla `familia` llega con el change 4.
 
-**Una migración reversible** que crea las siete tablas y los cuatro tipos, y los borra en el `downgrade`.
+**Dos migraciones reversibles.** La primera crea las siete tablas y los cuatro tipos, y los borra en el `downgrade`. La segunda agrega `CHECK (monto_fijo > 0)` a `tipo_cargo`, que surgió del pase adversarial.
 
 **La semilla:** `python tasks.py seed` carga en una base vacía una temporada 2026-27 completa con datos inventados:
 - Usuarios de los tres roles, que pueden ingresar con `POST /api/v1/auth/login` sin cambio de contraseña pendiente.
@@ -63,12 +63,12 @@ Ninguna. La capability `auth` no cambia: la semilla crea usuarios que el login e
 
 - **Código nuevo:**
   - `app/models/grupo.py`, `app/models/tarifario.py` y los tipos enumerados compartidos, todos registrados en `app/models/__init__.py`;
-  - una migración en `backend/alembic/versions/`;
+  - dos migraciones en `backend/alembic/versions/`;
   - la lógica de la semilla dentro del paquete `app`, para poder probarla;
   - `scripts/seed.py`, que solo la invoca.
 - **API:** sin rutas nuevas. `docs/api/openapi.json` no debería cambiar, y se comprueba con `python tasks.py openapi-check`.
 - **Dependencias de paquetes:** ninguna nueva.
-- **Datos:** la migración solo agrega. `temporada` y `usuario` no se tocan.
+- **Datos:** las migraciones solo agregan. `temporada` y `usuario` no se tocan.
 - **Lo que este change fija para los que siguen:**
   - la FK compuesta de `inscripcion` apunta a `grupo (id, temporada_id, turno)`, que este change declara único;
   - la de `cargo` apunta a `periodo_cobro (id, modalidad)`.
