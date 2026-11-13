@@ -2,7 +2,7 @@
 
 ## 1. Tablas de grupos y tarifario
 
-- [x] 1.1 Con la skill `backend-feature`, construir el esquema según todos los requirements de `specs/grupos/spec.md` (11 Scenarios) y de `specs/tarifario/spec.md` (22 Scenarios).
+- [x] 1.1 Con la skill `backend-feature`, construir el esquema según todos los requirements de `specs/grupos/spec.md` (11 Scenarios) y de `specs/tarifario/spec.md` (22 Scenarios al cerrar la 1.1).
   - Tipos enumerados compartidos en `app/models/enums.py`.
   - Modelos en `app/models/grupo.py` y `app/models/tarifario.py`, registrados en `app/models/__init__.py`.
   - **Una sola migración** `crear grupos y tarifario`, generada con `--autogenerate`. Va revisada con la skill `revisar-migracion` y con el `DROP TYPE` de los cuatro enums escrito a mano en el `downgrade` (design, «Reversibilidad»).
@@ -13,7 +13,7 @@
 
 ## 2. La semilla
 
-- [x] 2.1 Con la skill `backend-feature`, construir la semilla según todos los requirements de `specs/semilla/spec.md` (19 Scenarios).
+- [x] 2.1 Con la skill `backend-feature`, construir la semilla según todos los requirements de `specs/semilla/spec.md` (19 Scenarios al cerrar la 2.1).
   - `verificar_base_local(url)` y `cargar(sesion)` en `app/semilla.py`, con la excepción `SemillaRechazada`. `cargar` hace `flush` y nunca `commit`.
   - `scripts/seed.py` comprueba el host antes de la primera conexión, hace el único `commit` y sale con código 1 ante `SemillaRechazada` (design, «La semilla vive en `app/semilla.py`»).
   - Los tests van en `backend/tests/functional/semilla/`. El Scenario de login usa el fixture `cliente` después de `cargar(sesion)`.
@@ -30,7 +30,9 @@
 
 ## 4. Revisión adversarial
 
-- [ ] 4.1 Un pase del subagente `adversarial-reviewer` sobre el change terminado, antes del pull request. Rige `REVIEW.md`, «Cuándo se deja de revisar»: desde el segundo pase solo un hallazgo grave reabre el change. Se verifica con sus hallazgos resueltos o justificados por escrito.
+- [x] 4.1 Un pase del subagente `adversarial-reviewer` sobre el change terminado, antes del pull request. Rige `REVIEW.md`, «Cuándo se deja de revisar»: desde el segundo pase solo un hallazgo grave reabre el change. Se verifica con sus hallazgos resueltos o justificados por escrito. Sin graves; los dos menores (host remoto en la query de la URL y escala de los decimales sin test) y la pregunta sobre `monto_fijo` se resuelven en 4.2. No hay segundo pase.
+- [ ] 4.2 Con la skill `backend-feature`, resolver los hallazgos de 4.1 según los Scenarios nuevos: «Un host remoto escondido en la query» y «Una dirección remota escondida en la query» (en `specs/semilla/spec.md`, tests en `semilla/`); «Un monto con tres decimales se guarda con dos», «Un porcentaje con tres decimales se guarda con dos», «El monto fijo mínimo positivo» y «Monto fijo cero» (en `specs/tarifario/spec.md`, tests en `tarifario/`). Implementación: `verificar_base_local` revisa `host` y `hostaddr` de la query, y una migración nueva agrega `CHECK (monto_fijo > 0)` a `tipo_cargo` (design, «Una segunda migración»), probada en los dos sentidos. Se verifica con la suite completa en verde tras el rojo.
+- [ ] 4.3 `python tasks.py openapi-check` sin cambios, y `python tasks.py test`, `lint` y `typecheck` en verde.
 
 ## Workflow follow-up
 

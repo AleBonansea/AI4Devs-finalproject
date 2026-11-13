@@ -31,7 +31,7 @@ La semilla SHALL cargar sus datos solo si la base no tiene ninguna temporada ni 
 - **THEN** la semilla termina con error y la base tiene una sola temporada y los mismos cuatro usuarios
 
 ### Requirement: La semilla solo corre contra una base local
-La semilla SHALL negarse a correr si el host de la URL de la base no es `localhost`, `127.0.0.1`, `::1` o `db`, el servicio de `docker-compose.yml`. Al negarse MUST terminar con error, con el mensaje `La semilla solo corre contra una base local.`, sin conectarse a la base.
+La semilla SHALL negarse a correr si el host de la URL de la base no es `localhost`, `127.0.0.1`, `::1` o `db`, el servicio de `docker-compose.yml`, o si la query de la URL trae un `host` o un `hostaddr` que no sea uno de esos. Al negarse MUST terminar con error, con el mensaje `La semilla solo corre contra una base local.`, sin conectarse a la base.
 
 #### Scenario: Base del docker-compose
 - **WHEN** se comprueba la URL `postgresql+psycopg://escuelita:escuelita@db:5432/escuelita`
@@ -47,6 +47,14 @@ La semilla SHALL negarse a correr si el host de la URL de la base no es `localho
 
 #### Scenario: Un host que solo empieza como uno local
 - **WHEN** se comprueba la URL `postgresql+psycopg://u:p@localhost.ejemplo.com/escuelita`
+- **THEN** la semilla se niega con el mensaje `La semilla solo corre contra una base local.`
+
+#### Scenario: Un host remoto escondido en la query
+- **WHEN** se comprueba la URL `postgresql+psycopg://u:p@localhost/escuelita?host=dpg-abc123.oregon-postgres.render.com`
+- **THEN** la semilla se niega con el mensaje `La semilla solo corre contra una base local.`
+
+#### Scenario: Una dirección remota escondida en la query
+- **WHEN** se comprueba la URL `postgresql+psycopg://u:p@localhost/escuelita?hostaddr=203.0.113.7`
 - **THEN** la semilla se niega con el mensaje `La semilla solo corre contra una base local.`
 
 ### Requirement: Temporada vigente 2026-27

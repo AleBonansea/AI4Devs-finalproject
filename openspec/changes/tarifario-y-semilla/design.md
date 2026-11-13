@@ -56,7 +56,7 @@ Las FK usan el comportamiento por defecto de Postgres (`NO ACTION`). Borrar un g
 
 ### Montos y porcentajes en `Numeric`, comparados como `Decimal`
 
-Montos en `Numeric(12, 2)` y porcentajes en `Numeric(5, 2)`, con `CHECK (porcentaje BETWEEN 0 AND 100)`, y `CHECK (monto > 0)` en `tarifa_base`. `tipo_cargo.monto_fijo` no lleva ese CHECK porque el modelo de datos no lo pide y la spec no tiene Scenario: hoy la base aceptaría una Preinscripción de monto 0. En Python son `Decimal`, nunca `float`: 36.25 y 57.50 tienen que releerse exactos, y el change 6 multiplica con ellos.
+Montos en `Numeric(12, 2)` y porcentajes en `Numeric(5, 2)`, con `CHECK (porcentaje BETWEEN 0 AND 100)`, y `CHECK (monto > 0)` en `tarifa_base` y `CHECK (monto_fijo > 0)` en `tipo_cargo`. El segundo lo agregó el pase adversarial: sin él la base aceptaba una Preinscripción de −20000, y cada cargo de ese tipo habría bajado la deuda de la familia en vez de subirla. Es una decisión de integridad del dato, no una regla del cliente, así que va al modelo de datos y no a `aclaraciones-cliente.md`. La escala se comprueba con un valor de tres decimales que tiene que releerse redondeado: con `numeric` sin escala, Postgres lo guardaría tal cual. En Python son `Decimal`, nunca `float`: 36.25 y 57.50 tienen que releerse exactos, y el change 6 multiplica con ellos.
 
 ### La semilla vive en `app/semilla.py` y el script solo la invoca
 
@@ -65,6 +65,7 @@ Montos en `Numeric(12, 2)` y porcentajes en `Numeric(5, 2)`, con `CHECK (porcent
 - **`verificar_base_local(url: str) -> None`:**
   - Lanza `SemillaRechazada` con el mensaje `La semilla solo corre contra una base local.` si el host de la URL no es exactamente `localhost`, `127.0.0.1`, `::1` o `db`.
   - El host sale de `sqlalchemy.engine.make_url(url).host`, no de buscar texto en la URL. Así `localhost.ejemplo.com` no pasa.
+  - También mira `host` y `hostaddr` en la query de la URL (`make_url(url).query`), que psycopg usa por encima del host principal: `postgresql+psycopg://u:p@localhost/db?host=<remoto>` se conecta al remoto. Cada valor que traigan, incluida una lista separada por comas, tiene que ser uno de los hosts locales. Lo encontró el pase adversarial.
 - **`cargar(sesion: Session) -> None`:**
   - Lanza `SemillaRechazada` con el mensaje `La base no está vacía: la semilla solo corre sobre una base vacía.` si existe alguna temporada o algún usuario.
   - Si no, agrega todas las filas y hace `flush`, pero **no hace commit**. Así un test la corre dentro de su transacción revertida y la base de pruebas queda limpia.
@@ -123,7 +124,7 @@ El Scenario de login de `semilla` corre `cargar(sesion)` y después usa el fixtu
 
 ## Reversibilidad
 
-**Qué entra:** una migración generada con `alembic revision --autogenerate -m "crear grupos y tarifario"` y revisada con la skill `revisar-migracion`.
+**Qué entra:** dos migraciones. La segunda solo agrega el CHECK de `monto_fijo` (ver «Una segunda migración para el CHECK de `monto_fijo`»). La primera es una migración generada con `alembic revision --autogenerate -m "crear grupos y tarifario"` y revisada con la skill `revisar-migracion`.
 - Crea los cuatro tipos enumerados.
 - Crea las siete tablas en orden de dependencia: `grupo` y `grupo_profesor` después de `temporada` y `usuario`; las cinco del tarifario después de `temporada`.
 
@@ -136,6 +137,10 @@ El Scenario de login de `semilla` corre `cargar(sesion)` y después usa el fixtu
 - `temporada` y `usuario` no se modifican: no se agregan columnas ni restricciones.
 - Las siete tablas nuevas arrancan vacías.
 - El `downgrade` borra las filas de las tablas nuevas, y con ellas los datos de la semilla. En desarrollo no hay otros datos ahí, porque el ABM es del lote 2 y en producción el change todavía no corrió. Una vez que haya tarifarios cargados de verdad, revertir esta migración significaría perderlos: a partir de ahí no se revierte, se corrige con una migración nueva.
+
+### Una segunda migración para el CHECK de `monto_fijo`
+
+El CHECK va en una migración nueva, `tipo_cargo monto fijo positivo`, y no editando `a64e83ff89ab`: esa ya está aplicada en la base de desarrollo, y editar una migración aplicada deja a la base con un esquema distinto del que dice su versión. El `upgrade` agrega la restricción y el `downgrade` la saca. Si hubiera filas con `monto_fijo <= 0`, el `upgrade` fallaría; hoy no las hay, porque la tabla solo tiene lo que carga la semilla.
 
 ## Risks / Trade-offs
 
