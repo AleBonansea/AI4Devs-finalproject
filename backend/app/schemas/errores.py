@@ -20,3 +20,18 @@ def respuesta_de_error(mensaje: str) -> dict[str, Any]:
         "description": mensaje,
         "content": {"application/json": {"example": {"detail": mensaje}}},
     }
+
+
+class ErrorDeCampo(BaseModel):
+    """Un error atado a un campo del pedido, de validacion o de una regla del
+    negocio (`type` `regla_de_negocio`)."""
+
+    loc: list[str | int]
+    msg: str
+    type: str
+
+
+class ErroresDeCampo(BaseModel):
+    """El 422: la lista de errores, cada uno con su campo en `loc`."""
+
+    detail: list[ErrorDeCampo]

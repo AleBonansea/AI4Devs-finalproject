@@ -26,6 +26,7 @@ from app.core.config import obtener_configuracion  # noqa: E402
 from app.core.db import FabricaDeSesiones  # noqa: E402
 from app.semilla import (  # noqa: E402
     CONTRASENA_DEMO,
+    FAMILIAS,
     USUARIOS,
     SemillaRechazada,
     cargar,
@@ -45,7 +46,10 @@ def main() -> None:
         print(error, file=sys.stderr)
         sys.exit(1)
 
-    print("Semilla cargada: temporada 2026-27. Usuarios de demostracion:")
+    print(
+        f"Semilla cargada: temporada 2026-27 y {len(FAMILIAS)} familias de ejemplo. "
+        "Usuarios de demostracion:"
+    )
     for username, _nombre, _apellido, rol in USUARIOS:
         print(f"  {username:<12} {rol.value:<12} contraseña: {CONTRASENA_DEMO}")
 

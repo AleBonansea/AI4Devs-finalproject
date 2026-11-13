@@ -1,6 +1,6 @@
 """La semilla: una temporada de demostracion completa con una sola orden.
 
-Carga usuarios, grupos y tarifario inventados mientras el ABM que los carga
+Carga usuarios, grupos, tarifario y familias inventados mientras el ABM que los carga
 desde la aplicacion no existe. Nunca datos reales.
 
 Dos negativas la protegen (ver `design.md` del change tarifario-y-semilla):
@@ -20,15 +20,20 @@ from sqlalchemy.orm import Session
 
 from app.core.security import hashear
 from app.models import (
+    Alumno,
     CalculoCargo,
     CategoriaFamilia,
     DescuentoMes,
     DescuentoModalidad,
     EstadoTemporada,
+    Familia,
+    FamiliaPersona,
     Grupo,
     GrupoProfesor,
+    Inscripcion,
     Modalidad,
     PeriodoCobro,
+    Persona,
     RolUsuario,
     TarifaBase,
     Temporada,
@@ -151,6 +156,45 @@ TIPOS_DE_CARGO: tuple[tuple[str, CalculoCargo, Decimal | None], ...] = (
     ("Abono", CalculoCargo.TARIFARIO, None),
 )
 
+# Familias de ejemplo (spec de semilla del change familias-y-alumnos). Cada
+# grupo queda con al menos un alumno, y los Pérez tienen dos hijos a la mañana.
+# La clave de cada familia es solo para referirla en los vinculos y alumnos.
+FAMILIAS: dict[str, CategoriaFamilia] = {
+    "perez": CategoriaFamilia.EMPLEADO,
+    "gomez": CategoriaFamilia.SOCIO,
+    "ruiz": CategoriaFamilia.NO_SOCIO,
+}
+
+# clave, nombre, apellido, telefono, DNI (ya normalizado; None = sin DNI)
+PERSONAS: tuple[tuple[str, str, str, str, str | None], ...] = (
+    ("maria_perez", "María", "Pérez", "3511234567", "30111222"),
+    ("raul_perez", "Raúl", "Pérez", "3517654321", None),
+    ("pablo_gomez", "Pablo", "Gómez", "3519998877", "28999888"),
+    ("laura_ruiz", "Laura", "Ruiz", "3515556666", None),
+)
+
+# familia, persona, es tutor. Todos estan autorizados a retirar: el tutor
+# siempre, y el que no es tutor esta en la familia para eso.
+VINCULOS: tuple[tuple[str, str, bool], ...] = (
+    ("perez", "maria_perez", True),
+    ("perez", "raul_perez", False),
+    ("gomez", "pablo_gomez", True),
+    # La misma María Pérez, autorizada a retirar en una segunda familia.
+    ("gomez", "maria_perez", False),
+    ("ruiz", "laura_ruiz", True),
+)
+
+# familia, nombre, apellido, fecha de nacimiento, grupo (nombre, turno)
+ALUMNOS: tuple[tuple[str, str, str, date, tuple[str, Turno]], ...] = (
+    ("perez", "Ana", "Pérez", date(2018, 7, 5), ("Tiburones", Turno.MANANA)),
+    ("perez", "Juan", "Pérez", date(2020, 3, 10), ("Delfines", Turno.MANANA)),
+    ("gomez", "Lucía", "Gómez", date(2021, 5, 20), ("Delfines", Turno.TARDE)),
+    ("ruiz", "Sofía", "Ruiz", date(2017, 9, 1), ("Tiburones", Turno.TARDE)),
+)
+
+# Quien figura como `creado_por` de las inscripciones de la semilla.
+USUARIO_INSCRIPTOR = "mgarcia"
+
 
 # --- Logica -----------------------------------------------------------------
 
@@ -182,12 +226,12 @@ def verificar_base_local(url: str) -> None:
 def cargar(sesion: Session) -> None:
     """Agrega la temporada de demostracion y hace flush. Nunca commit.
 
-    Se niega, sin agregar nada, si ya hay alguna temporada o algun usuario.
+    Se niega, sin agregar nada, si ya hay alguna temporada, usuario, familia
+    o persona.
     """
-    hay_temporada = sesion.execute(select(Temporada.id).limit(1)).first() is not None
-    hay_usuario = sesion.execute(select(Usuario.id).limit(1)).first() is not None
-    if hay_temporada or hay_usuario:
-        raise SemillaRechazada(MENSAJE_BASE_NO_VACIA)
+    for id_de_tabla in (Temporada.id, Usuario.id, Familia.id, Persona.id):
+        if sesion.execute(select(id_de_tabla).limit(1)).first() is not None:
+            raise SemillaRechazada(MENSAJE_BASE_NO_VACIA)
 
     temporada = Temporada(
         nombre=TEMPORADA_NOMBRE,
@@ -219,6 +263,7 @@ def cargar(sesion: Session) -> None:
     # Los ids hacen falta para las FK de lo que sigue.
     sesion.flush()
 
+    grupos: dict[tuple[str, Turno], Grupo] = {}
     for nombre, turno, desde, hasta, profesor in GRUPOS:
         grupo = Grupo(
             temporada_id=temporada.id,
@@ -231,6 +276,9 @@ def cargar(sesion: Session) -> None:
         sesion.add(grupo)
         sesion.flush()
         sesion.add(GrupoProfesor(grupo_id=grupo.id, usuario_id=usuarios[profesor].id))
+        grupos[(nombre, turno)] = grupo
+
+    _cargar_familias(sesion, grupos, usuarios[USUARIO_INSCRIPTOR])
 
     sesion.add_all(
         TarifaBase(temporada_id=temporada.id, turno=turno, modalidad=modalidad, monto=monto)
@@ -278,3 +326,55 @@ def cargar(sesion: Session) -> None:
     )
 
     sesion.flush()
+
+
+def _cargar_familias(
+    sesion: Session, grupos: dict[tuple[str, Turno], Grupo], inscriptor: Usuario
+) -> None:
+    """Familias, personas, vinculos, alumnos y una inscripcion por alumno."""
+    familias = {clave: Familia(categoria=categoria) for clave, categoria in FAMILIAS.items()}
+    personas = {
+        clave: Persona(nombre=nombre, apellido=apellido, telefono=telefono, dni=dni)
+        for clave, nombre, apellido, telefono, dni in PERSONAS
+    }
+    sesion.add_all(familias.values())
+    sesion.add_all(personas.values())
+    # Los ids hacen falta para los vinculos y los alumnos.
+    sesion.flush()
+
+    sesion.add_all(
+        FamiliaPersona(
+            familia_id=familias[familia].id,
+            persona_id=personas[persona].id,
+            es_tutor=es_tutor,
+            autorizado_retiro=True,
+        )
+        for familia, persona, es_tutor in VINCULOS
+    )
+
+    alumnos = [
+        (
+            Alumno(
+                familia_id=familias[familia].id,
+                nombre=nombre,
+                apellido=apellido,
+                fecha_nacimiento=nacimiento,
+            ),
+            grupos[grupo],
+        )
+        for familia, nombre, apellido, nacimiento, grupo in ALUMNOS
+    ]
+    sesion.add_all(alumno for alumno, _grupo in alumnos)
+    sesion.flush()
+
+    # Temporada y turno se copian del grupo, como en el alta.
+    sesion.add_all(
+        Inscripcion(
+            alumno_id=alumno.id,
+            grupo_id=grupo.id,
+            temporada_id=grupo.temporada_id,
+            turno=grupo.turno,
+            creado_por=inscriptor.id,
+        )
+        for alumno, grupo in alumnos
+    )

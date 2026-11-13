@@ -11,6 +11,8 @@
 Como staff, quiero registrar un alumno con sus datos mínimos (incluido al menos un tutor) y asignarlo a un grupo y turno, para tenerlo inscripto desde el primer contacto y completar la documentación más adelante.
 *Sustento:* PRD «Alumnos, tutores y documentación» (ficha progresiva; la inscripción la hace el staff); PRD «Roles y permisos»; Acl. 3, 4, 8.
 
+> **Versión vigente:** HU-AF-01 ya está construida (change `familias-y-alumnos`, archivado el 13/11/2026). Los criterios que siguen son los que se entregaron en la Entrega 1 y se conservan como documento de esa entrega. El comportamiento vigente, con un Scenario por caso y los que se sumaron al construirla, está en [`openspec/specs/alumnos/spec.md`](openspec/specs/alumnos/spec.md), y la familia y las personas en [`openspec/specs/familias/spec.md`](openspec/specs/familias/spec.md). Si difieren, mandan las specs.
+
 *Criterios de aceptación* (incluyen la creación o elección de familia, la categoría y el tutor obligatorio, que se apoyan en HU-AF-02, HU-AF-03 y HU-AF-04):
 
 Datos mínimos del alta (Acl. 3): nombre, apellido y fecha de nacimiento del alumno; familia (nueva, con su categoría, o existente); al menos un tutor; y grupo y turno. La documentación no forma parte del mínimo.

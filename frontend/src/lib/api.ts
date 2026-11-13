@@ -47,6 +47,29 @@ export function borrarToken(): void {
   }
 }
 
+// --- Aviso de sesion perdida ---------------------------------------------------
+// Un 401 en una llamada que salio con token quiere decir que el token ya no
+// sirve. En lugar de que cada pantalla lo atrape (y alguna se olvide), api.ts
+// avisa a quien se haya suscripto; hoy, ProveedorSesion.
+
+const oyentesSesionPerdida = new Set<() => void>();
+
+/**
+ * Suscribe `fn` al aviso de sesion perdida. Devuelve la funcion para
+ * desuscribirse, pensada para la limpieza de un efecto.
+ */
+export function alPerderSesion(fn: () => void): () => void {
+  oyentesSesionPerdida.add(fn);
+  return () => {
+    oyentesSesionPerdida.delete(fn);
+  };
+}
+
+function avisarSesionPerdida(): void {
+  // Se copia el conjunto: un oyente podria desuscribirse mientras se recorre.
+  for (const fn of [...oyentesSesionPerdida]) fn();
+}
+
 /**
  * Traduce el cuerpo de error de FastAPI a algo que una pantalla pueda mostrar.
  *
@@ -101,6 +124,9 @@ async function pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise
 
   if (respuesta.status === 401) {
     borrarToken();
+    // Solo avisa si la llamada salio con token: el 401 del login (usuario o
+    // contrasena incorrectos) sale sin token y no es una sesion que se pierde.
+    if (token) avisarSesionPerdida();
   }
 
   if (!respuesta.ok) {
@@ -160,4 +186,103 @@ export function usuarioActual(): Promise<UsuarioActual> {
  */
 export function ingresar(username: string, password: string): Promise<LoginRespuesta> {
   return api.post<LoginRespuesta>("/auth/login", { username, password });
+}
+
+// --- Alta de alumnos ----------------------------------------------------------
+// Los tipos copian los esquemas del contrato (docs/api/openapi.json). Ninguno
+// lleva un monto: la pantalla manda que se registra, nunca un precio.
+
+export type Turno = "manana" | "tarde";
+
+export type CategoriaFamilia = "socio" | "empleado" | "no_socio";
+
+/** `GrupoParaInscribir`: un grupo donde se puede inscribir, con su sugerencia. */
+export interface GrupoParaInscribir {
+  id: number;
+  nombre: string;
+  turno: Turno;
+  nacimiento_desde: string;
+  nacimiento_hasta: string;
+  sugerido: boolean;
+}
+
+/** `FamiliaEncontrada`: lo unico que trae la busqueda por apellido. */
+export interface FamiliaEncontrada {
+  id: number;
+  etiqueta: string;
+  categoria: CategoriaFamilia;
+}
+
+/** `PersonaEncontrada`: lo unico que trae la busqueda por DNI. */
+export interface PersonaEncontrada {
+  id: number;
+  nombre: string;
+  apellido: string;
+}
+
+/** `PersonaNueva`: una persona que se carga en el alta. */
+export interface PersonaNueva {
+  nombre: string;
+  apellido: string;
+  telefono: string;
+  dni?: string | null;
+  es_tutor: boolean;
+}
+
+/** `PersonaReutilizada`: una persona ya cargada, elegida por su id. */
+export interface PersonaReutilizada {
+  persona_id: number;
+  es_tutor: boolean;
+}
+
+/** `AltaAlumnoEntrada`: `familia_id` para una familia existente, `categoria` para una nueva. */
+export interface AltaAlumnoEntrada {
+  nombre: string;
+  apellido: string;
+  fecha_nacimiento: string;
+  grupo_id: number;
+  familia_id?: number | null;
+  categoria?: CategoriaFamilia | null;
+  personas: (PersonaReutilizada | PersonaNueva)[];
+}
+
+/** `AlumnoRegistrado`: la respuesta 201 del alta. */
+export interface AlumnoRegistrado {
+  id: number;
+  nombre: string;
+  apellido: string;
+  fecha_nacimiento: string;
+  familia: FamiliaEncontrada;
+  inscripcion: {
+    grupo_id: number;
+    grupo_nombre: string;
+    turno: Turno;
+    temporada_id: number;
+  };
+}
+
+/**
+ * Los grupos donde el usuario puede inscribir. Con la fecha de nacimiento,
+ * la API marca los que corresponden como sugeridos.
+ */
+export function listarGrupos(fechaNacimiento?: string): Promise<GrupoParaInscribir[]> {
+  const consulta = fechaNacimiento
+    ? `?${new URLSearchParams({ fecha_nacimiento: fechaNacimiento })}`
+    : "";
+  return api.get<GrupoParaInscribir[]>(`/grupos${consulta}`);
+}
+
+/** Familias cuyo apellido empieza por `apellido`. La API exige 2 caracteres o mas. */
+export function buscarFamilias(apellido: string): Promise<FamiliaEncontrada[]> {
+  return api.get<FamiliaEncontrada[]>(`/familias?${new URLSearchParams({ apellido })}`);
+}
+
+/** La persona con ese DNI exacto. Si no hay ninguna, la API responde 404. */
+export function buscarPersonaPorDni(dni: string): Promise<PersonaEncontrada> {
+  return api.get<PersonaEncontrada>(`/personas?${new URLSearchParams({ dni })}`);
+}
+
+/** Da de alta un alumno con su familia, sus personas y su inscripcion. */
+export function registrarAlumno(entrada: AltaAlumnoEntrada): Promise<AlumnoRegistrado> {
+  return api.post<AlumnoRegistrado>("/alumnos", entrada);
 }

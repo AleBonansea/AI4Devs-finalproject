@@ -384,6 +384,20 @@ Las otras ocho del lote 1 se construyen igual, pero quedan listadas acá sin cri
 
 **Baja de grupos — propuesta, pendiente de confirmar:** un grupo con alumnos o asistencia registrada no se borra, se **desactiva**: deja de aparecer para inscribir, pero conserva su historia. Es el mismo criterio que ya rige para los usuarios (los desactivados se conservan para no romper las referencias de quién cobró). Si se confirma, pasa a `aclaraciones-cliente.md`.
 
+## Deuda técnica
+
+Lo que se sabe que hay que mejorar, con el disparador que dice cuándo. No son historias: no agregan comportamiento.
+
+**Velocidad de los tests del frontend.** Hoy cada test monta la app entera con `abrir()`, y Emotion reinyecta las hojas de MUI en cada montaje: el test más lento mide entre 3 y 4,1 s (medido el 13/11/2026, `testTimeout` en 10 s). No bloquea: cada pantalla nueva paga lo suyo y no se lo suma a las demás.
+
+Se actúa cuando pase cualquiera de estas dos cosas:
+- la suite completa del frontend supera los 60 s en el CI, o
+- algún test individual supera los 6 s.
+
+Dos salidas, en este orden:
+1. Probar happy-dom en lugar de jsdom en `vite.config.ts`. Es una línea y suele dar 2-3x, pero cambia la huella de los tests congelados, así que lo decide una persona con la suite verde antes y después y verificando que el DataGrid siga andando.
+2. Sedimentar el catálogo de componentes (módulo 12) para que las comprobaciones de estado bajen a nivel componente y solo los tests de integración monten `abrir()`.
+
 ## Excluido por no estar en las fuentes
 
 Hoy no queda ningún tema del documento técnico fuera de las fuentes. El cambio y el blanqueo de contraseña y el bloqueo por intentos ya tienen historias (HU-UT-06 a HU-UT-08). Si aparece otro tema, va acá hasta que se confirme y se sume a `aclaraciones-cliente.md`.

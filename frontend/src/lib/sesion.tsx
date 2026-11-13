@@ -5,9 +5,18 @@
  * con `useSesion()` y no vuelven a mirar el token por su cuenta. No es una
  * pieza de interfaz: es estado compartido, igual que el token en api.ts.
  */
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 import {
+  alPerderSesion,
   borrarToken,
   guardarToken,
   leerToken,
@@ -49,6 +58,11 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
     setHayToken(false);
     setUsuario(null);
   }, []);
+
+  // Un 401 en cualquier llamada con token cierra la sesion, igual que salir().
+  // RutaProtegida ve que no hay token y manda al ingreso. Se desuscribe al
+  // desmontar para no dejar oyentes colgados entre montajes.
+  useEffect(() => alPerderSesion(salir), [salir]);
 
   const valor = useMemo(
     () => ({ hayToken, usuario, ingresar, fijarUsuario, salir }),
