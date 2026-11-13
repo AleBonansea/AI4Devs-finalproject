@@ -153,3 +153,11 @@ export interface LoginRespuesta {
 export function usuarioActual(): Promise<UsuarioActual> {
   return api.get<UsuarioActual>("/auth/yo");
 }
+
+/**
+ * Ingreso con usuario y contrasena. Se mandan tal como se escribieron: la API
+ * no normaliza la contrasena y el usuario lo compara ella.
+ */
+export function ingresar(username: string, password: string): Promise<LoginRespuesta> {
+  return api.post<LoginRespuesta>("/auth/login", { username, password });
+}
