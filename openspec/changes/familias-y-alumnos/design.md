@@ -73,8 +73,9 @@ El manejador de `RequestValidationError` que ya existe reemplaza `msg` según `t
 | `type` de Pydantic | `msg` |
 |---|---|
 | `missing` | `Este dato es obligatorio.` |
-| `string_too_long` | `Puede tener hasta {max_length} caracteres.` (de `ctx`) |
-| `string_too_short` | `No puede quedar vacío.` |
+| `string_too_long`, `too_long` | `Puede tener hasta {max_length} caracteres.` (de `ctx`) |
+| `string_too_short` con `min_length` 1 | `No puede quedar vacío.` |
+| `string_too_short` con `min_length` mayor que 1 | `Tiene que tener al menos {min_length} caracteres.` (de `ctx`). Si no, un apellido de una letra en la búsqueda diría «vacío». |
 | `date_parsing`, `date_from_datetime_parsing`, `date_type` | `La fecha no es válida.` |
 | `int_parsing`, `int_type` | `Tiene que ser un número entero.` |
 | `enum`, `literal_error` | `El valor no es una de las opciones válidas.` |

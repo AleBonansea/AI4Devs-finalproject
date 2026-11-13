@@ -21,6 +21,10 @@ Todo 422 de validación SHALL traer el `msg` de cada error en castellano, con la
 - **WHEN** se llama a `POST /api/v1/alumnos` con un Coordinador y un `apellido` de solo espacios
 - **THEN** el error de `apellido` tiene `msg` `No puede quedar vacío.`
 
+#### Scenario: Texto más corto que un mínimo mayor que uno
+- **WHEN** un Coordinador llama a `GET /api/v1/familias?apellido=%20P%20`
+- **THEN** la respuesta es 422 y el error de `apellido` tiene `msg` `Tiene que tener al menos 2 caracteres.`
+
 #### Scenario: Número mal escrito
 - **WHEN** se llama a `POST /api/v1/alumnos` con un Coordinador y `grupo_id` `"uno"`
 - **THEN** el error de `grupo_id` tiene `msg` `Tiene que ser un número entero.`
