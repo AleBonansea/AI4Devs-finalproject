@@ -4,7 +4,7 @@
 
 ## 1. Esquema de familias y alumnos
 
-- [ ] 1.1 Con la skill `backend-feature`, crear los modelos `Familia`, `Persona`, `FamiliaPersona`, `Alumno` e `Inscripcion`, la vista `v_familia_etiqueta` y la migración `crear_familias_y_alumnos`, según los Requirements de `familias` «Categoría de la familia» (3 Scenarios), «Etiqueta de la familia» (5), «Persona reutilizable entre familias» (4) y «Vínculo de una persona con una familia» (5), y los de `alumnos` «Ficha mínima del alumno» (2) e «Inscripción en un grupo y turno» (4): 23 Scenarios.
+- [x] 1.1 Con la skill `backend-feature`, crear los modelos `Familia`, `Persona`, `FamiliaPersona`, `Alumno` e `Inscripcion`, la vista `v_familia_etiqueta` y la migración `crear_familias_y_alumnos`, según los Requirements de `familias` «Categoría de la familia» (3 Scenarios), «Etiqueta de la familia» (5), «Persona reutilizable entre familias» (4) y «Vínculo de una persona con una familia» (5), y los de `alumnos` «Ficha mínima del alumno» (2) e «Inscripción en un grupo y turno» (4): 23 Scenarios.
   - Columnas, restricciones e índices según design, «Esquema: las cinco tablas del modelo». La vista sobre un `MetaData()` propio y creada con `op.execute` (design, «La etiqueta es una vista»). `turno` y `categoria_familia` con `create_type=False`.
   - Los tests de la etiqueta insertan alumnos directo en la base y leen la vista: el alta todavía no existe.
   - Tests en `backend/tests/functional/familias/` y `backend/tests/functional/alumnos/`.
