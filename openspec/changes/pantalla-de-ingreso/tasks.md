@@ -34,7 +34,7 @@
   - poner a mano `debe_cambiar_password` en true para ese usuario en la base de desarrollo, recargar y ver el aviso de cambio pendiente; volverlo a false después;
   - la pantalla de ingreso a ancho de teléfono (360 px), con el teclado: Tab recorre usuario, contraseña e `Ingresar`, y Enter envía.
   - **Se verifica con** cada punto anotado como hecho en el informe de la tarea, con lo que haya fallado.
-- [ ] 3.2 `python tasks.py openapi-check` sin cambios (el change no toca el backend), `python tasks.py front-test` y `python tasks.py front-lint` en verde.
+- [x] 3.2 `python tasks.py openapi-check` sin cambios (el change no toca el backend), `python tasks.py front-test` y `python tasks.py front-lint` en verde.
 
 ## 4. Revisión adversarial
 
