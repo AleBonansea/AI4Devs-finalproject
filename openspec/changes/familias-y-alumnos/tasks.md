@@ -54,7 +54,7 @@
 
 ## 8. Comprobación de punta a punta
 
-- [ ] 8.1 Con la base de desarrollo migrada y la semilla cargada, la API y el frontend levantados, comprobar a mano en el navegador:
+- [x] 8.1 Con la base de desarrollo migrada y la semilla cargada, la API y el frontend levantados, comprobar a mano en el navegador:
   - como `lrodriguez` (coordinador), registrar un primer hijo con familia nueva, tutora nueva y un autorizado reutilizado por DNI (`30111222`), y ver el mensaje con la etiqueta;
   - registrar un segundo hijo, mayor, eligiendo esa familia por apellido, y ver que la etiqueta cambia;
   - como `jperez` (profesor), ver en `Grupo` solo «Delfines» de los dos turnos;
@@ -62,6 +62,14 @@
   - borrar el token a mano en el navegador con la pantalla abierta, buscar una familia y caer en el ingreso;
   - la pantalla a 360 px de ancho, sin scroll horizontal, y recorrible con el teclado.
   - **Se verifica con** cada punto anotado como hecho en el informe de la tarea, con lo que haya fallado.
+  - **Informe (13/11/2026), contra la base de desarrollo recién sembrada.** Las capturas de la extensión de Chrome daban timeout, como en el change 3, así que se manejó la pantalla con JavaScript en la página (los eventos `input`, `change` y `click` que escucha React) y se midió el DOM:
+    - Hecho: como `lrodriguez`, Mateo Torres (2021-02-10) con familia nueva `Socio`, tutora nueva Carla Torres y María Pérez reutilizada por DNI `30111222`. Con la fecha, «Delfines» salió sugerido en los dos turnos y `Grupo` quedó sin elegir; se eligió `Delfines · Tarde`. Mensaje: `Mateo Torres quedó inscripto en Delfines (Tarde). Familia: Torres – Mateo.` y el formulario quedó vacío.
+    - Hecho: Valentina Torres (2019-04-01), buscando `Tor` en `Buscar familia por apellido`. Apareció `Torres – Mateo · Socio` y, al elegirla, `Categoría: Socio` como texto, sin el campo. Mensaje: `… Familia: Torres – Valentina.`, así que la etiqueta cambió.
+    - Hecho: como `jperez`, `Grupo` ofrece solo `Delfines · Mañana` y `Delfines · Tarde`.
+    - Hecho: una persona nueva con DNI `30.111.222` da `Ya hay una persona con ese DNI. Buscala por DNI para reutilizarla.` como ayuda del `DNI` de esa fila, con `aria-invalid`, sin ningún `role="alert"`, y `Nombre` conserva lo escrito.
+    - Hecho, con una variación: en lugar de borrar el token se lo reemplazó por uno inválido, porque sin token la llamada no sale autenticada y no hay 401 que probar. Al buscar `Pér`, la dirección pasó a `/ingresar` y el token quedó borrado.
+    - Hecho, medido en un iframe de 360 px: sin scroll horizontal (`scrollWidth` igual a `clientWidth`) y los controles entre x=22 y x=308, también con una fila de persona y los errores a la vista. El orden de tabulación sigue el del formulario: datos del alumno, grupo, familia, categoría, búsqueda por DNI, campos de la persona, `Agregar persona nueva` y `Registrar`.
+    - Observación, no falla: el mensaje de éxito dice «quedó inscripto» también para Valentina. Es el texto fijo de la spec.
 - [x] 8.2 `python tasks.py test`, `lint`, `typecheck`, `openapi-check`, `front-test` y `front-lint` en verde.
 
 ## 9. Revisión adversarial
