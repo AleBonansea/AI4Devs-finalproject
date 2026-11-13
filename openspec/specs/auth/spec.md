@@ -420,12 +420,17 @@ Si `GET /api/v1/auth/yo` responde 401, el navegador SHALL borrar el token guarda
 - **THEN** se ve el inicio con el nombre del usuario
 
 ### Requirement: Inicio de la zona protegida
-La dirección `/` SHALL mostrar el nombre y el apellido del usuario actual, su rol escrito como `Admin`, `Coordinador` o `Profesor`, y un botón `Salir`. Además del nombre de la aplicación, no tiene otro contenido.
+La dirección `/` SHALL mostrar el nombre y el apellido del usuario actual, su rol escrito como `Admin`, `Coordinador` o `Profesor`, un botón `Salir` y un acceso `Registrar alumno` que lleva a `/alumnos/nuevo`. Además del nombre de la aplicación, no tiene otro contenido.
 
 #### Scenario: Inicio de un Profesor
 - **GIVEN** la sesión de un usuario `Carlos Gómez` con rol `profesor` y `debe_cambiar_password` en false
 - **WHEN** se abre `/`
 - **THEN** se ve `Carlos Gómez`, `Profesor` y el botón `Salir`
+
+#### Scenario: Ir a registrar un alumno
+- **GIVEN** la sesión de un Coordinador con `debe_cambiar_password` en false
+- **WHEN** se abre `/` y se pulsa `Registrar alumno`
+- **THEN** la dirección pasa a `/alumnos/nuevo`
 
 ### Requirement: Aviso de cambio de contraseña pendiente
 Si el usuario actual tiene `debe_cambiar_password` en true, venga del ingreso o de `GET /api/v1/auth/yo`, toda la zona protegida SHALL mostrar solo un aviso con el título `Tenés que cambiar tu contraseña antes de continuar.` y el texto `El cambio de contraseña todavía no está disponible. Pedile ayuda a un Admin.`, más el botón `Salir`. MUST NOT mostrar el inicio.
@@ -466,3 +471,19 @@ El botón `Salir` SHALL borrar el token guardado en el navegador y llevar a `/in
 - **WHEN** se abre `/`
 - **THEN** la dirección pasa a `/ingresar`
 - **AND** no se hace ninguna llamada a `GET /api/v1/auth/yo`
+
+### Requirement: Un 401 en cualquier llamada cierra la sesión
+Si cualquier llamada a la API con sesión, no solo `GET /api/v1/auth/yo`, responde 401, el navegador SHALL borrar el token guardado, olvidar el usuario actual y mandar al ingreso.
+
+#### Scenario: Token vencido al buscar una familia
+- **GIVEN** la sesión de un Coordinador en `/alumnos/nuevo`
+- **AND** `GET /api/v1/familias` responde 401
+- **WHEN** se busca una familia por apellido
+- **THEN** la dirección pasa a `/ingresar`
+- **AND** no queda token guardado
+
+#### Scenario: Un 403 no cierra la sesión
+- **GIVEN** la sesión de un Profesor en `/alumnos/nuevo`
+- **AND** `POST /api/v1/alumnos` responde 403
+- **WHEN** se pulsa `Registrar` con el formulario completo
+- **THEN** la dirección sigue en `/alumnos/nuevo` y el token sigue guardado
