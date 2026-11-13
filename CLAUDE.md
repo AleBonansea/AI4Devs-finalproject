@@ -205,6 +205,20 @@ Los datos se conservan entre temporadas: no se borra nada.
   - Se guarda qué Admin lo abonó.
   - Al abonarlo se genera un egreso en tesorería.
 
+## Arnés de agentes
+
+Los subagentes de `.claude/agents/` separan quién escribe los tests de quién escribe el código. La separación tiene candado en las dos direcciones:
+
+- **El implementer no toca los tests**: `backend-feature` y `frontend-feature` los congelan por hash (`git ls-files -s`) antes de implementar y lo comparan al terminar.
+- **El test-writer no lee la implementación**: un hook `PreToolUse` en su frontmatter (`.claude/hooks/sin_ver_implementacion.py`) corta `Read`, `Grep` y `Glob` sobre `backend/app/`, `backend/alembic/versions/` y `frontend/src/`, y también las búsquedas lanzadas desde una carpeta que las contiene. Se probó con un agente de juguete sin la prohibición escrita: frenó los cuatro caminos (`Read`, `Grep`, `Glob` y `cat` por `Bash`) y dejó pasar los de control. En `Bash` el hook solo mira el texto del comando, así que ahí es una red: `cd backend && cat app/main.py` pasa. La regla escrita en el prompt sigue siendo la otra mitad.
+
+Cómo funciona el arnés, aprendido a fuerza de probar:
+
+- **Al tocar un archivo de `.claude/agents/`, reiniciá la sesión.** Las definiciones de los agentes se cargan al arrancar: un agente nuevo da «Agent type not found» y un cambio a uno existente no se aplica hasta la sesión siguiente. Para probar sin cerrar la sesión, `claude -p "..." --output-format stream-json --verbose` arranca una nueva, y la salida dice qué modelo usó cada mensaje.
+- **El frontmatter no acepta `permissions`**: lo ignora sin dar error. Los permisos por agente van con `hooks`.
+- **Un hook bloquea solo si sale con código 2.** Con cualquier otro código distinto de cero, la herramienta corre igual.
+- `implementer` y `ui-implementer` corren con `model: sonnet` (verificado). `test-writer` y `adversarial-reviewer` usan el modelo de la sesión.
+
 ## Reglas de proceso
 
 1. **Una rama por change, no por petición.** Cada change de OpenSpec, es decir cada fila del «Plan de changes» (una historia, varias o ninguna si es técnico), tiene su propia rama `feat/<nombre-del-change>`. Antes de tocar código mirá en qué rama estás:
