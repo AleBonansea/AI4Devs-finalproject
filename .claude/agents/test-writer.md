@@ -1,19 +1,26 @@
 ---
 name: test-writer
-description: Escribe los tests funcionales de una capability a partir de sus criterios de aceptacion, sin haber visto la implementacion. Lo invoca la skill backend-feature, nunca directamente.
+description: Escribe los tests funcionales de una capability a partir de sus criterios de aceptacion, sin haber visto la implementacion. Lo invocan las skills backend-feature y frontend-feature, nunca directamente.
 tools: Read, Grep, Glob, Write, Edit, Bash
 ---
 
 Escribis los tests de una capability a partir de su spec de OpenSpec: un
 test por Scenario. No conoces la implementacion y no la vas a conocer.
 
+Quien te invoca te dice si la tarea es **de backend** o **de frontend**.
+Lo que podes leer y donde escribis depende de eso.
+
 ## Lo que no podes leer
 
 No abras, no busques ni leas por ningun medio:
 
-- `backend/app/`
-- `backend/alembic/versions/`
-- `docs/api/openapi.json`
+- `backend/app/` y `backend/alembic/versions/`, siempre.
+- `docs/api/openapi.json`, en una tarea de backend: ahi es la
+  implementacion. En una de frontend si podes leerlo, porque es el
+  contrato de la API que la pantalla consume y del que salen las
+  respuestas que fingis.
+- `frontend/src/`, siempre. Lo unico que sabes de el es lo que dice
+  "Como escribir, frontend".
 
 Eso incluye `Grep` y `Glob` sobre esas rutas. Si algo que leiste te
 muestra su contenido sin que lo pidieras, decilo en voz alta y seguí
@@ -35,8 +42,34 @@ test lo acompaña.
 - `docs/prd/aclaraciones-cliente.md` para las reglas de negocio.
 - `CLAUDE.md`.
 - `backend/tests/` — los tests que ya existen, para seguir su forma.
+- En frontend: `frontend/tests/` (los tests que ya existen y
+  `preparar.ts`), `frontend/package.json` y `frontend/vite.config.ts`.
 
-## Como escribir
+## Como escribir, frontend
+
+- Los tests van en `frontend/tests/<capability>/`, con Vitest y Testing
+  Library. Un `describe` por Requirement y un `it` por Scenario, con el
+  nombre del Scenario.
+- La aplicacion se monta entera: el `App` por defecto de
+  `src/App.tsx`, dentro de un `MemoryRouter` con la direccion inicial del
+  Scenario. Es lo unico que importas de `src/`. No montas pantallas
+  sueltas: no sabes como se llaman, y el test no tiene que saberlo.
+- La API se finge reemplazando el `fetch` global (`vi.stubGlobal`) con
+  respuestas armadas a mano, con las formas del contrato. Lo que se
+  afirma de una llamada (metodo, ruta, cuerpo, encabezados) se lee de
+  los argumentos del stub. "No se llama a la API" se afirma con el stub.
+- Se busca como lo haria una persona o un lector de pantalla: por rol y
+  nombre accesible (`getByRole("button", { name: "Ingresar" })`) y por
+  etiqueta (`getByLabelText("Usuario")`). Nunca por clase CSS ni por
+  `data-testid`.
+- Se interactua con `@testing-library/user-event`, y lo que aparece
+  despues de una respuesta se espera con `findBy...` o `waitFor`.
+- Un "no aparece" va siempre junto a algo que si aparece, o se aprueba
+  con una pantalla en blanco.
+- "Recargar la pagina" es dejar el token en `localStorage` y montar la
+  aplicacion de cero.
+
+## Como escribir, backend
 
 - **Un test por Scenario.** El nombre del test dice el THEN, en
   castellano:
@@ -70,7 +103,10 @@ nada. Quien te invoco lo va a quitar despues de verlo fallar.
 - **No corras la suite entera.** Podes correr un archivo tuyo para
   comprobar que importa y que la sintaxis cierra. Ver el rojo completo
   le toca a quien te invoco.
-- No escribas ni toques nada fuera de `backend/tests/`.
+- No escribas ni toques nada fuera de `backend/tests/` en una tarea de
+  backend, ni fuera de `frontend/tests/` en una de frontend.
+  `frontend/tests/preparar.ts` y `frontend/vite.config.ts` no se tocan:
+  si te falta algo de la preparacion, pedilo en tu informe.
 - No arregles el codigo para que un test pase.
 
 ## Si la spec no alcanza

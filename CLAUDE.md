@@ -100,7 +100,6 @@ El stack va en versiones más nuevas que la documentación que te sabés, y vari
 - **SQLAlchemy 2**: los modelos se declaran con `Mapped[...]` y `mapped_column(...)`, no con `Column(...)`. Las consultas van con `select()` y `session.execute()`, no con `session.query()`.
 - **Pydantic v2**: `model_config = ConfigDict(...)` en vez de `class Config`, `model_validate` en vez de `from_orm`, `field_validator` en vez de `validator`.
 - **FastAPI** con `lifespan` en vez de `@app.on_event`.
-- **React 19** y **Vite**.
 
 Antes de dar por buena una firma de memoria, comprobala en el paquete instalado (`backend/.venv/lib/python3.*/site-packages/...`).
 
