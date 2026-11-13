@@ -74,7 +74,7 @@
 
 ## 9. Revisión adversarial
 
-- [ ] 9.1 Un pase del subagente `adversarial-reviewer` sobre el change terminado, antes del pull request. Rige `REVIEW.md`, «Cuándo se deja de revisar». **Se verifica con** sus hallazgos resueltos o justificados por escrito en esta tarea.
+- [x] 9.1 Un pase del subagente `adversarial-reviewer` sobre el change terminado, antes del pull request. Rige `REVIEW.md`, «Cuándo se deja de revisar». **Se verifica con** sus hallazgos resueltos o justificados por escrito en esta tarea.
   - **Primer pase (13/11/2026): ningún hallazgo grave, 5 menores y 4 preguntas.** La persona a cargo decidió arreglar los cinco y resolver tres de las preguntas; los arreglos son las tareas 9.2 a 9.4:
     - Menor 1, un carácter NUL en un texto válido daba 500 (comprobado con una sonda) → 9.2.
     - Menor 2, un Profesor con un grupo ajeno inactivo, cerrado o inexistente recibía 422 y no 403 → 9.2. Se invierte el orden del design.
@@ -84,6 +84,12 @@
     - Pregunta, el DNI con guiones quedaba como otra persona → 9.2, la normalización quita también los guiones.
     - Pregunta, la sugerencia de grupo no reemplazaba lo que ella misma había elegido → 9.3.
     - Preguntas, recorrer el padrón por DNI y sumar personas de otras familias → no cambia el comportamiento: riesgos en el design y pregunta abierta en `aclaraciones-cliente.md`.
+  - **Resolución (13/11/2026): los cinco menores y las tres preguntas, resueltos en 9.2 a 9.4.**
+    - Al escribir los tests de 9.2 apareció que la carrera del DNI no estaba cubierta, aunque el informe de 4.1 la daba por hecha: el `except` atrapaba el choque, pero el rollback se llevaba la fila con la que chocaba, la reconsulta volvía vacía y salía 500. Ahora se atrapa en el `flush` de cada persona, con su índice.
+    - El test de comodines pasaba desde antes; se lo vio fallar desactivando a mano el escape antes de congelar.
+    - Pregunta de `test-writer`, sin cambio: `too_long` (el error de largo de listas en Pydantic) usa el mismo texto en «caracteres» que `string_too_long`. Hoy solo lo dispara el `username` del login, que es un texto; si aparece un campo lista con máximo, hay que darle su propio mensaje.
+    - Medición de los tests del frontend: con la suite corriendo sola, 57/57 tres veces y el más lento en 3,9–4,5 s. Una corrida dio timeout a 10 s mientras corría en paralelo la suite del backend. La deuda quedó registrada, con disparador, en `docs/product/historias-backlog.md`, «Deuda técnica».
+    - Estado final: backend con 234 tests, frontend con 57, y lint, typecheck, contrato y `front-lint` en verde.
 - [x] 9.2 Con la skill `backend-feature`, los arreglos del backend según los Scenarios nuevos: de `errores-de-la-api` «Caracteres de control en los textos» (4); de `alumnos` «Profesor con un grupo ajeno inactivo», «Profesor con un grupo que no existe», «Persona nueva con un DNI ya cargado escrito con guiones» y «Dos altas a la vez con el mismo DNI nuevo»; de `familias` «Los comodines se buscan como texto» y «DNI escrito con guiones»: 10 Scenarios, más el test de la función de traducción con cada `type` de la tabla (design, «Traducción de los 422»).
   - **Se verifica con** los tests nuevos en rojo por el motivo correcto (los de comodines y carrera pueden pasar ya: protegen comportamiento que existe, y se ven fallar quitando a mano el escape o el `except` antes de congelar), en verde después, `docs/api/openapi.json` regenerado si cambió, y `python tasks.py test`, `lint` y `typecheck` en verde.
 - [x] 9.3 Con la skill `frontend-feature`, el Scenario nuevo de `alumnos` «Corregir la fecha cambia el grupo elegido por la sugerencia» (1).
