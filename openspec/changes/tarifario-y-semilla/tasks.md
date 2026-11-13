@@ -18,15 +18,15 @@
   - `scripts/seed.py` comprueba el host antes de la primera conexión, hace el único `commit` y sale con código 1 ante `SemillaRechazada` (design, «La semilla vive en `app/semilla.py`»).
   - Los tests van en `backend/tests/functional/semilla/`. El Scenario de login usa el fixture `cliente` después de `cargar(sesion)`.
   - **Se verifica con** los tests de esa carpeta en verde, tras el rojo.
-- [ ] 2.2 Correr la semilla de punta a punta, sobre una base de desarrollo recién migrada y vacía.
+- [x] 2.2 Correr la semilla de punta a punta, sobre una base de desarrollo recién migrada y vacía.
   - `python tasks.py seed` termina con código 0 e imprime los cuatro usuarios.
   - Un segundo `python tasks.py seed` termina con código 1 y el mensaje de base no vacía.
-  - Con `python tasks.py up`, `POST /api/v1/auth/login` con `mgarcia` / `Verano2026` responde 200.
+  - Con la API levantada (`cd backend && uvicorn app.main:app`; `python tasks.py up` solo levanta Postgres), `POST /api/v1/auth/login` con `mgarcia` / `Verano2026` responde 200.
 
 ## 3. Contrato y calidad
 
-- [ ] 3.1 Correr `python tasks.py openapi-generate` y comprobar que `docs/api/openapi.json` no cambió, porque el change no agrega rutas ni esquemas, y que `python tasks.py openapi-check` pasa.
-- [ ] 3.2 Correr la suite completa con `python tasks.py test`, más `python tasks.py lint` y `python tasks.py typecheck`, todo en verde. Incluye los tests de `auth` y `test_migracion_inicial.py`, que no pueden romperse con las tablas nuevas.
+- [x] 3.1 Correr `python tasks.py openapi-generate` y comprobar que `docs/api/openapi.json` no cambió, porque el change no agrega rutas ni esquemas, y que `python tasks.py openapi-check` pasa.
+- [x] 3.2 Correr la suite completa con `python tasks.py test`, más `python tasks.py lint` y `python tasks.py typecheck`, todo en verde. Incluye los tests de `auth` y `test_migracion_inicial.py`, que no pueden romperse con las tablas nuevas.
 
 ## 4. Revisión adversarial
 
