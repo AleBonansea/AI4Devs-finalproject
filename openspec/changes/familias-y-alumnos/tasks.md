@@ -62,7 +62,7 @@
   - borrar el token a mano en el navegador con la pantalla abierta, buscar una familia y caer en el ingreso;
   - la pantalla a 360 px de ancho, sin scroll horizontal, y recorrible con el teclado.
   - **Se verifica con** cada punto anotado como hecho en el informe de la tarea, con lo que haya fallado.
-- [ ] 8.2 `python tasks.py test`, `lint`, `typecheck`, `openapi-check`, `front-test` y `front-lint` en verde.
+- [x] 8.2 `python tasks.py test`, `lint`, `typecheck`, `openapi-check`, `front-test` y `front-lint` en verde.
 
 ## 9. Revisión adversarial
 
