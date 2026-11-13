@@ -40,6 +40,7 @@
 
 - [ ] 6.1 Con la skill `backend-feature`, extender la semilla según los Requirements de `semilla` «La semilla solo corre sobre una base vacía» (5 Scenarios, 1 nuevo) y «Familias y alumnos de ejemplo» (1): los tests que ya existen de la base vacía no se tocan y se agregan 2.
   - **Se verifica con** los 2 tests nuevos en rojo por el motivo correcto y después en verde, los de la semilla que ya existían en verde, y `python tasks.py seed` corriendo sobre una base de desarrollo vacía.
+  - **Estado (13/11/2026):** hecho y verificado: los 2 tests en rojo por el motivo correcto (la semilla no se negaba con una persona y no creaba familias) y después en verde, los 22 de la semilla en verde, la huella intacta. **Pendiente:** correr `python tasks.py seed` sobre una base de desarrollo vacía. La base de desarrollo ya tiene la semilla anterior y vaciarla requiere un `DROP` que el hook `sin_borrar_datos.py` bloquea, con razón: lo corre una persona a mano. Hace falta igual para la tarea 8.1.
 
 ## 7. Pantalla «Registrar alumno»
 
