@@ -1,5 +1,5 @@
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
@@ -13,5 +13,13 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+  },
+  // Los tests usan esta misma configuracion: resuelven los modulos igual que
+  // el build. Este bloque entra en la huella de los tests congelados, porque
+  // achicar el include o cambiar el entorno hace pasar un test sin tocarlo.
+  test: {
+    environment: "jsdom",
+    include: ["tests/**/*.test.{ts,tsx}"],
+    setupFiles: ["./tests/preparar.ts"],
   },
 });

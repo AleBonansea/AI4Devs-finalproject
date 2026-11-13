@@ -174,6 +174,11 @@ def front_lint() -> None:
     correr([NPM, "run", "build"], cwd=FRONTEND)
 
 
+def front_test() -> None:
+    """Tests del frontend (Vitest)."""
+    correr([NPM, "run", "test"], cwd=FRONTEND)
+
+
 def front_dev() -> None:
     """Frontend en desarrollo."""
     correr([NPM, "run", "dev"], cwd=FRONTEND)
@@ -193,6 +198,7 @@ TAREAS = {
     "openapi-generate": openapi_generate,
     "openapi-check": openapi_check,
     "front-lint": front_lint,
+    "front-test": front_test,
     "front-dev": front_dev,
 }
 

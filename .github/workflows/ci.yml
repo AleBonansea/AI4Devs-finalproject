@@ -92,3 +92,4 @@ jobs:
       - run: npm ci
         working-directory: frontend
       - run: python tasks.py front-lint
+      - run: python tasks.py front-test

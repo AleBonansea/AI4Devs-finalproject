@@ -4,12 +4,12 @@
 
 ## 1. Montaje de los tests del frontend
 
-- [ ] 1.1 Instalar Vitest 3.x, jsdom, `@testing-library/react`, `@testing-library/user-event` y `@testing-library/jest-dom` con versiones exactas en `devDependencies`. Agregar el bloque `test` a `vite.config.ts` (`environment: "jsdom"`, `setupFiles: ["./tests/preparar.ts"]`), el script `"test": "vitest run"`, `tests` en el `include` de `tsconfig.app.json` y en el `prettier --check` de `npm run lint` (design, «Vitest con jsdom y Testing Library» y «Dónde viven los tests»). `tests/preparar.ts` carga los matchers de jest-dom, limpia `localStorage` y restaura los stubs después de cada test.
+- [x] 1.1 Instalar Vitest 3.x, jsdom, `@testing-library/react`, `@testing-library/user-event` y `@testing-library/jest-dom` con versiones exactas en `devDependencies`. Agregar el bloque `test` a `vite.config.ts` (`environment: "jsdom"`, `setupFiles: ["./tests/preparar.ts"]`), el script `"test": "vitest run"`, `tests` en el `include` de `tsconfig.app.json` y en el `prettier --check` de `npm run lint` (design, «Vitest con jsdom y Testing Library» y «Dónde viven los tests»). `tests/preparar.ts` carga los matchers de jest-dom, limpia `localStorage` y restaura los stubs después de cada test.
   - **Se verifica con:**
     - un control positivo que monta `App` y afirma un texto que no existe: `npm run test` tiene que fallar por esa aserción y no por la configuración. Después se borra.
     - `frontend/tests/preparar.test.tsx`, que se queda: comprueba que la preparación hace lo que promete. Un test escribe en `localStorage` y el siguiente lo encuentra vacío, y un elemento montado se afirma con un matcher de jest-dom (`toBeInTheDocument`). Así la suite nunca está vacía, `vitest run` no sale con error por falta de tests y el CI de la tarea 1.2 no queda en rojo hasta la 2.1.
     - `npm run test`, `npm run lint` y `npm run build` en verde.
-- [ ] 1.2 Agregar la tarea `front-test` a `tasks.py` (corre `npm run test` en `frontend/`) y el paso `python tasks.py front-test` al job `frontend` de `.github/workflows/ci.yml`, después de `front-lint`. Agregar la fila a la tabla de comandos de `CLAUDE.md`.
+- [x] 1.2 Agregar la tarea `front-test` a `tasks.py` (corre `npm run test` en `frontend/`) y el paso `python tasks.py front-test` al job `frontend` de `.github/workflows/ci.yml`, después de `front-lint`. Agregar la fila a la tabla de comandos de `CLAUDE.md`.
   - **Se verifica con** `python tasks.py front-test` saliendo con código distinto de 0 cuando hay un test en rojo y con 0 cuando no, porque un lanzador que siempre devuelve 0 apaga el CI. `python tasks.py` sola lista la tarea nueva.
 
 ## 2. Sesión e ingreso
