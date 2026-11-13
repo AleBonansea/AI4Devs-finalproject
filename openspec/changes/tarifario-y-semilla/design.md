@@ -71,7 +71,7 @@ Montos en `Numeric(12, 2)` y porcentajes en `Numeric(5, 2)`, con `CHECK (porcent
 
 `scripts/seed.py` es el único que hace commit, y su orden es fijo:
 1. Agrega `backend/` a `sys.path`, porque Python pone en el path la carpeta del script y no el `cwd`.
-2. Llama a `verificar_base_local` con `DATABASE_URL`, **antes de crear el motor**, así no llega a conectarse a una base remota.
+2. Llama a `verificar_base_local` con `DATABASE_URL`, **antes de abrir la primera conexión**, así no llega a conectarse a una base remota. El motor ya existe en ese momento, porque `app.semilla` importa los modelos y los modelos importan `app.core.db`, pero `create_engine` no se conecta: la primera conexión la abre la sesión, después de verificar.
 3. Abre una sesión, llama a `cargar` y hace `commit`.
 4. Imprime los cuatro usuarios con su rol y la contraseña de demostración.
 

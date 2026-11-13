@@ -13,9 +13,9 @@
 
 ## 2. La semilla
 
-- [ ] 2.1 Con la skill `backend-feature`, construir la semilla según todos los requirements de `specs/semilla/spec.md` (19 Scenarios).
+- [x] 2.1 Con la skill `backend-feature`, construir la semilla según todos los requirements de `specs/semilla/spec.md` (19 Scenarios).
   - `verificar_base_local(url)` y `cargar(sesion)` en `app/semilla.py`, con la excepción `SemillaRechazada`. `cargar` hace `flush` y nunca `commit`.
-  - `scripts/seed.py` comprueba el host antes de crear el motor, hace el único `commit` y sale con código 1 ante `SemillaRechazada` (design, «La semilla vive en `app/semilla.py`»).
+  - `scripts/seed.py` comprueba el host antes de la primera conexión, hace el único `commit` y sale con código 1 ante `SemillaRechazada` (design, «La semilla vive en `app/semilla.py`»).
   - Los tests van en `backend/tests/functional/semilla/`. El Scenario de login usa el fixture `cliente` después de `cargar(sesion)`.
   - **Se verifica con** los tests de esa carpeta en verde, tras el rojo.
 - [ ] 2.2 Correr la semilla de punta a punta, sobre una base de desarrollo recién migrada y vacía.
