@@ -35,6 +35,7 @@ No es un `Makefile` porque `make` no viene con Windows, que es donde se programa
 | Comprobar que el contrato está al día | `python tasks.py openapi-check` |
 | Frontend en desarrollo | `cd frontend && npm run dev` |
 | Lint y build del frontend | `cd frontend && npm run lint && npm run build` |
+| Tests del frontend | `python tasks.py front-test` |
 
 ## Estructura
 
