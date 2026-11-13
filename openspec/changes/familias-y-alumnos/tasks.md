@@ -12,7 +12,7 @@
 
 ## 2. Grupos para inscribir
 
-- [ ] 2.1 Con la skill `backend-feature`, construir `GET /api/v1/grupos` en un router `grupos.py`, según los Requirements de `grupos` «Grupos donde se puede inscribir» (5 Scenarios) y «Grupo sugerido por fecha de nacimiento» (6): 11 Scenarios.
+- [x] 2.1 Con la skill `backend-feature`, construir `GET /api/v1/grupos` en un router `grupos.py`, según los Requirements de `grupos` «Grupos donde se puede inscribir» (5 Scenarios) y «Grupo sugerido por fecha de nacimiento» (6): 11 Scenarios.
   - El filtro del Profesor como `JOIN` en la consulta y `sugerido` calculado en SQL (design, «Endpoints, roles y filtro del Profesor»).
   - **Se verifica con** los 11 tests en rojo por el motivo correcto y después en verde, `docs/api/openapi.json` regenerado, y `python tasks.py test`, `lint` y `typecheck` en verde.
 

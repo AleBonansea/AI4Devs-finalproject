@@ -112,6 +112,91 @@
         ]
       }
     },
+    "/api/v1/grupos": {
+      "get": {
+        "tags": [
+          "grupos"
+        ],
+        "summary": "Listar Grupos",
+        "operationId": "listar_grupos_api_v1_grupos_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "fecha_nacimiento",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fecha Nacimiento"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GrupoParaInscribir"
+                  },
+                  "title": "Response Listar Grupos Api V1 Grupos Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/salud": {
       "get": {
         "tags": [
@@ -140,6 +225,46 @@
   },
   "components": {
     "schemas": {
+      "GrupoParaInscribir": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "turno": {
+            "$ref": "#/components/schemas/Turno"
+          },
+          "nacimiento_desde": {
+            "type": "string",
+            "format": "date",
+            "title": "Nacimiento Desde"
+          },
+          "nacimiento_hasta": {
+            "type": "string",
+            "format": "date",
+            "title": "Nacimiento Hasta"
+          },
+          "sugerido": {
+            "type": "boolean",
+            "title": "Sugerido"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "turno",
+          "nacimiento_desde",
+          "nacimiento_hasta",
+          "sugerido"
+        ],
+        "title": "GrupoParaInscribir",
+        "description": "Un grupo donde se puede inscribir a un alumno, con la marca de\nsugerido segun la fecha de nacimiento consultada."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -220,6 +345,14 @@
           "profesor"
         ],
         "title": "RolUsuario"
+      },
+      "Turno": {
+        "type": "string",
+        "enum": [
+          "manana",
+          "tarde"
+        ],
+        "title": "Turno"
       },
       "UsuarioActual": {
         "properties": {
