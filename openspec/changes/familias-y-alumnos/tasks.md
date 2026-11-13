@@ -48,7 +48,7 @@
   - Las llamadas y sus tipos en `src/lib/api.ts`; `SelectorGrupo`, `SelectorFamilia` y `ListaPersonas` en `src/components/`; la página en `src/pages/RegistrarAlumno.tsx`; la ruta en `App.tsx` (design, «Frontend: la pantalla y sus piezas»). Los colores, si hacen falta, salen de `src/tema.ts`.
   - Tests en `frontend/tests/alumnos/`, con `fetch` fingido. El test del inicio que ya existe no se toca.
   - **Se verifica con** los 17 tests en rojo por el motivo correcto, la huella de `frontend/tests/` intacta después de implementar, y `python tasks.py front-test` y `cd frontend && npm run lint && npm run build` en verde.
-- [ ] 7.2 Con la skill `frontend-feature`, hacer que un 401 de cualquier llamada con token cierre la sesión, según el Requirement de `auth` «Un 401 en cualquier llamada cierra la sesión» (2 Scenarios).
+- [x] 7.2 Con la skill `frontend-feature`, hacer que un 401 de cualquier llamada con token cierre la sesión, según el Requirement de `auth` «Un 401 en cualquier llamada cierra la sesión» (2 Scenarios).
   - Oyentes en `api.ts` y suscripción en `ProveedorSesion` (design, «Frontend: el aviso de 401 por suscripción»). Cierra el diferido del change 3.
   - **Se verifica con** los 2 tests en rojo por el motivo correcto, los de `frontend/tests/auth/` sin cambios en verde, y `python tasks.py front-test` y `cd frontend && npm run lint && npm run build` en verde.
 

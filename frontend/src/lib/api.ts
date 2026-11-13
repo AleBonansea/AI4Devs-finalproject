@@ -47,6 +47,29 @@ export function borrarToken(): void {
   }
 }
 
+// --- Aviso de sesion perdida ---------------------------------------------------
+// Un 401 en una llamada que salio con token quiere decir que el token ya no
+// sirve. En lugar de que cada pantalla lo atrape (y alguna se olvide), api.ts
+// avisa a quien se haya suscripto; hoy, ProveedorSesion.
+
+const oyentesSesionPerdida = new Set<() => void>();
+
+/**
+ * Suscribe `fn` al aviso de sesion perdida. Devuelve la funcion para
+ * desuscribirse, pensada para la limpieza de un efecto.
+ */
+export function alPerderSesion(fn: () => void): () => void {
+  oyentesSesionPerdida.add(fn);
+  return () => {
+    oyentesSesionPerdida.delete(fn);
+  };
+}
+
+function avisarSesionPerdida(): void {
+  // Se copia el conjunto: un oyente podria desuscribirse mientras se recorre.
+  for (const fn of [...oyentesSesionPerdida]) fn();
+}
+
 /**
  * Traduce el cuerpo de error de FastAPI a algo que una pantalla pueda mostrar.
  *
@@ -101,6 +124,9 @@ async function pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise
 
   if (respuesta.status === 401) {
     borrarToken();
+    // Solo avisa si la llamada salio con token: el 401 del login (usuario o
+    // contrasena incorrectos) sale sin token y no es una sesion que se pierde.
+    if (token) avisarSesionPerdida();
   }
 
   if (!respuesta.ok) {
