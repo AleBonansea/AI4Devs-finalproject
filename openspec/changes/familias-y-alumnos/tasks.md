@@ -44,7 +44,7 @@
 
 ## 7. Pantalla «Registrar alumno»
 
-- [ ] 7.1 Con la skill `frontend-feature`, construir la pantalla `/alumnos/nuevo` y el acceso desde el inicio, según los Requirements de `alumnos` «Pantalla «Registrar alumno»» (1 Scenario), «Grupos en la pantalla» (4), «Familia en la pantalla» (2), «Personas en la pantalla» (2), «Validación antes de enviar el alta» (3) y «Envío del alta desde la pantalla» (4), y el de `auth` «Inicio de la zona protegida» (2, uno nuevo): 17 Scenarios nuevos.
+- [x] 7.1 Con la skill `frontend-feature`, construir la pantalla `/alumnos/nuevo` y el acceso desde el inicio, según los Requirements de `alumnos` «Pantalla «Registrar alumno»» (1 Scenario), «Grupos en la pantalla» (4), «Familia en la pantalla» (2), «Personas en la pantalla» (2), «Validación antes de enviar el alta» (3) y «Envío del alta desde la pantalla» (4), y el de `auth` «Inicio de la zona protegida» (2, uno nuevo): 17 Scenarios nuevos.
   - Las llamadas y sus tipos en `src/lib/api.ts`; `SelectorGrupo`, `SelectorFamilia` y `ListaPersonas` en `src/components/`; la página en `src/pages/RegistrarAlumno.tsx`; la ruta en `App.tsx` (design, «Frontend: la pantalla y sus piezas»). Los colores, si hacen falta, salen de `src/tema.ts`.
   - Tests en `frontend/tests/alumnos/`, con `fetch` fingido. El test del inicio que ya existe no se toca.
   - **Se verifica con** los 17 tests en rojo por el motivo correcto, la huella de `frontend/tests/` intacta después de implementar, y `python tasks.py front-test` y `cd frontend && npm run lint && npm run build` en verde.

@@ -3,17 +3,10 @@ import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-import type { RolUsuario } from "../lib/api";
+import { NOMBRE_DEL_ROL } from "../lib/nombres";
 import { useSesion } from "../lib/sesion";
-
-/** El rol escrito para personas. Vive aca porque es el unico lugar que lo muestra. */
-const NOMBRE_DEL_ROL: Record<RolUsuario, string> = {
-  admin: "Admin",
-  coordinador: "Coordinador",
-  profesor: "Profesor",
-};
 
 export default function Inicio() {
   const { usuario, salir } = useSesion();
@@ -38,7 +31,14 @@ export default function Inicio() {
             {`${usuario.nombre} ${usuario.apellido}`}
           </Typography>
           <Typography color="text.secondary">{NOMBRE_DEL_ROL[usuario.rol]}</Typography>
-          <Button onClick={alSalir}>Salir</Button>
+          <Stack direction="row" spacing={2}>
+            <Button component={Link} to="/alumnos/nuevo">
+              Registrar alumno
+            </Button>
+            <Button variant="outlined" onClick={alSalir}>
+              Salir
+            </Button>
+          </Stack>
         </Stack>
       </Paper>
     </Container>
