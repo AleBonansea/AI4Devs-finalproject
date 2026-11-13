@@ -197,6 +197,170 @@
         }
       }
     },
+    "/api/v1/familias": {
+      "get": {
+        "tags": [
+          "familias"
+        ],
+        "summary": "Buscar Familias",
+        "operationId": "buscar_familias_api_v1_familias_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "apellido",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "title": "Apellido"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FamiliaEncontrada"
+                  },
+                  "title": "Response Buscar Familias Api V1 Familias Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/personas": {
+      "get": {
+        "tags": [
+          "personas"
+        ],
+        "summary": "Buscar Persona",
+        "operationId": "buscar_persona_api_v1_personas_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "dni",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dni"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonaEncontrada"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No hay ninguna persona con ese DNI.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "No hay ninguna persona con ese DNI."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/salud": {
       "get": {
         "tags": [
@@ -225,6 +389,38 @@
   },
   "components": {
     "schemas": {
+      "CategoriaFamilia": {
+        "type": "string",
+        "enum": [
+          "socio",
+          "empleado",
+          "no_socio"
+        ],
+        "title": "CategoriaFamilia"
+      },
+      "FamiliaEncontrada": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "etiqueta": {
+            "type": "string",
+            "title": "Etiqueta"
+          },
+          "categoria": {
+            "$ref": "#/components/schemas/CategoriaFamilia"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "etiqueta",
+          "categoria"
+        ],
+        "title": "FamiliaEncontrada",
+        "description": "Una familia de la busqueda por apellido. Solo id, etiqueta y categoria:\nla busqueda no filtra por grupo para el Profesor, asi que lo que se limita\nes lo que trae (ni alumnos, ni fechas, ni grupos, ni personas)."
+      },
       "GrupoParaInscribir": {
         "properties": {
           "id": {
@@ -336,6 +532,30 @@
         ],
         "title": "MensajeError",
         "description": "Un rechazo con `detail` en castellano, que src/lib/api.ts muestra tal\ncual."
+      },
+      "PersonaEncontrada": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "apellido": {
+            "type": "string",
+            "title": "Apellido"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "apellido"
+        ],
+        "title": "PersonaEncontrada",
+        "description": "La persona de la busqueda por DNI. Solo id, nombre y apellido: ni\ntelefono, ni DNI, ni familias."
       },
       "RolUsuario": {
         "type": "string",

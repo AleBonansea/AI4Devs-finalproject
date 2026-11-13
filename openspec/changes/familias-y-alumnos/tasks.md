@@ -18,7 +18,7 @@
 
 ## 3. Búsquedas de familia y de persona
 
-- [ ] 3.1 Con la skill `backend-feature`, construir `GET /api/v1/familias?apellido=` y `GET /api/v1/personas?dni=`, en los routers `familias.py` y `personas.py`, según los Requirements de `familias` «Buscar familias por apellido» (9 Scenarios) y «Buscar una persona por DNI» (5): 14 Scenarios.
+- [x] 3.1 Con la skill `backend-feature`, construir `GET /api/v1/familias?apellido=` y `GET /api/v1/personas?dni=`, en los routers `familias.py` y `personas.py`, según los Requirements de `familias` «Buscar familias por apellido» (9 Scenarios) y «Buscar una persona por DNI» (5): 14 Scenarios.
   - `normalizar_dni` en un solo lugar, que después reusa el alta (design, «Normalización del DNI»). El `LIKE` escapa `%` y `_`. Los esquemas de respuesta tienen solo los campos que dice la spec.
   - **Se verifica con** los 14 tests en rojo por el motivo correcto y después en verde, incluidos los que comprueban que la respuesta no trae ningún campo de más; `docs/api/openapi.json` regenerado; `python tasks.py test`, `lint` y `typecheck` en verde.
 
