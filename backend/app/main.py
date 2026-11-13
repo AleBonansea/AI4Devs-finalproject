@@ -10,6 +10,7 @@ from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from app.api.v1.router import router as router_v1
 from app.core.config import obtener_configuracion
+from app.core.errores import ReglaIncumplida
 
 
 @asynccontextmanager
@@ -45,6 +46,17 @@ async def error_de_validacion(_: Request, exc: RequestValidationError) -> JSONRe
         status_code=HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": jsonable_encoder(errores)},
     )
+
+
+@app.exception_handler(ReglaIncumplida)
+async def regla_incumplida(_: Request, exc: ReglaIncumplida) -> JSONResponse:
+    # La forma del 422 de validacion, con `type` propio y sin ningun otro
+    # campo: la pantalla pega cada `msg` junto a su campo.
+    errores = [
+        {"loc": ["body", *ubicacion], "msg": mensaje, "type": "regla_de_negocio"}
+        for ubicacion, mensaje in exc.errores
+    ]
+    return JSONResponse(status_code=HTTP_422_UNPROCESSABLE_ENTITY, content={"detail": errores})
 
 
 app.include_router(router_v1)

@@ -24,7 +24,7 @@
 
 ## 4. Alta de alumno y errores en castellano
 
-- [ ] 4.1 Con la skill `backend-feature`, construir `POST /api/v1/alumnos` en un router `alumnos.py` con el servicio `app/services/alumnos.py`, según los Requirements de `alumnos` «Alta de un alumno con familia nueva» (4 Scenarios), «Alta de un alumno en una familia existente» (4), «Personas en el alta» (7), «Datos del alumno en el alta» (4: todos menos «Faltan varios datos mínimos», que va en 4.2), «El grupo del alta» (4) y «Quién puede dar de alta un alumno» (5), más el de `errores-de-la-api` «Rechazos de reglas del negocio con la forma de validación» (1): 29 Scenarios.
+- [x] 4.1 Con la skill `backend-feature`, construir `POST /api/v1/alumnos` en un router `alumnos.py` con el servicio `app/services/alumnos.py`, según los Requirements de `alumnos` «Alta de un alumno con familia nueva» (4 Scenarios), «Alta de un alumno en una familia existente» (4), «Personas en el alta» (7), «Datos del alumno en el alta» (4: todos menos «Faltan varios datos mínimos», que va en 4.2), «El grupo del alta» (4) y «Quién puede dar de alta un alumno» (5), más el de `errores-de-la-api` «Rechazos de reglas del negocio con la forma de validación» (1): 29 Scenarios.
   - Orden de las reglas, juntado de errores del paso 4 y carrera en el DNI según design, «El alta, en un servicio». `ReglaIncumplida` y su manejador según design, «Rechazos de reglas con la forma del 422».
   - Los tests de «no se crea nada» cuentan filas de `familia`, `persona`, `familia_persona`, `alumno` e `inscripcion` antes y después.
   - **Se verifica con** los 29 tests en rojo por el motivo correcto y después en verde, `docs/api/openapi.json` regenerado, y `python tasks.py test`, `lint` y `typecheck` en verde.

@@ -361,6 +361,78 @@
         }
       }
     },
+    "/api/v1/alumnos": {
+      "post": {
+        "tags": [
+          "alumnos"
+        ],
+        "summary": "Registrar",
+        "operationId": "registrar_api_v1_alumnos_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AltaAlumnoEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlumnoRegistrado"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo podés inscribir alumnos en tus grupos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Solo podés inscribir alumnos en tus grupos."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Datos invalidos o una regla del alta incumplida (grupo, familia, personas). Cada error trae su campo en `loc`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErroresDeCampo"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/salud": {
       "get": {
         "tags": [
@@ -389,6 +461,115 @@
   },
   "components": {
     "schemas": {
+      "AltaAlumnoEntrada": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Nombre"
+          },
+          "apellido": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Apellido"
+          },
+          "fecha_nacimiento": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Nacimiento"
+          },
+          "grupo_id": {
+            "type": "integer",
+            "title": "Grupo Id"
+          },
+          "familia_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Familia Id"
+          },
+          "categoria": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoriaFamilia"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "personas": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/PersonaReutilizada"
+                },
+                {
+                  "$ref": "#/components/schemas/PersonaNueva"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Personas",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "nombre",
+          "apellido",
+          "fecha_nacimiento",
+          "grupo_id"
+        ],
+        "title": "AltaAlumnoEntrada",
+        "description": "El alta: datos del alumno, grupo, familia (existente o nueva) y\npersonas autorizadas a retirar."
+      },
+      "AlumnoRegistrado": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "apellido": {
+            "type": "string",
+            "title": "Apellido"
+          },
+          "fecha_nacimiento": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Nacimiento"
+          },
+          "familia": {
+            "$ref": "#/components/schemas/FamiliaDelAlumno"
+          },
+          "inscripcion": {
+            "$ref": "#/components/schemas/InscripcionDelAlumno"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "apellido",
+          "fecha_nacimiento",
+          "familia",
+          "inscripcion"
+        ],
+        "title": "AlumnoRegistrado",
+        "description": "El alumno recien dado de alta, con su familia y su inscripcion."
+      },
       "CategoriaFamilia": {
         "type": "string",
         "enum": [
@@ -397,6 +578,79 @@
           "no_socio"
         ],
         "title": "CategoriaFamilia"
+      },
+      "ErrorDeCampo": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Loc"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Msg"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ErrorDeCampo",
+        "description": "Un error atado a un campo del pedido, de validacion o de una regla del\nnegocio (`type` `regla_de_negocio`)."
+      },
+      "ErroresDeCampo": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ErrorDeCampo"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ErroresDeCampo",
+        "description": "El 422: la lista de errores, cada uno con su campo en `loc`."
+      },
+      "FamiliaDelAlumno": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "etiqueta": {
+            "type": "string",
+            "title": "Etiqueta"
+          },
+          "categoria": {
+            "$ref": "#/components/schemas/CategoriaFamilia"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "etiqueta",
+          "categoria"
+        ],
+        "title": "FamiliaDelAlumno"
       },
       "FamiliaEncontrada": {
         "properties": {
@@ -473,6 +727,33 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "InscripcionDelAlumno": {
+        "properties": {
+          "grupo_id": {
+            "type": "integer",
+            "title": "Grupo Id"
+          },
+          "grupo_nombre": {
+            "type": "string",
+            "title": "Grupo Nombre"
+          },
+          "turno": {
+            "$ref": "#/components/schemas/Turno"
+          },
+          "temporada_id": {
+            "type": "integer",
+            "title": "Temporada Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "grupo_id",
+          "grupo_nombre",
+          "turno",
+          "temporada_id"
+        ],
+        "title": "InscripcionDelAlumno"
       },
       "LoginEntrada": {
         "properties": {
@@ -556,6 +837,74 @@
         ],
         "title": "PersonaEncontrada",
         "description": "La persona de la busqueda por DNI. Solo id, nombre y apellido: ni\ntelefono, ni DNI, ni familias."
+      },
+      "PersonaNueva": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Nombre"
+          },
+          "apellido": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Apellido"
+          },
+          "telefono": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 1,
+            "title": "Telefono"
+          },
+          "dni": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 15
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dni"
+          },
+          "es_tutor": {
+            "type": "boolean",
+            "title": "Es Tutor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "nombre",
+          "apellido",
+          "telefono",
+          "es_tutor"
+        ],
+        "title": "PersonaNueva",
+        "description": "Una persona que se carga en el alta."
+      },
+      "PersonaReutilizada": {
+        "properties": {
+          "persona_id": {
+            "type": "integer",
+            "title": "Persona Id"
+          },
+          "es_tutor": {
+            "type": "boolean",
+            "title": "Es Tutor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "persona_id",
+          "es_tutor"
+        ],
+        "title": "PersonaReutilizada",
+        "description": "Una persona ya cargada, elegida por su id (de la busqueda por DNI)."
       },
       "RolUsuario": {
         "type": "string",
