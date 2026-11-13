@@ -3,9 +3,11 @@
  * escritos como nombre y turno, con la marca `(sugerido)` segun la fecha de
  * nacimiento.
  *
- * Pide los grupos a la API cada vez que cambia la fecha. Si la respuesta trae
- * exactamente un sugerido y todavia no hay grupo elegido, lo elige; nunca
- * pisa una eleccion. Lo van a reusar la ficha y la reinscripcion (HU-AF-11).
+ * Pide los grupos a la API cada vez que cambia la fecha. Distingue el grupo
+ * elegido a mano del elegido por la sugerencia: mientras el usuario no haya
+ * elegido a mano, la sugerencia manda (con exactamente un sugerido lo elige;
+ * con dos o ninguno deja el grupo sin elegir). Una eleccion a mano no la pisa
+ * ninguna sugerencia. Lo van a reusar la ficha y la reinscripcion (HU-AF-11).
  */
 import TextField from "@mui/material/TextField";
 import { memo, useEffect, useRef, useState } from "react";
@@ -20,7 +22,8 @@ interface Props {
   fechaNacimiento: string;
   /** El id del grupo elegido, o null. */
   valor: number | null;
-  onCambiar: (grupoId: number) => void;
+  /** Recibe null cuando la sugerencia deja el grupo sin elegir. */
+  onCambiar: (grupoId: number | null) => void;
   /** El error de validacion del campo, si hay. */
   error?: string;
 }
@@ -44,6 +47,11 @@ function SelectorGrupo({ fechaNacimiento, valor, onCambiar, error }: Props) {
     cambiar.current = onCambiar;
   });
 
+  // El ultimo grupo que eligio la sugerencia, o null si no eligio ninguno o
+  // si despues el usuario eligio a mano. Si el valor actual coincide con este,
+  // la eleccion es de la sugerencia y una fecha nueva la puede reemplazar.
+  const elegidoPorSugerencia = useRef<number | null>(null);
+
   useEffect(() => {
     // Solo vale la respuesta del ultimo pedido: con la fecha escrita a mano
     // salen varios seguidos y pueden volver en otro orden.
@@ -55,10 +63,15 @@ function SelectorGrupo({ fechaNacimiento, valor, onCambiar, error }: Props) {
         if (!vigente) return;
         setGrupos(leidos);
         setCargando(false);
+        // Sin eleccion, o con la de una sugerencia anterior, manda la nueva.
+        // Si el valor actual lo eligio el usuario a mano, no se toca.
+        const actual = valorActual.current;
+        const mandaLaSugerencia = actual === null || actual === elegidoPorSugerencia.current;
+        if (!mandaLaSugerencia) return;
         const [unico, ...otros] = leidos.filter((grupo) => grupo.sugerido);
-        if (unico && otros.length === 0 && valorActual.current === null) {
-          cambiar.current(unico.id);
-        }
+        const nuevo = unico && otros.length === 0 ? unico.id : null;
+        elegidoPorSugerencia.current = nuevo;
+        if (nuevo !== actual) cambiar.current(nuevo);
       })
       .catch((causa: unknown) => {
         if (!vigente) return;
@@ -88,7 +101,10 @@ function SelectorGrupo({ fechaNacimiento, valor, onCambiar, error }: Props) {
       label="Grupo"
       value={valorVisible}
       onChange={(evento) => {
-        if (evento.target.value !== "") onCambiar(Number(evento.target.value));
+        if (evento.target.value === "") return;
+        // Eleccion a mano: desde ahora ninguna sugerencia la reemplaza.
+        elegidoPorSugerencia.current = null;
+        onCambiar(Number(evento.target.value));
       }}
       error={Boolean(error || errorCarga)}
       helperText={ayuda}

@@ -148,7 +148,10 @@ export default function RegistrarAlumno() {
     setAlumno((anterior) => ({ ...anterior, ...cambios }));
   }, []);
 
-  const elegirGrupo = useCallback((grupoId: number) => cambiarAlumno({ grupoId }), [cambiarAlumno]);
+  const elegirGrupo = useCallback(
+    (grupoId: number | null) => cambiarAlumno({ grupoId }),
+    [cambiarAlumno],
+  );
 
   const cantidadDePersonas = personas.length;
   const cambiarPersonas = useCallback(
