@@ -34,7 +34,7 @@
 
 ## 5. Contrato
 
-- [ ] 5.1 Comprobar que `docs/api/openapi.json` tiene los cuatro endpoints nuevos con sus esquemas y que ningún esquema de entrada tiene un campo de monto. **Se verifica con** `python tasks.py openapi-check` en verde.
+- [x] 5.1 Comprobar que `docs/api/openapi.json` tiene los cuatro endpoints nuevos con sus esquemas y que ningún esquema de entrada tiene un campo de monto. **Se verifica con** `python tasks.py openapi-check` en verde.
 
 ## 6. Semilla
 
