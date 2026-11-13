@@ -1,0 +1,59 @@
+name: Revision adversarial
+
+# Donde se publica: como comentario del pull request. Un informe que
+# queda en el registro de la ejecucion no lo lee nadie.
+#
+# Cuando NO corre: en un pull request que viene de un fork. GitHub no le
+# entrega los secretos, asi que el paso fallaria por falta de
+# credenciales. Por eso los pull requests de trabajo se abren DENTRO de
+# este fork (de feat/* hacia la rama de entrega), y recien al final se
+# abre el pull request hacia el repositorio de LIDR, donde esto no corre.
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  revisar:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+      # Requerido para que la accion se autentique como la app de GitHub,
+      # que es como publica el comentario. Sin esto el paso falla aunque el
+      # secreto este bien cargado.
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Revisar el diff
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Palancas de costo: un revisor no necesita el modelo grande ni
+          # cuarenta turnos. Con esto un pase sale centavos.
+          claude_args: >-
+            --model sonnet
+            --effort medium
+            --max-turns 40
+          prompt: |
+            Revisa el diff de este pull request contra la rama base.
+
+            Lee primero REVIEW.md: es vinculante. Dice que es grave,
+            cuantas sugerencias menores podes hacer y donde no se
+            reporta. Lee tambien CLAUDE.md para las reglas del negocio.
+
+            Mira solo lo que el diff cambia:
+
+                git diff origin/${{ github.base_ref }}...HEAD
+
+            Publica el informe como un unico comentario en el pull
+            request. Si no hay nada grave y no tenes sugerencias que
+            valgan la pena, decilo en un renglon.
+
+            No arregles nada. No hagas commits.
