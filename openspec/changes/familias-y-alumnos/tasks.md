@@ -1,0 +1,74 @@
+# Tasks
+
+> Cada tarea que toca rutas, esquemas o modelos cierra su commit con `python tasks.py openapi-generate` (regla 5 de CLAUDE.md). La tarea 5.1 lo comprueba al final.
+
+## 1. Esquema de familias y alumnos
+
+- [ ] 1.1 Con la skill `backend-feature`, crear los modelos `Familia`, `Persona`, `FamiliaPersona`, `Alumno` e `Inscripcion`, la vista `v_familia_etiqueta` y la migración `crear_familias_y_alumnos`, según los Requirements de `familias` «Categoría de la familia» (3 Scenarios), «Etiqueta de la familia» (5), «Persona reutilizable entre familias» (4) y «Vínculo de una persona con una familia» (5), y los de `alumnos` «Ficha mínima del alumno» (2) e «Inscripción en un grupo y turno» (4): 23 Scenarios.
+  - Columnas, restricciones e índices según design, «Esquema: las cinco tablas del modelo». La vista sobre un `MetaData()` propio y creada con `op.execute` (design, «La etiqueta es una vista»). `turno` y `categoria_familia` con `create_type=False`.
+  - Los tests de la etiqueta insertan alumnos directo en la base y leen la vista: el alta todavía no existe.
+  - Tests en `backend/tests/functional/familias/` y `backend/tests/functional/alumnos/`.
+  - **Se verifica con** los 23 tests en rojo por el motivo correcto y después en verde; la skill `revisar-migracion` sobre la migración, con `upgrade head` → `downgrade -1` → `upgrade head` contra la base de pruebas y el downgrade sin tocar los tipos `turno` ni `categoria_familia`; `python tasks.py test`, `lint` y `typecheck` en verde.
+
+## 2. Grupos para inscribir
+
+- [ ] 2.1 Con la skill `backend-feature`, construir `GET /api/v1/grupos` en un router `grupos.py`, según los Requirements de `grupos` «Grupos donde se puede inscribir» (5 Scenarios) y «Grupo sugerido por fecha de nacimiento» (6): 11 Scenarios.
+  - El filtro del Profesor como `JOIN` en la consulta y `sugerido` calculado en SQL (design, «Endpoints, roles y filtro del Profesor»).
+  - **Se verifica con** los 11 tests en rojo por el motivo correcto y después en verde, `docs/api/openapi.json` regenerado, y `python tasks.py test`, `lint` y `typecheck` en verde.
+
+## 3. Búsquedas de familia y de persona
+
+- [ ] 3.1 Con la skill `backend-feature`, construir `GET /api/v1/familias?apellido=` y `GET /api/v1/personas?dni=`, en los routers `familias.py` y `personas.py`, según los Requirements de `familias` «Buscar familias por apellido» (9 Scenarios) y «Buscar una persona por DNI» (5): 14 Scenarios.
+  - `normalizar_dni` en un solo lugar, que después reusa el alta (design, «Normalización del DNI»). El `LIKE` escapa `%` y `_`. Los esquemas de respuesta tienen solo los campos que dice la spec.
+  - **Se verifica con** los 14 tests en rojo por el motivo correcto y después en verde, incluidos los que comprueban que la respuesta no trae ningún campo de más; `docs/api/openapi.json` regenerado; `python tasks.py test`, `lint` y `typecheck` en verde.
+
+## 4. Alta de alumno y errores en castellano
+
+- [ ] 4.1 Con la skill `backend-feature`, construir `POST /api/v1/alumnos` en un router `alumnos.py` con el servicio `app/services/alumnos.py`, según los Requirements de `alumnos` «Alta de un alumno con familia nueva» (4 Scenarios), «Alta de un alumno en una familia existente» (4), «Personas en el alta» (7), «Datos del alumno en el alta» (4: todos menos «Faltan varios datos mínimos», que va en 4.2), «El grupo del alta» (4) y «Quién puede dar de alta un alumno» (5), más el de `errores-de-la-api` «Rechazos de reglas del negocio con la forma de validación» (1): 29 Scenarios.
+  - Orden de las reglas, juntado de errores del paso 4 y carrera en el DNI según design, «El alta, en un servicio». `ReglaIncumplida` y su manejador según design, «Rechazos de reglas con la forma del 422».
+  - Los tests de «no se crea nada» cuentan filas de `familia`, `persona`, `familia_persona`, `alumno` e `inscripcion` antes y después.
+  - **Se verifica con** los 29 tests en rojo por el motivo correcto y después en verde, `docs/api/openapi.json` regenerado, y `python tasks.py test`, `lint` y `typecheck` en verde.
+- [ ] 4.2 Con la skill `backend-feature`, traducir los `msg` del 422 en el manejador de `app/main.py`, según el Requirement de `errores-de-la-api` «Mensajes de validación en castellano» (7 Scenarios) y el Scenario «Faltan varios datos mínimos» de `alumnos`: 8 Scenarios.
+  - La tabla por `type` del design, «Traducción de los 422 de Pydantic». El 422 sigue sin `input`: los tests de `auth` sobre el 422 tienen que seguir en verde sin tocarlos.
+  - **Se verifica con** los 8 tests en rojo por el motivo correcto (el `msg` llega en inglés) y después en verde, `docs/api/openapi.json` regenerado si cambió, y `python tasks.py test`, `lint` y `typecheck` en verde.
+
+## 5. Contrato
+
+- [ ] 5.1 Comprobar que `docs/api/openapi.json` tiene los cuatro endpoints nuevos con sus esquemas y que ningún esquema de entrada tiene un campo de monto. **Se verifica con** `python tasks.py openapi-check` en verde.
+
+## 6. Semilla
+
+- [ ] 6.1 Con la skill `backend-feature`, extender la semilla según los Requirements de `semilla` «La semilla solo corre sobre una base vacía» (5 Scenarios, 1 nuevo) y «Familias y alumnos de ejemplo» (1): los tests que ya existen de la base vacía no se tocan y se agregan 2.
+  - **Se verifica con** los 2 tests nuevos en rojo por el motivo correcto y después en verde, los de la semilla que ya existían en verde, y `python tasks.py seed` corriendo sobre una base de desarrollo vacía.
+
+## 7. Pantalla «Registrar alumno»
+
+- [ ] 7.1 Con la skill `frontend-feature`, construir la pantalla `/alumnos/nuevo` y el acceso desde el inicio, según los Requirements de `alumnos` «Pantalla «Registrar alumno»» (1 Scenario), «Grupos en la pantalla» (4), «Familia en la pantalla» (2), «Personas en la pantalla» (2), «Validación antes de enviar el alta» (3) y «Envío del alta desde la pantalla» (4), y el de `auth` «Inicio de la zona protegida» (2, uno nuevo): 17 Scenarios nuevos.
+  - Las llamadas y sus tipos en `src/lib/api.ts`; `SelectorGrupo`, `SelectorFamilia` y `ListaPersonas` en `src/components/`; la página en `src/pages/RegistrarAlumno.tsx`; la ruta en `App.tsx` (design, «Frontend: la pantalla y sus piezas»). Los colores, si hacen falta, salen de `src/tema.ts`.
+  - Tests en `frontend/tests/alumnos/`, con `fetch` fingido. El test del inicio que ya existe no se toca.
+  - **Se verifica con** los 17 tests en rojo por el motivo correcto, la huella de `frontend/tests/` intacta después de implementar, y `python tasks.py front-test` y `cd frontend && npm run lint && npm run build` en verde.
+- [ ] 7.2 Con la skill `frontend-feature`, hacer que un 401 de cualquier llamada con token cierre la sesión, según el Requirement de `auth` «Un 401 en cualquier llamada cierra la sesión» (2 Scenarios).
+  - Oyentes en `api.ts` y suscripción en `ProveedorSesion` (design, «Frontend: el aviso de 401 por suscripción»). Cierra el diferido del change 3.
+  - **Se verifica con** los 2 tests en rojo por el motivo correcto, los de `frontend/tests/auth/` sin cambios en verde, y `python tasks.py front-test` y `cd frontend && npm run lint && npm run build` en verde.
+
+## 8. Comprobación de punta a punta
+
+- [ ] 8.1 Con la base de desarrollo migrada y la semilla cargada, la API y el frontend levantados, comprobar a mano en el navegador:
+  - como `lrodriguez` (coordinador), registrar un primer hijo con familia nueva, tutora nueva y un autorizado reutilizado por DNI (`30111222`), y ver el mensaje con la etiqueta;
+  - registrar un segundo hijo, mayor, eligiendo esa familia por apellido, y ver que la etiqueta cambia;
+  - como `jperez` (profesor), ver en `Grupo` solo «Delfines» de los dos turnos;
+  - un DNI ya cargado como persona nueva muestra el error junto a su campo;
+  - borrar el token a mano en el navegador con la pantalla abierta, buscar una familia y caer en el ingreso;
+  - la pantalla a 360 px de ancho, sin scroll horizontal, y recorrible con el teclado.
+  - **Se verifica con** cada punto anotado como hecho en el informe de la tarea, con lo que haya fallado.
+- [ ] 8.2 `python tasks.py test`, `lint`, `typecheck`, `openapi-check`, `front-test` y `front-lint` en verde.
+
+## 9. Revisión adversarial
+
+- [ ] 9.1 Un pase del subagente `adversarial-reviewer` sobre el change terminado, antes del pull request. Rige `REVIEW.md`, «Cuándo se deja de revisar». **Se verifica con** sus hallazgos resueltos o justificados por escrito en esta tarea.
+
+## Workflow follow-up
+
+- Comprobar el change con `/openspec-verify-change` y archivarlo con `/openspec-archive-change`, que crea `openspec/specs/familias`, `alumnos` y `errores-de-la-api`, y funde los deltas de `grupos`, `auth` y `semilla`.
+- Al archivar, reemplazar los criterios de HU-AF-01 en `5-historias-de-usuario.md` por un puntero a la spec de `alumnos`.
+- Pull request de `feat/familias-y-alumnos` hacia la rama de entrega.
