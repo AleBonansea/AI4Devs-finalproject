@@ -2,7 +2,7 @@
 
 ## 1. Tablas de grupos y tarifario
 
-- [ ] 1.1 Con la skill `backend-feature`, construir el esquema según todos los requirements de `specs/grupos/spec.md` (11 Scenarios) y de `specs/tarifario/spec.md` (22 Scenarios).
+- [x] 1.1 Con la skill `backend-feature`, construir el esquema según todos los requirements de `specs/grupos/spec.md` (11 Scenarios) y de `specs/tarifario/spec.md` (22 Scenarios).
   - Tipos enumerados compartidos en `app/models/enums.py`.
   - Modelos en `app/models/grupo.py` y `app/models/tarifario.py`, registrados en `app/models/__init__.py`.
   - **Una sola migración** `crear grupos y tarifario`, generada con `--autogenerate`. Va revisada con la skill `revisar-migracion` y con el `DROP TYPE` de los cuatro enums escrito a mano en el `downgrade` (design, «Reversibilidad»).

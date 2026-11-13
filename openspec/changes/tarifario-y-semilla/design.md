@@ -56,7 +56,7 @@ Las FK usan el comportamiento por defecto de Postgres (`NO ACTION`). Borrar un g
 
 ### Montos y porcentajes en `Numeric`, comparados como `Decimal`
 
-Montos en `Numeric(12, 2)` y porcentajes en `Numeric(5, 2)`, con `CHECK (porcentaje BETWEEN 0 AND 100)` y `CHECK (monto > 0)`. En Python son `Decimal`, nunca `float`: 36.25 y 57.50 tienen que releerse exactos, y el change 6 multiplica con ellos.
+Montos en `Numeric(12, 2)` y porcentajes en `Numeric(5, 2)`, con `CHECK (porcentaje BETWEEN 0 AND 100)`, y `CHECK (monto > 0)` en `tarifa_base`. `tipo_cargo.monto_fijo` no lleva ese CHECK porque el modelo de datos no lo pide y la spec no tiene Scenario: hoy la base aceptaría una Preinscripción de monto 0. En Python son `Decimal`, nunca `float`: 36.25 y 57.50 tienen que releerse exactos, y el change 6 multiplica con ellos.
 
 ### La semilla vive en `app/semilla.py` y el script solo la invoca
 
