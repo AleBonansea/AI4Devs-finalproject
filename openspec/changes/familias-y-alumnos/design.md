@@ -51,8 +51,8 @@ Alternativa descartada: crear todas las columnas del modelo de una vez. Ahorra u
 `app/services/alumnos.py` expone `registrar_alumno(sesion, usuario, entrada)`. El router solo traduce. Orden de comprobación:
 
 1. **Pydantic** valida forma y largos (422 con los mensajes traducidos).
-2. **Grupo:** existe, está activo, es de la temporada vigente (422 en `grupo_id`).
-3. **Permiso del Profesor:** existe la fila `grupo_profesor (grupo_id, usuario.id)`; si no, 403 y fin. Va después del paso 2 para no gastar un 403 en un grupo que no existe, y antes del 4 para que un Profesor no use el alta como oráculo de qué familias o personas existen fuera de sus grupos.
+2. **Permiso del Profesor:** existe la fila `grupo_profesor (grupo_id, usuario.id)`; si no, 403 y fin, exista o no el grupo. Va primero para que el Profesor no use el alta como oráculo de los grupos ajenos (si existen, si están activos, de qué temporada son: hallazgo del pase adversarial, que dejaba un 422 por grupo inactivo antes del 403), y antes del 4 para que tampoco lo use para saber qué familias o personas existen fuera de sus grupos.
+3. **Grupo:** existe, está activo, es de la temporada vigente (422 en `grupo_id`). Para el Profesor solo se alcanza con un grupo propio.
 4. **Familia y personas:** `familia_id` xor `categoria`; la familia existe; cada `persona_id` existe y no está repetido ni ya vinculado; cada DNI nuevo no está cargado; con familia nueva, al menos un tutor. Estas reglas cruzan campos, así que viven acá y no en un `model_validator` de Pydantic, que las pegaría a la raíz del cuerpo en lugar de al campo. **Se juntan todas** las de este paso y se devuelven en un solo 422, para que la pantalla marque todos los campos de una vez.
 5. **Escritura:** familia (si es nueva), personas nuevas, vínculos, alumno, inscripción, un solo `flush` y la transacción de la petición.
 
@@ -84,11 +84,15 @@ El manejador de `RequestValidationError` que ya existe reemplaza `msg` según `t
 
 Los validadores propios (fecha futura) levantan `PydanticCustomError("regla_de_negocio", "<mensaje>")`, así su mensaje pasa intacto. Los textos se recortan antes de medir con `Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]`.
 
+La tabla se prueba entera: además de los Scenarios, un test llama a la función pura con cada `type` de la tabla (y con uno desconocido) y comprueba su mensaje. Un `type` mal escrito en la tabla cae al genérico sin que ningún Scenario lo note (hallazgo del pase adversarial).
+
+**Caracteres de control.** Todo texto que llega a la base (nombre, apellido y teléfono del alta, el apellido y el DNI de las búsquedas) pasa por el mismo validador que ya usa el login: un carácter de control da `PydanticCustomError("regla_de_negocio", "No puede tener caracteres de control.")`. Sin eso, un NUL llega a Postgres y la API responde 500 (hallazgo del pase adversarial, comprobado con una sonda).
+
 Alternativa descartada: traducir en el frontend. El contrato quedaría en inglés y cada cliente tendría que repetir la tabla.
 
 ### Normalización del DNI en un solo lugar
 
-Una función `normalizar_dni` (quita espacios y puntos, pasa a mayúsculas) la usan el esquema del alta y el parámetro de la búsqueda. Se guarda normalizado; el largo de 15 se mide después de normalizar.
+Una función `normalizar_dni` (quita espacios, puntos y guiones, pasa a mayúsculas; admite letras por los documentos extranjeros) la usan el esquema del alta y el parámetro de la búsqueda. Se guarda normalizado; el largo de 15 se mide después de normalizar.
 
 ### Endpoints, roles y filtro del Profesor
 
@@ -119,6 +123,8 @@ Alternativa descartada: que cada pantalla atrape el 401. Es exactamente el olvid
 - Errores: `porCampo` trae claves como `nombre` o `personas.0.dni`. La lista de personas se manda en el orden en que se ve, así el índice de la clave es la fila. Lo que no tiene campo va a un `Alert` general. Esto resuelve, para este formulario, el diferido del change 3 de los 422 con varios campos.
 - `api.ts` suma `listarGrupos(fecha?)`, `buscarFamilias(apellido)`, `buscarPersonaPorDni(dni)` y `registrarAlumno(entrada)`, con los tipos copiados del contrato. Ningún campo de monto.
 - Tests en `frontend/tests/alumnos/`, con `fetch` fingido y el montaje de `frontend/tests/auth/montar.tsx`.
+- `SelectorGrupo` distingue el grupo elegido a mano del elegido por la sugerencia: este último lo reemplaza la sugerencia de una fecha nueva; el primero, nunca.
+- El bloque `test` de `vite.config.ts` fija `testTimeout: 10000`. Los tests que completan el alta tardan entre 2 y 4 s con la suite entera (jsdom con las hojas de estilo de MUI), demasiado cerca del plazo por defecto de 5 s para un CI más lento. Lo decidió la persona a cargo, porque el archivo entra en la huella.
 
 ### Semilla
 
@@ -143,6 +149,8 @@ La reutilización solo por DNI exacto es **[SUPUESTO]**. Se agrega a «Preguntas
 - [Dos altas del mismo chico crean dos alumnos] → Fuera de alcance (proposal). La etiqueta de familia lo deja a la vista.
 - [La vista se recalcula en cada lectura] → Con cientos de familias es irrelevante; el índice sobre `alumno (familia_id)` la mantiene barata.
 - [Un `msg` traducido por `type` puede no calzar con un validador nuevo] → El caso por defecto (`El valor no es válido.`) nunca sale en inglés; un test de la tabla cubre cada `type` conocido.
+- [Un Profesor puede probar DNIs consecutivos en `GET /personas` y juntar nombre y apellido de los adultos que encuentre] → No hay límite de pedidos en el sistema. Se acepta para el lote 1 y queda registrado en la pregunta abierta «Reutilizar una persona ya cargada» de `aclaraciones-cliente.md`; un límite de pedidos va antes de producción, junto con la mitigación de HU-UT-08.
+- [Un Profesor puede sumar como autorizado, en una familia de su grupo, a una persona de cualquier otra familia] → Es lo que pide Acl. 3 (una persona autorizada en varias familias). La persona solo se identifica por su DNI exacto.
 
 ## Migration Plan
 

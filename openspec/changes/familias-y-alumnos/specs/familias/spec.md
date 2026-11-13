@@ -130,6 +130,11 @@ Cada vínculo entre una persona y una familia SHALL indicar si la persona es tut
 - **WHEN** un Coordinador llama a `GET /api/v1/familias?apellido=Mar`
 - **THEN** la respuesta trae exactamente 20 familias, ordenadas por etiqueta
 
+#### Scenario: Los comodines se buscan como texto
+- **GIVEN** la familia `Pérez – Ana` y ninguna familia con un alumno cuyo apellido tenga `%` o `_`
+- **WHEN** un Coordinador llama a `GET /api/v1/familias?apellido=P%25` y a `GET /api/v1/familias?apellido=P_rez`
+- **THEN** las dos respuestas son 200 con una lista vacía
+
 #### Scenario: Sin coincidencias
 - **WHEN** un Coordinador llama a `GET /api/v1/familias?apellido=Zzz`
 - **THEN** la respuesta es 200 con una lista vacía
@@ -144,7 +149,7 @@ Cada vínculo entre una persona y una familia SHALL indicar si la persona es tut
 - **THEN** la respuesta es 403
 
 ### Requirement: Buscar una persona por DNI
-`GET /api/v1/personas?dni=` SHALL devolver la persona cuyo DNI coincide exactamente con el pedido, después de quitarle espacios y puntos, con solo `id`, `nombre` y `apellido`. Si no hay ninguna, responde 404 con `No hay ninguna persona con ese DNI.` Lo usan los tres roles. [SUPUESTO: la reutilización es solo por DNI exacto; ver la pregunta abierta «Reutilizar una persona ya cargada» en `aclaraciones-cliente.md`].
+`GET /api/v1/personas?dni=` SHALL devolver la persona cuyo DNI coincide exactamente con el pedido, después de quitarle espacios, puntos y guiones, con solo `id`, `nombre` y `apellido`. Si no hay ninguna, responde 404 con `No hay ninguna persona con ese DNI.` Lo usan los tres roles. [SUPUESTO: la reutilización es solo por DNI exacto; ver la pregunta abierta «Reutilizar una persona ya cargada» en `aclaraciones-cliente.md`].
 
 #### Scenario: DNI que existe
 - **GIVEN** la persona María Pérez, teléfono `3511234567`, DNI `30111222`, tutora de la familia `Pérez – Ana`
@@ -155,6 +160,11 @@ Cada vínculo entre una persona y una familia SHALL indicar si la persona es tut
 #### Scenario: DNI escrito con puntos
 - **GIVEN** la persona María Pérez con DNI `30111222`
 - **WHEN** un Coordinador llama a `GET /api/v1/personas?dni=30.111.222`
+- **THEN** la respuesta es 200 con el `id` de María Pérez
+
+#### Scenario: DNI escrito con guiones
+- **GIVEN** la persona María Pérez con DNI `30111222`
+- **WHEN** un Coordinador llama a `GET /api/v1/personas?dni=30-111-222`
 - **THEN** la respuesta es 200 con el `id` de María Pérez
 
 #### Scenario: DNI incompleto

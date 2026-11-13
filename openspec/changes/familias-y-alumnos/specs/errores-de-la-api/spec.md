@@ -42,6 +42,26 @@ Todo 422 de validación SHALL traer el `msg` de cada error en castellano, con la
 - **THEN** la respuesta es 422 y el error de `username` tiene `msg` `Puede tener hasta 60 caracteres.`
 - **AND** el cuerpo no tiene ningún campo `input`
 
+### Requirement: Caracteres de control en los textos
+Un texto del pedido (en el cuerpo o en un parámetro de búsqueda) que contiene un carácter de control SHALL rechazarse con 422 y `msg` `No puede tener caracteres de control.` en ese campo, nunca con 500.
+
+#### Scenario: Carácter NUL en el nombre del alumno
+- **WHEN** un Coordinador llama a `POST /api/v1/alumnos` con un alta válida salvo `nombre` `"Ju\u0000an"`
+- **THEN** la respuesta es 422 y el error de `nombre` tiene `msg` `No puede tener caracteres de control.`
+- **AND** no se crea nada
+
+#### Scenario: Carácter NUL en el teléfono de una persona
+- **WHEN** un Coordinador llama a `POST /api/v1/alumnos` con un alta válida salvo una persona nueva con `telefono` `"351\u00001234"`
+- **THEN** la respuesta es 422 y el error de `personas.0.telefono` tiene `msg` `No puede tener caracteres de control.`
+
+#### Scenario: Carácter NUL en la búsqueda de familias
+- **WHEN** un Coordinador llama a `GET /api/v1/familias?apellido=P%00e`
+- **THEN** la respuesta es 422 y el error de `apellido` tiene `msg` `No puede tener caracteres de control.`
+
+#### Scenario: Carácter NUL en la búsqueda por DNI
+- **WHEN** un Coordinador llama a `GET /api/v1/personas?dni=301%0011222`
+- **THEN** la respuesta es 422 y el error de `dni` tiene `msg` `No puede tener caracteres de control.`
+
 ### Requirement: Rechazos de reglas del negocio con la forma de validación
 Un rechazo por una regla del negocio que se puede atribuir a un campo del pedido (una familia que no existe, un DNI ya cargado, un grupo inactivo) SHALL responder 422 con la misma forma que un error de validación: `detail` como lista, con `loc` apuntando a ese campo (`["body", "personas", 0, "dni"]`), el mensaje en `msg` y `type` `regla_de_negocio`.
 

@@ -93,7 +93,7 @@ Cada inscripción SHALL unir un alumno con un grupo, y su temporada y su turno M
 - **AND** no se crea el alumno
 
 ### Requirement: Personas en el alta
-Cada persona del alta SHALL ser o bien una persona ya cargada, indicada por `persona_id`, o bien una nueva con `nombre`, `apellido` y `telefono` obligatorios y `dni` optativo, más `es_tutor`. El DNI se guarda sin espacios ni puntos. La misma persona MUST NOT aparecer dos veces en un alta. Un DNI ya cargado no crea otra persona: se rechaza.
+Cada persona del alta SHALL ser o bien una persona ya cargada, indicada por `persona_id`, o bien una nueva con `nombre`, `apellido` y `telefono` obligatorios y `dni` optativo, más `es_tutor`. El DNI se guarda sin espacios, puntos ni guiones. La misma persona MUST NOT aparecer dos veces en un alta. Un DNI ya cargado no crea otra persona: se rechaza.
 
 #### Scenario: Reutilizar una persona de otra familia
 - **GIVEN** María Pérez, tutora de la familia `Pérez – Ana`
@@ -106,6 +106,17 @@ Cada persona del alta SHALL ser o bien una persona ya cargada, indicada por `per
 - **WHEN** un Coordinador da de alta a un alumno con una persona nueva con DNI `30.111.222`
 - **THEN** la respuesta es 422 con un error en `personas.0.dni` cuyo `msg` es `Ya hay una persona con ese DNI. Buscala por DNI para reutilizarla.`
 - **AND** no se crea nada
+
+#### Scenario: Persona nueva con un DNI ya cargado escrito con guiones
+- **GIVEN** María Pérez con DNI `30111222`
+- **WHEN** un Coordinador da de alta a un alumno con una persona nueva con DNI `30-111-222`
+- **THEN** la respuesta es 422 con un error en `personas.0.dni` cuyo `msg` es `Ya hay una persona con ese DNI. Buscala por DNI para reutilizarla.`
+
+#### Scenario: Dos altas a la vez con el mismo DNI nuevo
+- **GIVEN** que entre la comprobación del DNI y la escritura otra alta guardó una persona con DNI `40222333`
+- **WHEN** termina un alta de un Coordinador con una persona nueva con DNI `40222333`
+- **THEN** la respuesta es 422 con un error en `personas.0.dni` cuyo `msg` es `Ya hay una persona con ese DNI. Buscala por DNI para reutilizarla.`, no 500
+- **AND** no se crea nada de esa alta
 
 #### Scenario: La misma persona dos veces
 - **WHEN** un Coordinador da de alta a un alumno con familia nueva y dos veces el mismo `persona_id`
@@ -174,7 +185,7 @@ El grupo del alta SHALL existir, estar activo y ser de la temporada vigente; la 
 - **THEN** la respuesta es 422 con un error en `grupo_id` cuyo `msg` es `El grupo no existe.`
 
 ### Requirement: Quién puede dar de alta un alumno
-`POST /api/v1/alumnos` SHALL estar disponible para Admin y Coordinador en cualquier grupo, y para el Profesor solo en los grupos que tiene asignados. Si el Profesor elige otro grupo, responde 403 con `Solo podés inscribir alumnos en tus grupos.` y no crea nada.
+`POST /api/v1/alumnos` SHALL estar disponible para Admin y Coordinador en cualquier grupo, y para el Profesor solo en los grupos que tiene asignados. Si el Profesor elige otro grupo, exista o no, esté activo o no y sea de la temporada que sea, responde 403 con `Solo podés inscribir alumnos en tus grupos.` y no crea nada: el Profesor no se entera de nada de un grupo ajeno.
 
 #### Scenario: Profesor en su grupo
 - **GIVEN** un Profesor asignado a «Delfines» mañana
@@ -186,6 +197,16 @@ El grupo del alta SHALL existir, estar activo y ser de la temporada vigente; la 
 - **WHEN** llama a `POST /api/v1/alumnos` con familia nueva, su tutora y el `grupo_id` de «Tiburones» mañana
 - **THEN** la respuesta es 403 con `detail` `Solo podés inscribir alumnos en tus grupos.`
 - **AND** no se crean ni la familia, ni el alumno, ni la persona, ni la inscripción
+
+#### Scenario: Profesor con un grupo ajeno inactivo
+- **GIVEN** un Profesor asignado solo a «Delfines» mañana, y un grupo inactivo «Pulpos» mañana de la temporada vigente
+- **WHEN** da de alta a un alumno en «Pulpos» mañana
+- **THEN** la respuesta es 403 con `detail` `Solo podés inscribir alumnos en tus grupos.`
+
+#### Scenario: Profesor con un grupo que no existe
+- **GIVEN** un Profesor asignado solo a «Delfines» mañana
+- **WHEN** da de alta a un alumno con un `grupo_id` que no existe
+- **THEN** la respuesta es 403 con `detail` `Solo podés inscribir alumnos en tus grupos.`
 
 #### Scenario: Profesor en el mismo grupo del otro turno
 - **GIVEN** un Profesor asignado solo a «Delfines» mañana
@@ -210,7 +231,7 @@ La dirección `/alumnos/nuevo`, dentro de la zona protegida, SHALL mostrar un fo
 - **THEN** se ven los campos `Nombre`, `Apellido`, `Fecha de nacimiento` y `Grupo`, las opciones `Familia nueva` y `Familia existente` con `Familia nueva` elegida, el campo `Categoría` y el botón `Registrar`
 
 ### Requirement: Grupos en la pantalla
-El campo `Grupo` SHALL ofrecer los grupos que devuelve `GET /api/v1/grupos`, escritos como nombre y turno (`Delfines · Mañana`). Al cargar la fecha de nacimiento, los vuelve a pedir con esa fecha y marca cada sugerido con `(sugerido)`. Si hay exactamente uno y todavía no se eligió grupo, lo elige. Se puede elegir otro.
+El campo `Grupo` SHALL ofrecer los grupos que devuelve `GET /api/v1/grupos`, escritos como nombre y turno (`Delfines · Mañana`). Al cargar la fecha de nacimiento, los vuelve a pedir con esa fecha y marca cada sugerido con `(sugerido)`. Mientras el usuario no haya elegido el grupo a mano, la sugerencia manda: con exactamente un sugerido lo elige, y con dos o ninguno deja el grupo sin elegir. Una elección a mano no la pisa ninguna sugerencia.
 
 #### Scenario: Profesor ve solo sus grupos
 - **GIVEN** la sesión de un Profesor y `GET /api/v1/grupos` responde solo «Delfines» mañana
@@ -227,6 +248,12 @@ El campo `Grupo` SHALL ofrecer los grupos que devuelve `GET /api/v1/grupos`, esc
 - **WHEN** se escribe `2020-03-10` en `Fecha de nacimiento` sin haber elegido grupo
 - **THEN** `Grupo` sigue sin elegir
 - **AND** al desplegarlo se ven `Delfines · Mañana (sugerido)` y `Delfines · Tarde (sugerido)`
+
+#### Scenario: Corregir la fecha cambia el grupo elegido por la sugerencia
+- **GIVEN** se escribió `2020-03-10` en `Fecha de nacimiento` y `Grupo` quedó en `Delfines · Mañana (sugerido)` sin tocarlo a mano
+- **AND** `GET /api/v1/grupos?fecha_nacimiento=2018-05-05` marca «Tiburones» mañana como único sugerido
+- **WHEN** se corrige la fecha a `2018-05-05`
+- **THEN** `Grupo` queda en `Tiburones · Mañana (sugerido)`
 
 #### Scenario: La sugerencia no pisa una elección
 - **GIVEN** se eligió `Tiburones · Mañana` en `Grupo`

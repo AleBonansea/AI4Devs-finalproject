@@ -75,6 +75,20 @@
 ## 9. Revisión adversarial
 
 - [ ] 9.1 Un pase del subagente `adversarial-reviewer` sobre el change terminado, antes del pull request. Rige `REVIEW.md`, «Cuándo se deja de revisar». **Se verifica con** sus hallazgos resueltos o justificados por escrito en esta tarea.
+  - **Primer pase (13/11/2026): ningún hallazgo grave, 5 menores y 4 preguntas.** La persona a cargo decidió arreglar los cinco y resolver tres de las preguntas; los arreglos son las tareas 9.2 a 9.4:
+    - Menor 1, un carácter NUL en un texto válido daba 500 (comprobado con una sonda) → 9.2.
+    - Menor 2, un Profesor con un grupo ajeno inactivo, cerrado o inexistente recibía 422 y no 403 → 9.2. Se invierte el orden del design.
+    - Menor 3, los tests de pantalla del alta van cerca del plazo de 5 s → 9.4, `testTimeout: 10000`.
+    - Menor 4, ni el escape del `LIKE` ni la carrera del DNI tenían test → 9.2, con Scenario propio cada uno.
+    - Menor 5, el design prometía un test por cada `type` de la tabla de traducción → 9.2, test de la función pura.
+    - Pregunta, el DNI con guiones quedaba como otra persona → 9.2, la normalización quita también los guiones.
+    - Pregunta, la sugerencia de grupo no reemplazaba lo que ella misma había elegido → 9.3.
+    - Preguntas, recorrer el padrón por DNI y sumar personas de otras familias → no cambia el comportamiento: riesgos en el design y pregunta abierta en `aclaraciones-cliente.md`.
+- [ ] 9.2 Con la skill `backend-feature`, los arreglos del backend según los Scenarios nuevos: de `errores-de-la-api` «Caracteres de control en los textos» (4); de `alumnos` «Profesor con un grupo ajeno inactivo», «Profesor con un grupo que no existe», «Persona nueva con un DNI ya cargado escrito con guiones» y «Dos altas a la vez con el mismo DNI nuevo»; de `familias` «Los comodines se buscan como texto» y «DNI escrito con guiones»: 10 Scenarios, más el test de la función de traducción con cada `type` de la tabla (design, «Traducción de los 422»).
+  - **Se verifica con** los tests nuevos en rojo por el motivo correcto (los de comodines y carrera pueden pasar ya: protegen comportamiento que existe, y se ven fallar quitando a mano el escape o el `except` antes de congelar), en verde después, `docs/api/openapi.json` regenerado si cambió, y `python tasks.py test`, `lint` y `typecheck` en verde.
+- [ ] 9.3 Con la skill `frontend-feature`, el Scenario nuevo de `alumnos` «Corregir la fecha cambia el grupo elegido por la sugerencia» (1).
+  - **Se verifica con** el test en rojo por el motivo correcto, después en verde, y `python tasks.py front-test` y `front-lint` en verde.
+- [ ] 9.4 Subir `testTimeout` a 10000 en el bloque `test` de `frontend/vite.config.ts` y actualizar la huella de `frontend/tests/` y `vite.config.ts`. **Se verifica con** `python tasks.py front-test` en verde dos veces seguidas.
 
 ## Workflow follow-up
 
