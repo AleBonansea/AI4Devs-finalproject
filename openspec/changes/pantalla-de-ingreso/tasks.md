@@ -26,7 +26,7 @@
 
 ## 3. Comprobación de punta a punta
 
-- [ ] 3.1 Con la base de desarrollo migrada y la semilla cargada (`python tasks.py up`, `python tasks.py migrate`, `python tasks.py seed`), la API levantada (`python tasks.py api`) y el frontend en desarrollo (`cd frontend && npm run dev`), comprobar a mano en el navegador:
+- [x] 3.1 Con la base de desarrollo migrada y la semilla cargada (`python tasks.py up`, `python tasks.py migrate`, `python tasks.py seed`), la API levantada (`python tasks.py api`) y el frontend en desarrollo (`cd frontend && npm run dev`), comprobar a mano en el navegador:
   - ingresar con un usuario de la semilla y ver su nombre y su rol en el inicio;
   - recargar y seguir adentro; salir y volver a `/ingresar`; abrir `/` después de salir y caer en el ingreso;
   - una contraseña incorrecta muestra `Usuario o contraseña incorrectos.`;
@@ -34,6 +34,12 @@
   - poner a mano `debe_cambiar_password` en true para ese usuario en la base de desarrollo, recargar y ver el aviso de cambio pendiente; volverlo a false después;
   - la pantalla de ingreso a ancho de teléfono (360 px), con el teclado: Tab recorre usuario, contraseña e `Ingresar`, y Enter envía.
   - **Se verifica con** cada punto anotado como hecho en el informe de la tarea, con lo que haya fallado.
+  - **Informe (13/11/2026), contra la base de desarrollo con la semilla, usuario `mgarcia`.** Las capturas de la extensión de Chrome daban timeout, así que se manejó la pantalla con JavaScript en la página (los eventos `input` y `click` que escucha React) y se midió el DOM:
+    - Hecho: ingresa y muestra `María García` y `Admin`; al recargar sigue adentro; Salir lleva a `/ingresar`; abrir `/` después de salir cae en el ingreso sin llamar a `/yo`.
+    - Hecho: la contraseña incorrecta muestra `Usuario o contraseña incorrectos.`, conserva el usuario y vacía la contraseña. Los campos vacíos muestran los dos mensajes.
+    - Hecho: con `debe_cambiar_password` en true, el ingreso y la recarga muestran solo el aviso y Salir; Salir lleva al ingreso. Se volvió a false.
+    - **Distinto de lo esperado:** con la API apagada, el aviso es `El servidor tuvo un problema. Intentá de nuevo.`, no el de conexión. En desarrollo el proxy de Vite convierte la conexión rechazada en un 500. El código cumple la spec (un `fetch` sin respuesta da el mensaje de conexión, cubierto por los tests); el mensaje de conexión aparece de verdad sin red, no con un proxy delante. Ver design, «Risks / Trade-offs».
+    - Hecho, medido en un iframe de 360 px (la ventana no se dejó redimensionar): sin scroll horizontal, la tarjeta con 16 px de margen a cada lado, tampoco con los errores a la vista. El orden de tabulación es `Usuario` → `Contraseña` → `Ingresar` y los dos campos tienen su etiqueta asociada. Que Enter envíe no se probó con una tecla real; lo cubre el test «Se envía con Enter» sobre el `<form>`.
 - [x] 3.2 `python tasks.py openapi-check` sin cambios (el change no toca el backend), `python tasks.py front-test` y `python tasks.py front-lint` en verde.
 
 ## 4. Revisión adversarial
