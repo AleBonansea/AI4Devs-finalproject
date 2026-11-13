@@ -88,5 +88,19 @@ No se usa ningún gestor de tickets. Para la entrega del curso, las unidades de 
 - [ ] **Región de Render**: elegir la más cercana disponible.
 - [ ] **Dominio**: registrar el nombre.
 - [ ] **Límite del tamaño del cuerpo de la petición**: configurarlo en Render o en el proxy que tenga delante. FastAPI lee el cuerpo entero antes de validar, así que los topes de los esquemas (por ejemplo, los 128 caracteres de la contraseña del login) no protegen al servidor de un cuerpo enorme. Ver el design del change `auth-ingreso`.
+- [ ] **Que la semilla no pueda escribir en la base de producción**: resolver antes de crear esa base. Hoy la semilla decide si una base es segura leyendo el texto de la URL.
+  - **Qué mira hoy:** el host principal, más `host` y `hostaddr` de la query.
+  - **Por qué es una red y no un candado:** psycopg puede terminar conectado a otra base sin que la URL lo muestre:
+    - con `service=` y un `pg_service.conf`;
+    - con `PGHOST` o `PGDATABASE` en el entorno;
+    - con otros parámetros de conexión.
+
+    Tapar `service=` deja abiertos los demás.
+  - **El arreglo que cierra la clase entera:** no inspeccionar la URL, sino abrir la conexión y preguntarle dónde terminó, con `conn.info.host`, `conn.info.port` y `conn.info.dbname`. Eso da la base real, sin importar cómo se escribió la URL.
+  - **El candado de verdad** es que las credenciales de producción no vivan en la máquina de desarrollo. Lo de `conn.info` queda como red, por si algún día alguien se las lleva igual.
+  - **Cuándo importa:** una sola vez, el día que se cree la base de producción. Ese día hay una base que importa y que está vacía, y fallan juntas las dos defensas actuales:
+    - la de base local, porque se esquiva por los caminos de arriba;
+    - la de base vacía, porque la base recién creada todavía está vacía.
+  - **Origen:** queda diferido desde el change `tarifario-y-semilla`. Ver su design, archivado en `openspec/changes/archive/2026-11-13-tarifario-y-semilla/`.
 - [ ] **Librería de UI**: MUI o Mantine.
 - [ ] **Gestor de issues para el proyecto real**: adoptar GitHub Issues o seguir sin gestor. No afecta a la entrega del curso.
