@@ -26,11 +26,21 @@ from pydantic_core import InitErrorDetails, PydanticCustomError
 from pydantic_core.core_schema import ErrorType
 
 from app.models.enums import CategoriaFamilia, Turno
+from app.schemas.validadores import sin_caracteres_de_control
 from app.services.personas import normalizar_dni
 
 # Se recorta antes de medir: "  Juan  " mide 4. 80 es el ancho de las columnas.
-Texto80 = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
-Telefono = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=30)]
+# Los caracteres de control se rechazan despues: un NUL daba 500 en Postgres.
+Texto80 = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=80),
+    AfterValidator(sin_caracteres_de_control),
+]
+Telefono = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=30),
+    AfterValidator(sin_caracteres_de_control),
+]
 
 
 def _dni_o_nada(valor: object) -> object:
@@ -43,7 +53,9 @@ def _dni_o_nada(valor: object) -> object:
 
 
 Dni = Annotated[
-    Annotated[str, StringConstraints(max_length=15)] | None, BeforeValidator(_dni_o_nada)
+    Annotated[str, StringConstraints(max_length=15), AfterValidator(sin_caracteres_de_control)]
+    | None,
+    BeforeValidator(_dni_o_nada),
 ]
 
 

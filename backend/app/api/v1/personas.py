@@ -13,6 +13,7 @@ from app.core.deps import MENSAJE_SESION_INVALIDA, MENSAJE_SIN_PERMISO, exigir_r
 from app.models.usuario import RolUsuario, Usuario
 from app.schemas.errores import respuesta_de_error
 from app.schemas.personas import PersonaEncontrada
+from app.schemas.validadores import sin_caracteres_de_control
 from app.services.personas import buscar_persona_por_dni, normalizar_dni
 
 router = APIRouter(prefix="/personas", tags=["personas"])
@@ -29,7 +30,10 @@ def _dni_normalizado(texto: str) -> str:
     return dni
 
 
-DniPedido = Annotated[str, AfterValidator(_dni_normalizado)]
+# Primero los caracteres de control: un NUL llegaba a Postgres y daba 500.
+DniPedido = Annotated[
+    str, AfterValidator(sin_caracteres_de_control), AfterValidator(_dni_normalizado)
+]
 
 
 @router.get(

@@ -4,7 +4,7 @@ a HTTP."""
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, status
-from pydantic import StringConstraints
+from pydantic import AfterValidator, StringConstraints
 from sqlalchemy.orm import Session
 
 from app.core.db import obtener_sesion
@@ -12,12 +12,18 @@ from app.core.deps import MENSAJE_SESION_INVALIDA, MENSAJE_SIN_PERMISO, exigir_r
 from app.models.usuario import RolUsuario, Usuario
 from app.schemas.errores import respuesta_de_error
 from app.schemas.familias import FamiliaEncontrada
+from app.schemas.validadores import sin_caracteres_de_control
 from app.services.familias import buscar_familias_por_apellido
 
 router = APIRouter(prefix="/familias", tags=["familias"])
 
-# Se recorta antes de medir: " P " tiene un solo caracter y da 422.
-TextoApellido = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2)]
+# Se recorta antes de medir: " P " tiene un solo caracter y da 422. Un
+# caracter de control da 422 en lugar de llegar a Postgres.
+TextoApellido = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=2),
+    AfterValidator(sin_caracteres_de_control),
+]
 
 
 @router.get(

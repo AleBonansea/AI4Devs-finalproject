@@ -9,12 +9,12 @@ from app.models.familia import Persona
 
 
 def normalizar_dni(texto: str) -> str:
-    """Quita espacios y puntos y pasa a mayusculas.
+    """Quita espacios, puntos y guiones y pasa a mayusculas.
 
     Unico lugar de la normalizacion: la usan el parametro de la busqueda y el
     alta, y el DNI se guarda ya normalizado.
     """
-    return "".join(c for c in texto if not c.isspace() and c != ".").upper()
+    return "".join(c for c in texto if not c.isspace() and c not in ".-").upper()
 
 
 def buscar_persona_por_dni(sesion: Session, dni: str) -> Row[Any] | None:

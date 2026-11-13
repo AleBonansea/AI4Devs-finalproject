@@ -7,6 +7,7 @@ from pydantic import AfterValidator, BaseModel, BeforeValidator, ConfigDict, Fie
 from pydantic_core import PydanticCustomError
 
 from app.models.usuario import RolUsuario
+from app.schemas.validadores import tiene_caracteres_de_control
 
 
 def _normalizar_username(valor: object) -> object:
@@ -20,7 +21,8 @@ def _normalizar_username(valor: object) -> object:
 
 def _sin_caracteres_de_control(valor: str) -> str:
     # Un NUL llegaba a Postgres, que lo rechaza, y el login respondia 500.
-    if any(unicodedata.category(c) == "Cc" for c in valor):
+    # El mensaje propio del login esta fijado en la spec de auth.
+    if tiene_caracteres_de_control(valor):
         # Type `regla_de_negocio`: el manejador del 422 deja el mensaje intacto.
         raise PydanticCustomError(
             "regla_de_negocio", "El usuario no puede tener caracteres de control."

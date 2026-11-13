@@ -2,7 +2,7 @@
 una sola transaccion.
 
 Las reglas se comprueban en un orden fijo (design, «El alta, en un servicio,
-con las reglas en un orden fijo»): grupo, permiso del Profesor, familia y
+con las reglas en un orden fijo»): permiso del Profesor, grupo, familia y
 personas, y recien entonces se escribe.
 """
 
@@ -45,6 +45,15 @@ class GrupoAjeno(Exception):
     """El Profesor eligio un grupo que no tiene asignado."""
 
 
+class _ChoqueDeDni(Exception):
+    """El INSERT de una persona nueva choco con uq_persona_dni: otra alta
+    cargo el mismo DNI despues de la comprobacion previa."""
+
+    def __init__(self, indice: int) -> None:
+        super().__init__(indice)
+        self.indice = indice
+
+
 @dataclass(frozen=True)
 class AltaRegistrada:
     alumno: Alumno
@@ -58,7 +67,7 @@ def _id_posible(valor: int) -> bool:
 
 
 def _comprobar_grupo(sesion: Session, grupo_id: int) -> Grupo:
-    """Paso 2: el grupo existe, esta activo y es de la temporada vigente."""
+    """Paso 3: el grupo existe, esta activo y es de la temporada vigente."""
     fila = (
         sesion.execute(
             select(Grupo, Temporada.estado)
@@ -79,18 +88,28 @@ def _comprobar_grupo(sesion: Session, grupo_id: int) -> Grupo:
     return grupo
 
 
-def _comprobar_profesor(sesion: Session, usuario: Usuario, grupo: Grupo) -> None:
-    """Paso 3: el Profesor solo inscribe en sus grupos. Antes del paso 4 para
-    que el alta no sirva de oraculo de familias y personas ajenas."""
+def _comprobar_profesor(sesion: Session, usuario: Usuario, grupo_id: int) -> None:
+    """Paso 2: el Profesor solo inscribe en sus grupos.
+
+    Va antes de mirar el grupo: un grupo ajeno da 403 exista o no, este
+    activo o no, asi el alta no le cuenta nada de grupos que no son suyos.
+    Y antes del paso 4, para que no sirva de oraculo de familias y personas
+    ajenas.
+    """
     if usuario.rol != RolUsuario.PROFESOR:
         return
-    asignado = sesion.execute(
-        select(
-            exists().where(
-                GrupoProfesor.grupo_id == grupo.id, GrupoProfesor.usuario_id == usuario.id
+    # Un id fuera de rango no puede estar asignado; ademas haria fallar a
+    # Postgres.
+    asignado = (
+        _id_posible(grupo_id)
+        and sesion.execute(
+            select(
+                exists().where(
+                    GrupoProfesor.grupo_id == grupo_id, GrupoProfesor.usuario_id == usuario.id
+                )
             )
-        )
-    ).scalar_one()
+        ).scalar_one()
+    )
     if not asignado:
         raise GrupoAjeno
 
@@ -202,7 +221,7 @@ def _escribir(
         sesion.add(familia)
         sesion.flush()
 
-    for persona in entrada.personas:
+    for i, persona in enumerate(entrada.personas):
         if isinstance(persona, PersonaReutilizada):
             persona_id = persona.persona_id
         else:
@@ -214,7 +233,14 @@ def _escribir(
                 dni=persona.dni,
             )
             sesion.add(nueva)
-            sesion.flush()
+            # Este flush es el unico que inserta en persona: aca se sabe de
+            # que fila del alta es el DNI si otra alta se adelanto.
+            try:
+                sesion.flush()
+            except IntegrityError as exc:
+                if _es_choque_de_dni(exc):
+                    raise _ChoqueDeDni(i) from exc
+                raise
             persona_id = nueva.id
         # Todas autorizadas a retirar: la seccion es «Personas autorizadas a
         # retirar» y este alta no carga contactos de emergencia.
@@ -255,43 +281,29 @@ def _es_choque_de_dni(exc: IntegrityError) -> bool:
     return getattr(diagnostico, "constraint_name", None) == _RESTRICCION_DNI
 
 
-def _errores_de_dni_cargado(
-    sesion: Session, entrada: AltaAlumnoEntrada
-) -> list[tuple[Ubicacion, str]]:
-    """Las personas nuevas del alta cuyo DNI ya esta en la base."""
-    dnis = {p.dni for p in entrada.personas if isinstance(p, PersonaNueva) and p.dni}
-    if not dnis:
-        return []
-    cargados = set(sesion.execute(select(Persona.dni).where(Persona.dni.in_(dnis))).scalars())
-    return [
-        (("personas", i, "dni"), MENSAJE_DNI_CARGADO)
-        for i, p in enumerate(entrada.personas)
-        if isinstance(p, PersonaNueva) and p.dni in cargados
-    ]
-
-
 def registrar_alumno(
     sesion: Session, usuario: Usuario, entrada: AltaAlumnoEntrada
 ) -> AltaRegistrada:
     """Da de alta al alumno. Levanta ReglaIncumplida (422 por campo) o
     GrupoAjeno (403); en los dos casos no escribe nada."""
+    _comprobar_profesor(sesion, usuario, entrada.grupo_id)
     grupo = _comprobar_grupo(sesion, entrada.grupo_id)
-    _comprobar_profesor(sesion, usuario, grupo)
     familia_o_categoria = _comprobar_familia_y_personas(sesion, entrada)
 
     try:
         alumno, familia = _escribir(sesion, usuario, entrada, grupo, familia_o_categoria)
         sesion.commit()
-    except IntegrityError as exc:
-        # Carrera: otra alta cargo el mismo DNI despues del paso 4. Se
-        # responde lo mismo que si el paso 4 lo hubiera visto.
+    except _ChoqueDeDni as choque:
+        # Carrera: otra alta cargo el mismo DNI despues del paso 4. Se revierte
+        # todo lo escrito y se responde lo mismo que si el paso 4 lo hubiera
+        # visto. No se vuelve a consultar la base para ubicar el DNI: despues
+        # de revertir, la fila de la otra alta puede no verse (sin commit
+        # todavia, o revertida con esta transaccion).
         sesion.rollback()
-        if not _es_choque_de_dni(exc):
-            raise
-        errores = _errores_de_dni_cargado(sesion, entrada)
-        if not errores:
-            raise
-        raise ReglaIncumplida(errores) from None
+        raise ReglaIncumplida([(("personas", choque.indice, "dni"), MENSAJE_DNI_CARGADO)]) from None
+    except IntegrityError:
+        sesion.rollback()
+        raise
 
     # La etiqueta sale de la vista, ya con el alumno nuevo contado.
     etiqueta = sesion.execute(
