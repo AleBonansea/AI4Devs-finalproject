@@ -131,6 +131,29 @@ class TestTarifaBase:
             == 0
         )
 
+    def test_un_monto_con_tres_decimales_se_relee_redondeado_a_dos(
+        self, sesion: Session, temporada_2026_27: int
+    ) -> None:
+        # Scenario: Un monto con tres decimales se guarda con dos
+        _insertar(
+            sesion,
+            _INSERTAR_TARIFA,
+            {
+                "t": temporada_2026_27,
+                "turno": "manana",
+                "modalidad": "mes",
+                "monto": Decimal("100000.005"),
+            },
+        )
+        monto = sesion.execute(
+            text(
+                "SELECT monto FROM tarifa_base "
+                "WHERE temporada_id = :t AND turno = 'manana' AND modalidad = 'mes'"
+            ),
+            {"t": temporada_2026_27},
+        ).scalar_one()
+        _es_decimal_exacto(monto, "100000.01")
+
     def test_la_base_rechaza_dos_tarifas_para_la_misma_combinacion(
         self, sesion: Session, temporada_2026_27: int
     ) -> None:
@@ -403,6 +426,29 @@ class TestPorcentajes:
         ).scalar_one()
         _es_decimal_exacto(porcentaje, "36.25")
 
+    def test_un_porcentaje_con_tres_decimales_se_relee_redondeado_a_dos(
+        self, sesion: Session, temporada_2026_27: int
+    ) -> None:
+        # Scenario: Un porcentaje con tres decimales se guarda con dos
+        _insertar(
+            sesion,
+            _INSERTAR_DESCUENTO_MES,
+            {
+                "t": temporada_2026_27,
+                "categoria": "empleado",
+                "tramo": 3,
+                "porcentaje": Decimal("36.255"),
+            },
+        )
+        porcentaje = sesion.execute(
+            text(
+                "SELECT porcentaje FROM descuento_mes "
+                "WHERE temporada_id = :t AND categoria = 'empleado' AND tramo_hijos = 3"
+            ),
+            {"t": temporada_2026_27},
+        ).scalar_one()
+        _es_decimal_exacto(porcentaje, "36.26")
+
 
 # --- Requirement: Periodos de cobro con fechas fijas -----------------------
 
@@ -538,6 +584,53 @@ class TestPeriodoCobro:
 
 
 class TestTipoCargo:
+    def test_el_monto_fijo_minimo_positivo_queda_guardado_exacto(
+        self, sesion: Session, temporada_2026_27: int
+    ) -> None:
+        # Scenario: El monto fijo minimo positivo (limite de adentro)
+        _insertar(
+            sesion,
+            _INSERTAR_TIPO_CARGO,
+            {
+                "t": temporada_2026_27,
+                "nombre": "Preinscripción",
+                "calculo": "monto_fijo",
+                "monto": Decimal("0.01"),
+            },
+        )
+        fila = sesion.execute(
+            text(
+                "SELECT calculo::text, monto_fijo FROM tipo_cargo "
+                "WHERE temporada_id = :t AND nombre = 'Preinscripción'"
+            ),
+            {"t": temporada_2026_27},
+        ).one()
+        assert fila[0] == "monto_fijo"
+        _es_decimal_exacto(fila[1], "0.01")
+
+    def test_la_base_rechaza_un_tipo_de_monto_fijo_cero(
+        self, sesion: Session, temporada_2026_27: int
+    ) -> None:
+        # Scenario: Monto fijo cero (limite de afuera)
+        _rechaza(
+            sesion,
+            _INSERTAR_TIPO_CARGO,
+            {
+                "t": temporada_2026_27,
+                "nombre": "Preinscripción",
+                "calculo": "monto_fijo",
+                "monto": Decimal("0"),
+            },
+        )
+        assert (
+            _contar(
+                sesion,
+                "SELECT count(*) FROM tipo_cargo WHERE temporada_id = :t",
+                {"t": temporada_2026_27},
+            )
+            == 0
+        )
+
     def test_un_tipo_de_monto_fijo_con_su_monto_queda_guardado(
         self, sesion: Session, temporada_2026_27: int
     ) -> None:

@@ -31,8 +31,8 @@
 ## 4. Revisión adversarial
 
 - [x] 4.1 Un pase del subagente `adversarial-reviewer` sobre el change terminado, antes del pull request. Rige `REVIEW.md`, «Cuándo se deja de revisar»: desde el segundo pase solo un hallazgo grave reabre el change. Se verifica con sus hallazgos resueltos o justificados por escrito. Sin graves; los dos menores (host remoto en la query de la URL y escala de los decimales sin test) y la pregunta sobre `monto_fijo` se resuelven en 4.2. No hay segundo pase.
-- [ ] 4.2 Con la skill `backend-feature`, resolver los hallazgos de 4.1 según los Scenarios nuevos: «Un host remoto escondido en la query» y «Una dirección remota escondida en la query» (en `specs/semilla/spec.md`, tests en `semilla/`); «Un monto con tres decimales se guarda con dos», «Un porcentaje con tres decimales se guarda con dos», «El monto fijo mínimo positivo» y «Monto fijo cero» (en `specs/tarifario/spec.md`, tests en `tarifario/`). Implementación: `verificar_base_local` revisa `host` y `hostaddr` de la query, y una migración nueva agrega `CHECK (monto_fijo > 0)` a `tipo_cargo` (design, «Una segunda migración»), probada en los dos sentidos. Se verifica con la suite completa en verde tras el rojo.
-- [ ] 4.3 `python tasks.py openapi-check` sin cambios, y `python tasks.py test`, `lint` y `typecheck` en verde.
+- [x] 4.2 Con la skill `backend-feature`, resolver los hallazgos de 4.1 según los Scenarios nuevos: «Un host remoto escondido en la query» y «Una dirección remota escondida en la query» (en `specs/semilla/spec.md`, tests en `semilla/`); «Un monto con tres decimales se guarda con dos», «Un porcentaje con tres decimales se guarda con dos», «El monto fijo mínimo positivo» y «Monto fijo cero» (en `specs/tarifario/spec.md`, tests en `tarifario/`). Implementación: `verificar_base_local` revisa `host` y `hostaddr` de la query, y una migración nueva agrega `CHECK (monto_fijo > 0)` a `tipo_cargo` (design, «Una segunda migración»), probada en los dos sentidos. Se verifica con la suite completa en verde tras el rojo.
+- [x] 4.3 `python tasks.py openapi-check` sin cambios, y `python tasks.py test`, `lint` y `typecheck` en verde.
 
 ## Workflow follow-up
 

@@ -150,6 +150,8 @@ El CHECK va en una migración nueva, `tipo_cargo monto fijo positivo`, y no edit
   - **Mitigación:** se acepta. Fuera del docker-compose de este repo nadie corre `tasks.py seed`, y la segunda negativa (base no vacía) sigue en pie.
 - **[La lista de hosts locales es corta]** y una base local con otro nombre, por ejemplo una IP de la red de Docker, queda rechazada.
   - **Mitigación:** preferible a que pase una remota. Si hace falta otro host, se agrega a la lista con su Scenario.
+- **[Diferido] La URL puede redirigir la conexión con `service=`**, que libpq resuelve desde `pg_service.conf`. `verificar_base_local` mira el host principal y `host`/`hostaddr` de la query, pero no ese parámetro.
+  - **Por qué se difiere:** es menor. Hace falta un `pg_service.conf` armado a propósito en la máquina que corre la semilla, y la negativa por base no vacía sigue en pie. Va a un change de seguimiento si alguna vez se usa `service` en este proyecto (`REVIEW.md`, «Cuándo se deja de revisar»).
 - **[Los porcentajes de socio y empleado los calculó una persona a mano]**, como dice Acl. 5, y la semilla los trae escritos.
   - **Mitigación:** el Scenario de los 12 descuentos del Mes fija cada celda. Un error de transcripción falla el test, no la demostración.
 - **[El tipo `categoria_familia` se crea antes que la tabla `familia`.]**

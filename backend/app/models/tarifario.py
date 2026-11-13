@@ -140,4 +140,6 @@ class TipoCargo(MarcaDeCreacion, Base):
             "(calculo = 'monto_fijo') = (monto_fijo IS NOT NULL)",
             name="ck_tipo_cargo_monto_segun_calculo",
         ),
+        # Un monto fijo de cero no cobra nada: tiene que ser positivo.
+        CheckConstraint("monto_fijo > 0", name="ck_tipo_cargo_monto_fijo_positivo"),
     )

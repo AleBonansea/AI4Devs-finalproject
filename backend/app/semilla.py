@@ -160,9 +160,23 @@ class SemillaRechazada(Exception):
 
 
 def verificar_base_local(url: str) -> None:
-    """Se niega si el host de la URL no es local. No se conecta a la base."""
-    if make_url(url).host not in HOSTS_LOCALES:
+    """Se niega si el host de la URL no es local. No se conecta a la base.
+
+    libpq tambien toma `host` y `hostaddr` de la query, y esos le ganan al
+    host de la URL: cada valor (string o tupla, cada uno una lista separada
+    por comas) tiene que ser local.
+    """
+    url_parseada = make_url(url)
+    if url_parseada.host not in HOSTS_LOCALES:
         raise SemillaRechazada(MENSAJE_BASE_NO_LOCAL)
+    for clave in ("host", "hostaddr"):
+        valor = url_parseada.query.get(clave)
+        if valor is None:
+            continue
+        valores = (valor,) if isinstance(valor, str) else valor
+        for elemento in (e.strip() for v in valores for e in v.split(",")):
+            if elemento not in HOSTS_LOCALES:
+                raise SemillaRechazada(MENSAJE_BASE_NO_LOCAL)
 
 
 def cargar(sesion: Session) -> None:

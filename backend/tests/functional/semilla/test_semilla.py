@@ -202,6 +202,21 @@ def test_un_host_que_solo_empieza_como_localhost_se_rechaza() -> None:
     assert str(error.value) == MENSAJE_BASE_NO_LOCAL
 
 
+def test_un_host_remoto_escondido_en_la_query_se_rechaza() -> None:
+    with pytest.raises(SemillaRechazada) as error:
+        verificar_base_local(
+            "postgresql+psycopg://u:p@localhost/escuelita"
+            "?host=dpg-abc123.oregon-postgres.render.com"
+        )
+    assert str(error.value) == MENSAJE_BASE_NO_LOCAL
+
+
+def test_una_direccion_remota_escondida_en_la_query_se_rechaza() -> None:
+    with pytest.raises(SemillaRechazada) as error:
+        verificar_base_local("postgresql+psycopg://u:p@localhost/escuelita?hostaddr=203.0.113.7")
+    assert str(error.value) == MENSAJE_BASE_NO_LOCAL
+
+
 # --- Requirement: Temporada vigente 2026-27 ----------------------------------
 
 
