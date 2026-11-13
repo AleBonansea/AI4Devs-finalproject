@@ -66,18 +66,18 @@ function traducirError(estado: number, cuerpo: unknown): ErrorDeApi {
     for (const item of detalle) {
       const loc = (item as { loc?: unknown[] }).loc ?? [];
       const campo = loc.filter((p) => p !== "body").join(".");
-      const msg = String((item as { msg?: unknown }).msg ?? "Valor invalido");
+      const msg = String((item as { msg?: unknown }).msg ?? "Valor inválido");
       if (campo) porCampo[campo] = msg;
     }
-    const primero = Object.values(porCampo)[0] ?? "Revisa los datos ingresados.";
+    const primero = Object.values(porCampo)[0] ?? "Revisá los datos ingresados.";
     return new ErrorDeApi(estado, primero, porCampo);
   }
 
-  if (estado === 401) return new ErrorDeApi(estado, "Tu sesion vencio. Volve a ingresar.");
-  if (estado === 403) return new ErrorDeApi(estado, "No tenes permiso para hacer esto.");
+  if (estado === 401) return new ErrorDeApi(estado, "Tu sesión venció. Volvé a ingresar.");
+  if (estado === 403) return new ErrorDeApi(estado, "No tenés permiso para hacer esto.");
   if (estado >= 500)
-    return new ErrorDeApi(estado, "El servidor tuvo un problema. Intenta de nuevo.");
-  return new ErrorDeApi(estado, "No se pudo completar la operacion.");
+    return new ErrorDeApi(estado, "El servidor tuvo un problema. Intentá de nuevo.");
+  return new ErrorDeApi(estado, "No se pudo completar la operación.");
 }
 
 async function pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
@@ -96,7 +96,7 @@ async function pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise
   } catch {
     // Sin red, o el backend caido. El Profesor toma asistencia desde el
     // telefono en el club, asi que este caso pasa de verdad.
-    throw new ErrorDeApi(0, "No se pudo conectar con el servidor. Revisa tu conexion.");
+    throw new ErrorDeApi(0, "No se pudo conectar con el servidor. Revisá tu conexión.");
   }
 
   if (respuesta.status === 401) {
@@ -123,3 +123,33 @@ export const api = {
   put: <T>(ruta: string, cuerpo?: unknown) => pedir<T>("PUT", ruta, cuerpo),
   patch: <T>(ruta: string, cuerpo?: unknown) => pedir<T>("PATCH", ruta, cuerpo),
 };
+
+// --- Sesion -----------------------------------------------------------------
+// Los tipos copian los campos del contrato (docs/api/openapi.json).
+
+export type RolUsuario = "admin" | "coordinador" | "profesor";
+
+/** El usuario que ingreso, tal como lo devuelve la API: sin hash ni intentos. */
+export interface UsuarioActual {
+  id: number;
+  username: string;
+  nombre: string;
+  apellido: string;
+  rol: RolUsuario;
+  debe_cambiar_password: boolean;
+}
+
+/** Respuesta de `POST /auth/login`. */
+export interface LoginRespuesta {
+  access_token: string;
+  token_type?: "bearer";
+  usuario: UsuarioActual;
+}
+
+/**
+ * El usuario del token guardado. Responde aunque el cambio de contrasena
+ * este pendiente, que es lo que se necesita al recargar la pagina.
+ */
+export function usuarioActual(): Promise<UsuarioActual> {
+  return api.get<UsuarioActual>("/auth/yo");
+}

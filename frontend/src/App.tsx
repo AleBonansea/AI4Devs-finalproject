@@ -1,19 +1,24 @@
-import Container from "@mui/material/Container";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
+import { Navigate, Route, Routes } from "react-router-dom";
 
+import { ProveedorSesion } from "./lib/sesion";
+import Ingreso from "./pages/Ingreso";
+import Inicio from "./pages/Inicio";
+import RutaProtegida from "./routes/RutaProtegida";
+
+/**
+ * Las rutas de la aplicacion. No crea el router: main.tsx la monta en un
+ * BrowserRouter y los tests en un MemoryRouter con la direccion del caso.
+ */
 export default function App() {
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Stack spacing={2}>
-        <Typography variant="h4" component="h1">
-          Escuelita de Verano
-        </Typography>
-        <Typography color="text.secondary">
-          Andamiaje listo. Las pantallas se construyen con la skill frontend-feature, una por
-          historia.
-        </Typography>
-      </Stack>
-    </Container>
+    <ProveedorSesion>
+      <Routes>
+        <Route path="/ingresar" element={<Ingreso />} />
+        <Route element={<RutaProtegida />}>
+          <Route path="/" element={<Inicio />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </ProveedorSesion>
   );
 }

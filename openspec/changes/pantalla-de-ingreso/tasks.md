@@ -14,7 +14,7 @@
 
 ## 2. Sesión e ingreso
 
-- [ ] 2.1 Con la skill `frontend-feature`, construir la zona protegida según los Requirements «La zona protegida exige sesión» (4 Scenarios), «Sesión rechazada por la API» (3), «Inicio de la zona protegida» (1), «Salir» (3) y los Scenarios «Recarga con el cambio pendiente» y «Sin el cambio pendiente no hay aviso» de «Aviso de cambio de contraseña pendiente»: 13 Scenarios.
+- [x] 2.1 Con la skill `frontend-feature`, construir la zona protegida según los Requirements «La zona protegida exige sesión» (4 Scenarios), «Sesión rechazada por la API» (3), «Inicio de la zona protegida» (1), «Salir» (3) y los Scenarios «Recarga con el cambio pendiente» y «Sin el cambio pendiente no hay aviso» de «Aviso de cambio de contraseña pendiente»: 13 Scenarios.
   - `usuarioActual()` y los tipos `UsuarioActual` y `LoginRespuesta` en `src/lib/api.ts`, más las tildes de sus mensajes (design, «Mensajes en castellano con tildes»).
   - El contexto de sesión en `src/lib/sesion.tsx`, `src/routes/RutaProtegida.tsx`, `src/pages/Inicio.tsx`, `src/pages/CambioPendiente.tsx` y el router en `App.tsx` y `main.tsx` (design, «La sesión, en un contexto» y «Rutas»). Composición con MUI según la tabla del design; nada nuevo en `components/`.
   - Los tests van en `frontend/tests/auth/`, con `fetch` fingido y la aplicación montada en un `MemoryRouter` (design, «La API se finge en `fetch`»).
