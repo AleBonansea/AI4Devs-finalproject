@@ -16,12 +16,19 @@ historia de backend, no un arreglo en el componente.
 
 ## 2. Catalogo primero
 
-Recorre `frontend/src/components/` y anota que existe. Despues escribi
-el plan de la pantalla **nombrando que componente del catalogo usas
-para cada parte**, y cuales faltan.
+El catalogo es **MUI** (`@mui/material` y `@mui/x-data-grid`) mas lo
+que haya en `frontend/src/components/`. Una carpeta vacia no es falta
+de catalogo: es que todavia no se extrajo nada propio.
 
-Una pieza que falta se crea en `components/` con nombre propio, no se
-improvisa dentro de la pantalla.
+Escribi el plan de la pantalla **nombrando que componente de MUI (o de
+`components/`) cubre cada parte**, y si falta alguno. Un elemento HTML
+con estilos a mano donde MUI ya tiene un componente es un defecto, no
+una variante.
+
+Una pieza que falta no se improvisa dentro de la pantalla ni se inventa
+por las dudas: se señala en el plan y la decide una persona. A
+`components/` se extrae lo que ya se repitio, no lo que podria
+repetirse.
 
 ## 3. Plan, y PARAR
 
@@ -47,3 +54,10 @@ club, pero el Profesor toma asistencia desde el telefono.
 ## 6. Cierre
 
 Con la skill `/commit`.
+
+## Alcance diferido
+
+Storybook, regresion visual y comprobaciones automaticas de
+accesibilidad llegan cuando el catalogo propio de `components/` tenga
+piezas, no antes. Fundar esa infraestructura por adelantado, sobre un
+catalogo que todavia no existe, suele salir mal.

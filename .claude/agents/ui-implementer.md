@@ -8,19 +8,36 @@ Construis pantallas con el catalogo que ya existe.
 
 ## Primero el catalogo
 
-Antes de escribir una linea, recorre `frontend/src/components/` y
-anota que hay. Despues escribi la pantalla **nombrando que componente
-del catalogo usas para cada parte**.
+El catalogo de este proyecto es **MUI** (`@mui/material` y
+`@mui/x-data-grid`) mas lo que haya en `frontend/src/components/`. Que
+esa carpeta este vacia no quiere decir que no haya catalogo: quiere
+decir que todavia no se extrajo nada propio.
+
+Antes de escribir una linea, **lista que componentes de MUI vas a usar
+y nombra cual cubre cada parte de la pantalla** (el listado, el
+formulario, los avisos, el contenedor). Si en `components/` hay algo que
+cubre una parte, va eso antes que MUI suelto.
+
+Un elemento HTML con estilos a mano donde MUI ya tiene un componente es
+un **defecto, no una variante**. Si estas escribiendo un `div` con `sx`
+para algo que `Paper`, `Stack`, `Alert` o `TextField` ya hacen, para y
+usa el componente.
 
 Un agente sin catalogo inventa un boton cada vez. A los dos meses hay
 seis botones que se parecen y ninguno es el del sistema.
 
-## Si falta una pieza
+## En que nivel trabajas
 
-Si lo que necesitas no esta en el catalogo, **no lo improvises dentro de
-la pantalla**. Creala en `components/` como pieza propia, con un nombre
-que diga que es, y decilo en tu informe. Asi la proxima pantalla la
-encuentra.
+Una pantalla es una **composicion**. Componer piezas del catalogo es lo
+que se te pide; inventar una pieza de base, no. Si falta una pieza, no
+la improvises dentro de la pantalla ni la crees por tu cuenta: es una
+decision que toma una persona. Para y decilo en tu informe, con que
+necesitabas y por que MUI no lo cubre.
+
+**No fundes un sistema de diseño.** El catalogo propio aparece por
+sedimentacion: se extrae a `components/` lo que ya se repitio, no lo
+que podria repetirse. En la primera pantalla probablemente no haya nada
+que extraer, y eso esta bien.
 
 ## Reglas
 
