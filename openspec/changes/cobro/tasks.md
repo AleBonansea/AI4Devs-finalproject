@@ -20,7 +20,7 @@
 
 ## 3. Endpoints
 
-- [ ] 3.1 Con la skill `backend-feature`, construir `POST /api/v1/cargos` y `POST /api/v1/cargos/simulacion` en un router `cargos.py`, con el servicio `app/services/cargos.py` y los esquemas de `app/schemas/cargos.py`, según estos Requirements de `cargos`: «Registrar un cargo» (6 Scenarios), «Un único porcentaje sobre la tarifa base» (5), «El tramo de hijos del Mes» (6), «Un cargo registrado no se recalcula» (2), «Saldo pendiente al registrar» (2), «Simular un cargo» (2), y de «Solo el Admin registra cargos» todos menos «Coordinador pide las opciones» (5): 28 Scenarios.
+- [x] 3.1 Con la skill `backend-feature`, construir `POST /api/v1/cargos` y `POST /api/v1/cargos/simulacion` en un router `cargos.py`, con el servicio `app/services/cargos.py` y los esquemas de `app/schemas/cargos.py`, según estos Requirements de `cargos`: «Registrar un cargo» (6 Scenarios), «Un único porcentaje sobre la tarifa base» (5), «El tramo de hijos del Mes» (6), «Un cargo registrado no se recalcula» (2), «Saldo pendiente al registrar» (2), «Simular un cargo» (2), y de «Solo el Admin registra cargos» todos menos «Coordinador pide las opciones» (5): 28 Scenarios.
   - `preparar_cargo` compartida por simulación y registro, y el orden de los pasos según design, «El servicio». En esta tarea alcanza con los pasos que piden estos Scenarios; los rechazos de la 3.2 pueden quedar sin implementar.
   - Los tests arman su propio tarifario con los valores de cada Scenario, no el de la semilla (los porcentajes de `empleado` difieren). El de «Medio centavo» pasa por la base: el `CHECK` es parte de lo que prueba.
   - Los tests de «no se guarda nada» cuentan los cargos antes y después.

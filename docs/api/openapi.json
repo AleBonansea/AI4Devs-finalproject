@@ -652,6 +652,176 @@
         }
       }
     },
+    "/api/v1/cargos": {
+      "post": {
+        "tags": [
+          "cargos"
+        ],
+        "summary": "Registrar",
+        "operationId": "registrar_api_v1_cargos_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CargoEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CargoRegistrado"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El alumno ya tiene un cargo «Abono» de «Mes 1» en el turno mañana.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "El alumno ya tiene un cargo «Abono» de «Mes 1» en el turno mañana."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Datos inválidos o una regla del cargo incumplida. Cada error trae su campo en `loc`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErroresDeCampo"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cargos/simulacion": {
+      "post": {
+        "tags": [
+          "cargos"
+        ],
+        "summary": "Simular",
+        "operationId": "simular_api_v1_cargos_simulacion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CargoEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CargoSimulado"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El alumno ya tiene un cargo «Abono» de «Mes 1» en el turno mañana.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "El alumno ya tiene un cargo «Abono» de «Mes 1» en el turno mañana."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Datos inválidos o una regla del cargo incumplida. Cada error trae su campo en `loc`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErroresDeCampo"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/salud": {
       "get": {
         "tags": [
@@ -894,6 +1064,249 @@
           "presente"
         ],
         "title": "AsistenciaMarcada"
+      },
+      "CargoEntrada": {
+        "properties": {
+          "alumno_id": {
+            "type": "integer",
+            "title": "Alumno Id"
+          },
+          "tipo_cargo_id": {
+            "type": "integer",
+            "title": "Tipo Cargo Id"
+          },
+          "inscripcion_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inscripcion Id"
+          },
+          "modalidad": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Modalidad"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "periodo_cobro_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Periodo Cobro Id"
+          },
+          "fecha_dia": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Dia"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "alumno_id",
+          "tipo_cargo_id"
+        ],
+        "title": "CargoEntrada"
+      },
+      "CargoRegistrado": {
+        "properties": {
+          "familia_id": {
+            "type": "integer",
+            "title": "Familia Id"
+          },
+          "categoria_aplicada": {
+            "$ref": "#/components/schemas/CategoriaFamilia"
+          },
+          "cantidad_hijos_aplicada": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cantidad Hijos Aplicada"
+          },
+          "monto_base": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto Base"
+          },
+          "porcentaje_aplicado": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Porcentaje Aplicado"
+          },
+          "monto_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto Total"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "temporada_id": {
+            "type": "integer",
+            "title": "Temporada Id"
+          },
+          "alumno_id": {
+            "type": "integer",
+            "title": "Alumno Id"
+          },
+          "tipo_cargo_id": {
+            "type": "integer",
+            "title": "Tipo Cargo Id"
+          },
+          "inscripcion_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inscripcion Id"
+          },
+          "modalidad": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Modalidad"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "periodo_cobro_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Periodo Cobro Id"
+          },
+          "fecha_dia": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Dia"
+          },
+          "creado_por": {
+            "type": "integer",
+            "title": "Creado Por"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          },
+          "saldo_pendiente": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Saldo Pendiente"
+          }
+        },
+        "type": "object",
+        "required": [
+          "familia_id",
+          "categoria_aplicada",
+          "cantidad_hijos_aplicada",
+          "monto_base",
+          "porcentaje_aplicado",
+          "monto_total",
+          "id",
+          "temporada_id",
+          "alumno_id",
+          "tipo_cargo_id",
+          "inscripcion_id",
+          "modalidad",
+          "periodo_cobro_id",
+          "fecha_dia",
+          "creado_por",
+          "creado_en",
+          "saldo_pendiente"
+        ],
+        "title": "CargoRegistrado"
+      },
+      "CargoSimulado": {
+        "properties": {
+          "familia_id": {
+            "type": "integer",
+            "title": "Familia Id"
+          },
+          "categoria_aplicada": {
+            "$ref": "#/components/schemas/CategoriaFamilia"
+          },
+          "cantidad_hijos_aplicada": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cantidad Hijos Aplicada"
+          },
+          "monto_base": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto Base"
+          },
+          "porcentaje_aplicado": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Porcentaje Aplicado"
+          },
+          "monto_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "familia_id",
+          "categoria_aplicada",
+          "cantidad_hijos_aplicada",
+          "monto_base",
+          "porcentaje_aplicado",
+          "monto_total"
+        ],
+        "title": "CargoSimulado",
+        "description": "El desglose que el registro guardaría, sin guardar nada."
       },
       "CategoriaFamilia": {
         "type": "string",
@@ -1138,6 +1551,16 @@
         ],
         "title": "MensajeError",
         "description": "Un rechazo con `detail` en castellano, que src/lib/api.ts muestra tal\ncual."
+      },
+      "Modalidad": {
+        "type": "string",
+        "enum": [
+          "mes",
+          "quincena",
+          "semana",
+          "dia"
+        ],
+        "title": "Modalidad"
       },
       "PersonaEncontrada": {
         "properties": {
