@@ -1,14 +1,12 @@
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import Container from "@mui/material/Container";
-import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
 import { useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
+import EncuadreSinSesion from "../components/EncuadreSinSesion";
 import { ErrorDeApi, ingresar as pedirIngreso } from "../lib/api";
 import { useSesion } from "../lib/sesion";
 
@@ -70,42 +68,37 @@ export default function Ingreso() {
   }
 
   return (
-    <Container maxWidth="xs" sx={{ py: 8 }}>
-      <Paper variant="outlined" sx={{ p: 4 }}>
-        <Stack component="form" spacing={2} noValidate onSubmit={enviar}>
-          <Typography variant="h5" component="h1">
-            Escuelita de Verano
-          </Typography>
-          {aviso && <Alert severity="error">{aviso}</Alert>}
-          <TextField
-            id="ingreso-usuario"
-            label="Usuario"
-            autoComplete="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            error={Boolean(errores.username)}
-            helperText={errores.username}
-          />
-          <TextField
-            id="ingreso-contrasena"
-            label="Contraseña"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            error={Boolean(errores.password)}
-            helperText={errores.password}
-          />
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={enviando}
-            startIcon={enviando ? <CircularProgress size={16} color="inherit" /> : undefined}
-          >
-            Ingresar
-          </Button>
-        </Stack>
-      </Paper>
-    </Container>
+    <EncuadreSinSesion>
+      <Stack component="form" spacing={2} noValidate onSubmit={enviar}>
+        {aviso && <Alert severity="error">{aviso}</Alert>}
+        <TextField
+          id="ingreso-usuario"
+          label="Usuario"
+          autoComplete="username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          error={Boolean(errores.username)}
+          helperText={errores.username}
+        />
+        <TextField
+          id="ingreso-contrasena"
+          label="Contraseña"
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={Boolean(errores.password)}
+          helperText={errores.password}
+        />
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={enviando}
+          startIcon={enviando ? <CircularProgress size={16} color="inherit" /> : undefined}
+        >
+          Ingresar
+        </Button>
+      </Stack>
+    </EncuadreSinSesion>
   );
 }
