@@ -5,7 +5,7 @@
 - `frontend/src/tema.ts` es el único archivo del frontend donde puede haber un valor de color. El hook `color_con_nombre.py` corta los valores escritos a mano en cualquier otro lado. Hoy en el tema `primary` es `marca` (verde `#1b5e20`), `error` es `deuda` y los grises son cálidos.
 - Ninguna pantalla usa `colores.*` directamente: todas pasan por la paleta de MUI (`severity="error"`, `color="text.secondary"`, el `primary` por defecto de `Button`). Por eso, cambiar el mapeo en el tema cambia todas las pantallas sin tocarlas.
 - `Ingreso.tsx` y `CambioPendiente.tsx` arman cada una su propio `Container` + `Paper`. `CambioPendiente` se muestra desde `RutaProtegida` cuando `debe_cambiar_password` está en true.
-- `frontend/public/logo.png` (512×512, fondo transparente) ya está en el repo. Vite sirve `public/` en la raíz, así que queda en `/logo.png`.
+- `frontend/public/logo.png` (512×512, fondo transparente) lo provee el usuario y entra con este change. Se dibuja tal cual, sin el círculo con anillo oscuro y fondo gris que muestra el prototipo (ver tasks.md, 2.3). Vite sirve `public/` en la raíz, así que queda en `/logo.png`.
 
 ## Goals / Non-Goals
 

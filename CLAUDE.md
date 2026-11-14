@@ -210,7 +210,12 @@ Los datos se conservan entre temporadas: no se borra nada.
 Los subagentes de `.claude/agents/` separan quién escribe los tests de quién escribe el código. La separación tiene candado en las dos direcciones:
 
 - **El implementer no toca los tests**: `backend-feature` y `frontend-feature` los congelan por hash (`git ls-files -s`) antes de implementar y lo comparan al terminar.
-- **El test-writer no lee la implementación**: un hook `PreToolUse` en su frontmatter (`.claude/hooks/sin_ver_implementacion.py`) corta `Read`, `Grep` y `Glob` sobre `backend/app/`, `backend/alembic/versions/` y `frontend/src/`, y también las búsquedas lanzadas desde una carpeta que las contiene. Se probó con un agente de juguete sin la prohibición escrita: frenó los cuatro caminos (`Read`, `Grep`, `Glob` y `cat` por `Bash`) y dejó pasar los de control. En `Bash` el hook solo mira el texto del comando, así que ahí es una red: `cd backend && cat app/main.py` pasa. La regla escrita en el prompt sigue siendo la otra mitad.
+- **El test-writer no lee ni toca la implementación**: un hook `PreToolUse` en su frontmatter (`.claude/hooks/sin_ver_implementacion.py`) corta `Read`, `Grep`, `Glob`, `Write` y `Edit` sobre `backend/app/`, `backend/alembic/versions/`, `frontend/src/` y `frontend/dist/` (el bundle compilado), y también las búsquedas lanzadas desde una carpeta que las contiene. Se probó con un agente de juguete sin la prohibición escrita: frenó los cuatro caminos de lectura (`Read`, `Grep`, `Glob` y `cat` por `Bash`) y dejó pasar los de control.
+  - Falla cerrado: si no entiende la entrada, bloquea.
+  - Dos huecos que el hook no cubre:
+    - en `Bash` solo mira el texto del comando, así que ahí es una red: `cd backend && cat app/main.py` pasa;
+    - si `python` no está en el PATH, el hook ni arranca y la herramienta corre.
+  - La regla escrita en el prompt sigue siendo la otra mitad.
 
 Cómo funciona el arnés, aprendido a fuerza de probar:
 

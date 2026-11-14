@@ -1,17 +1,22 @@
-"""Corta las lecturas de la implementacion desde el test-writer.
+"""Corta el acceso del test-writer a la implementacion.
 
 Va en el frontmatter de `.claude/agents/test-writer.md` como PreToolUse,
 asi que solo corre dentro de ese agente. Sale con 2, que es el codigo que
 bloquea la herramienta (cualquier otro codigo distinto de cero es un
 error que no bloquea y la herramienta corre igual).
 
-Read, Grep y Glob: mira la ruta resuelta. Grep y Glob se cortan tambien
-si buscan desde una carpeta que CONTIENE la implementacion (la raiz del
-repo, backend/, frontend/), porque si no un Grep sin ruta la recorre
-entera.
+Read, Write, Edit y NotebookEdit: mira la ruta resuelta. Grep y Glob, lo
+mismo, y se cortan tambien si buscan desde una carpeta que CONTIENE la
+implementacion (la raiz del repo, backend/, frontend/), porque si no un
+Grep sin ruta la recorre entera.
 
 Bash: mira el texto del comando. Ahi es una red, no un candado: corta
 `cat backend/app/main.py`, pero no un script que arme la ruta por partes.
+
+Falla cerrado: si la entrada no se puede leer o tiene una forma que no
+espera, bloquea. Un candado que se abre cuando se rompe no es un candado.
+Lo unico que no puede cubrir es que `python` no este en el PATH: ahi el
+hook ni arranca y la herramienta corre.
 """
 
 import json
@@ -19,7 +24,14 @@ import os
 import re
 import sys
 
-PROTEGIDAS = ("backend/app", "backend/alembic/versions", "frontend/src")
+# `frontend/dist` es el bundle compilado de `frontend/src`: leerlo es leer
+# la implementacion con otro formato.
+PROTEGIDAS = (
+    "backend/app",
+    "backend/alembic/versions",
+    "frontend/src",
+    "frontend/dist",
+)
 
 MOTIVO = (
     "CANDADO test-writer: {que} toca la implementacion ({ruta}). "
@@ -84,21 +96,21 @@ def revisar_comando(comando: str) -> str | None:
     return None
 
 
-def main() -> int:
-    try:
-        datos = json.load(sys.stdin)
-    except Exception:
-        return 0
-
+def revisar(datos: dict) -> str | None:
+    """Devuelve la carpeta protegida que toca la llamada, o None si es libre."""
     herramienta = datos.get("tool_name", "")
     entrada = datos.get("tool_input") or {}
     cwd = datos.get("cwd") or os.getcwd()
     raiz = raiz_del_repo(cwd)
 
     hallazgo: str | None = None
-    if herramienta == "Read":
+    if herramienta in ("Read", "Write", "Edit"):
         hallazgo = revisar_ruta(
             entrada.get("file_path", ""), cwd, raiz, es_busqueda=False
+        )
+    elif herramienta == "NotebookEdit":
+        hallazgo = revisar_ruta(
+            entrada.get("notebook_path", ""), cwd, raiz, es_busqueda=False
         )
     elif herramienta in ("Grep", "Glob"):
         hallazgo = revisar_ruta(entrada.get("path") or cwd, cwd, raiz, es_busqueda=True)
@@ -107,9 +119,26 @@ def main() -> int:
             hallazgo = hallazgo or revisar_patron(entrada.get("pattern", "") or "")
     elif herramienta == "Bash":
         hallazgo = revisar_comando(entrada.get("command", ""))
+    return hallazgo
+
+
+def main() -> int:
+    try:
+        datos = json.load(sys.stdin)
+        hallazgo = revisar(datos)
+    except Exception as error:
+        # Falla cerrado: una entrada que no se entiende no se deja pasar.
+        print(
+            f"CANDADO test-writer: el hook no pudo revisar la llamada ({error!r}).",
+            file=sys.stderr,
+        )
+        return 2
 
     if hallazgo:
-        print(MOTIVO.format(que=herramienta, ruta=hallazgo), file=sys.stderr)
+        print(
+            MOTIVO.format(que=datos.get("tool_name", ""), ruta=hallazgo),
+            file=sys.stderr,
+        )
         return 2
     return 0
 

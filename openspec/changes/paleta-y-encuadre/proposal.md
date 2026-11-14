@@ -10,9 +10,9 @@ El tema actual (`frontend/src/tema.ts`) usa el verde de la marca como color de a
 
 - **Paleta del prototipo en `tema.ts`**. Los valores salen de muestrear `docs/previews/01-inicio.png` y `00-ingreso.png`. `palette.primary` pasa a ser el color de acción (azul `#1870b0`), no la marca. La marca (`#108038`) queda para el logotipo y el título de las pantallas sin sesión, nunca para un botón. El naranja `#d85018` es el dinero: el saldo a cobrar y la acción de cobrar. Los grises pasan a ser fríos.
 - **`deuda` se unifica con el naranja del dinero**, como en el prototipo. El rojo deja de ser `deuda` y pasa a llamarse `error`, solo para fallos (errores de la API y de validación). Ver design.md, decisión 2.
-- **Encuadre de las pantallas sin sesión**, como pieza propia en `src/components/`: logo circular, título `Escuela de Verano` en el color de marca, subtítulo `Centro Médico · Administración de la temporada`, y debajo el contenido de cada pantalla. Lo usan el ingreso y el aviso de cambio de contraseña pendiente.
-- **Logo** servido como `/logo.png` desde `frontend/public/logo.png` (ya está en el repo).
-- **Captura del ingreso** (`docs/previews/00-ingreso.png`, ya está en el repo) referenciada en `1-descripcion-general-del-producto.md`, en la sección 1.3, junto a las otras capturas.
+- **Encuadre de las pantallas sin sesión**, como pieza propia en `src/components/`: el logo de la escuela, título `Escuela de Verano` en el color de marca, subtítulo `Centro Médico · Administración de la temporada`, y debajo el contenido de cada pantalla. Lo usan el ingreso y el aviso de cambio de contraseña pendiente.
+- **Logo** servido como `/logo.png` desde `frontend/public/logo.png`. Lo provee el usuario y entra al repo con este change.
+- **Captura del ingreso** (`docs/previews/00-ingreso.png`, exportada del prototipo por el usuario, entra al repo con este change) referenciada en `1-descripcion-general-del-producto.md`, en la sección 1.3, junto a las otras capturas.
 
 ### Fuera de este change
 
