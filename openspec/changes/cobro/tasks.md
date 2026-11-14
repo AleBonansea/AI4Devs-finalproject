@@ -4,7 +4,7 @@
 
 ## 1. Esquema del cargo y supuestos
 
-- [ ] 1.1 Con la skill `backend-feature`, crear el modelo `Cargo` y la migración `crear_cargo`, según los Requirements de `cargos` «El cargo guarda su cálculo» (3 Scenarios), «La forma del cargo según el tipo y la modalidad» (8) y «Un cargo no se repite» (5): 16 Scenarios.
+- [x] 1.1 Con la skill `backend-feature`, crear el modelo `Cargo` y la migración `crear_cargo`, según los Requirements de `cargos` «El cargo guarda su cálculo» (3 Scenarios), «La forma del cargo según el tipo y la modalidad» (8) y «Un cargo no se repite» (5): 16 Scenarios.
   - Columnas según `3-modelo-de-datos.md`, «`cargo`»; restricciones, nombres e índices según design, «Esquema». Con `MarcaDeCreacion`; reusa `TIPO_MODALIDAD` y `TIPO_CATEGORIA_FAMILIA` de `enums.py`.
   - Los tests insertan directo en la base: los endpoints todavía no existen. Tests en `backend/tests/functional/cargos/`.
   - Sumar a la regla de `cargo` en `3-modelo-de-datos.md` los tres índices únicos parciales, con la nota de que sumarán `AND anulado_en IS NULL` cuando llegue la anulación de cargos.

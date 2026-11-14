@@ -670,6 +670,12 @@ Todas las tablas de esta sección cuelgan de `temporada`: cada verano tiene su p
 - **Cómo se calcula el Abono:**
   - El % sale de `descuento_mes` (categoría y `least(cantidad_hijos, 4)`) si la modalidad es Mes, o de `descuento_modalidad` en los demás casos.
   - La cantidad de hijos se cuenta **por turno**, "contando solo a los hermanos anotados en ese turno" (PRD).
+- **Un cargo no se repite** [SUPUESTO] (`aclaraciones-cliente.md`, «Preguntas abiertas», «Cargos repetidos»). Tres índices únicos parciales:
+  - `uq_cargo_inscripcion_periodo`: único `(inscripcion_id, periodo_cobro_id) WHERE periodo_cobro_id IS NOT NULL`.
+  - `uq_cargo_inscripcion_fecha`: único `(inscripcion_id, fecha_dia) WHERE fecha_dia IS NOT NULL`.
+  - `uq_cargo_alumno_tipo_monto_fijo`: único `(alumno_id, tipo_cargo_id) WHERE modalidad IS NULL`. El tipo es de una temporada, así que es uno por alumno, tipo y temporada.
+
+  Cuando llegue la anulación de cargos, los tres sumarán `AND anulado_en IS NULL` a su `WHERE`: un cargo anulado deja de contar como repetido.
 - Un cargo no se recalcula nunca. Si cambia el tarifario, la categoría o la cantidad de hijos, solo afecta a los cargos nuevos.
 - No se pueden registrar cargos en una temporada `cerrada`.
 - La ficha incompleta no impide registrar el cargo (Acl. 8).

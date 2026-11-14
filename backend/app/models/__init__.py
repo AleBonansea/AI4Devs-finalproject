@@ -7,6 +7,7 @@ autogenerate propone borrar su tabla.
 
 from app.models.alumno import Alumno, Inscripcion
 from app.models.asistencia import Asistencia
+from app.models.cargo import Cargo
 from app.models.enums import CalculoCargo, CategoriaFamilia, Modalidad, Turno
 from app.models.familia import Familia, FamiliaPersona, Persona
 from app.models.grupo import Grupo, GrupoProfesor
@@ -24,6 +25,7 @@ __all__ = [
     "Asistencia",
     "Alumno",
     "CalculoCargo",
+    "Cargo",
     "CategoriaFamilia",
     "DescuentoMes",
     "DescuentoModalidad",
