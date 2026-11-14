@@ -9,8 +9,8 @@ tabla de descuentos).
 Orden fijo de las reglas (design, «El servicio»); el rol y el cuerpo ya los
 resolvió FastAPI:
   3. alumno y tipo de cargo existen
-  4. (tarea 3.2) temporada del tipo cerrada
-  5. (tarea 3.2) forma y referencias, todos los errores juntos
+  4. temporada del tipo cerrada
+  5. forma y referencias, todos los errores juntos
   6. cargo repetido -> 409
   7. cálculo; falta de configuración -> 409
   8. solo al registrar: INSERT y saldo
@@ -36,6 +36,7 @@ from app.models.tarifario import (
     TarifaBase,
     TipoCargo,
 )
+from app.models.temporada import EstadoTemporada, Temporada
 from app.models.usuario import Usuario
 from app.schemas.cargos import CargoEntrada, CargoRegistrado, CargoSimulado
 from app.services.calculo_cargo import (
@@ -51,6 +52,18 @@ MENSAJE_ALUMNO_INEXISTENTE = "El alumno no existe."
 MENSAJE_TIPO_INEXISTENTE = "El tipo de cargo no existe."
 MENSAJE_OBLIGATORIO = "Este dato es obligatorio."
 MENSAJE_INSCRIPCION_INEXISTENTE = "La inscripción no existe."
+MENSAJE_INSCRIPCION_AJENA = "La inscripción no es del alumno."
+MENSAJE_INSCRIPCION_OTRA_TEMPORADA = "La inscripción no es de la temporada del tipo de cargo."
+MENSAJE_PERIODO_INEXISTENTE = "El período no existe."
+MENSAJE_PERIODO_OTRA_TEMPORADA = "El período no es de la temporada del tipo de cargo."
+MENSAJE_PERIODO_OTRA_MODALIDAD = "El período es de otra modalidad."
+MENSAJE_SOLO_DIA_LLEVA_FECHA = "Solo la modalidad Día lleva fecha."
+MENSAJE_DIA_SIN_PERIODO = "La modalidad Día no lleva período."
+MENSAJE_MONTO_FIJO_SIN_DATO = "Un cargo de monto fijo no lleva este dato."
+MENSAJE_ALUMNO_SIN_INSCRIPCION = "El alumno no está inscripto en la temporada."
+MENSAJE_TEMPORADA_CERRADA = (
+    "El tipo de cargo es de una temporada cerrada, que queda solo para consulta."
+)
 
 _CENTAVO = Decimal("0.01")
 # Los tres índices únicos de `cargo` empiezan así (ver app/models/cargo.py).
@@ -127,22 +140,128 @@ def _comprobar_existencia(sesion: Session, entrada: CargoEntrada) -> tuple[Alumn
     return alumno, tipo
 
 
-def _comprobar_inscripcion(sesion: Session, entrada: CargoEntrada) -> Inscripcion:
-    """Lo mínimo del paso 5 que el cálculo necesita: de la inscripción sale el
-    turno. Las demás reglas de forma (tarea 3.2) se suman acá, juntando sus
-    errores en el mismo `ReglaIncumplida`."""
+def _comprobar_cerrada(sesion: Session, tipo: TipoCargo) -> Temporada:
+    """Paso 4: la temporada del tipo no está cerrada. Se responde ahí."""
+    temporada = sesion.get(Temporada, tipo.temporada_id)
+    if temporada is None:  # lo garantiza la clave foránea
+        raise ValueError("El tipo de cargo no tiene temporada.")
+    if temporada.estado is EstadoTemporada.CERRADA:
+        raise ReglaIncumplida([(("tipo_cargo_id",), MENSAJE_TEMPORADA_CERRADA)])
+    return temporada
+
+
+def _errores_monto_fijo(
+    sesion: Session, entrada: CargoEntrada, tipo: TipoCargo
+) -> list[tuple[Ubicacion, str]]:
+    """Paso 5 de un cargo de monto fijo: no lleva ningún dato de tarifario y el
+    alumno tiene que estar inscripto en la temporada del tipo."""
     errores: list[tuple[Ubicacion, str]] = []
+    presentes = {
+        "inscripcion_id": entrada.inscripcion_id,
+        "modalidad": entrada.modalidad,
+        "periodo_cobro_id": entrada.periodo_cobro_id,
+        "fecha_dia": entrada.fecha_dia,
+    }
+    for campo, valor in presentes.items():
+        if valor is not None:
+            errores.append(((campo,), MENSAJE_MONTO_FIJO_SIN_DATO))
+    inscripto = sesion.execute(
+        select(
+            exists().where(
+                Inscripcion.alumno_id == entrada.alumno_id,
+                Inscripcion.temporada_id == tipo.temporada_id,
+            )
+        )
+    ).scalar_one()
+    if not inscripto:
+        errores.append((("alumno_id",), MENSAJE_ALUMNO_SIN_INSCRIPCION))
+    return errores
+
+
+def _errores_inscripcion(
+    sesion: Session, entrada: CargoEntrada, tipo: TipoCargo
+) -> tuple[Inscripcion | None, list[tuple[Ubicacion, str]]]:
+    """La inscripción: obligatoria, existe, es del alumno y de la temporada."""
     if entrada.inscripcion_id is None:
-        errores.append((("inscripcion_id",), MENSAJE_OBLIGATORIO))
-    if entrada.modalidad is None:
-        errores.append((("modalidad",), MENSAJE_OBLIGATORIO))
+        return None, [(("inscripcion_id",), MENSAJE_OBLIGATORIO)]
     inscripcion = (
         sesion.get(Inscripcion, entrada.inscripcion_id)
-        if entrada.inscripcion_id is not None and id_posible(entrada.inscripcion_id)
+        if id_posible(entrada.inscripcion_id)
         else None
     )
-    if entrada.inscripcion_id is not None and inscripcion is None:
-        errores.append((("inscripcion_id",), MENSAJE_INSCRIPCION_INEXISTENTE))
+    ubicacion: Ubicacion = ("inscripcion_id",)
+    if inscripcion is None:
+        return None, [(ubicacion, MENSAJE_INSCRIPCION_INEXISTENTE)]
+    if inscripcion.alumno_id != entrada.alumno_id:
+        return inscripcion, [(ubicacion, MENSAJE_INSCRIPCION_AJENA)]
+    if inscripcion.temporada_id != tipo.temporada_id:
+        return inscripcion, [(ubicacion, MENSAJE_INSCRIPCION_OTRA_TEMPORADA)]
+    return inscripcion, []
+
+
+def _errores_periodo(
+    sesion: Session, entrada: CargoEntrada, tipo: TipoCargo, modalidad: Modalidad
+) -> list[tuple[Ubicacion, str]]:
+    """Mes, Quincena y Semana: período obligatorio, existente, de la temporada
+    y de la modalidad; y sin fecha."""
+    errores: list[tuple[Ubicacion, str]] = []
+    ubicacion: Ubicacion = ("periodo_cobro_id",)
+    if entrada.periodo_cobro_id is None:
+        errores.append((ubicacion, MENSAJE_OBLIGATORIO))
+    else:
+        periodo = (
+            sesion.get(PeriodoCobro, entrada.periodo_cobro_id)
+            if id_posible(entrada.periodo_cobro_id)
+            else None
+        )
+        if periodo is None:
+            errores.append((ubicacion, MENSAJE_PERIODO_INEXISTENTE))
+        elif periodo.temporada_id != tipo.temporada_id:
+            errores.append((ubicacion, MENSAJE_PERIODO_OTRA_TEMPORADA))
+        elif periodo.modalidad is not modalidad:
+            errores.append((ubicacion, MENSAJE_PERIODO_OTRA_MODALIDAD))
+    if entrada.fecha_dia is not None:
+        errores.append((("fecha_dia",), MENSAJE_SOLO_DIA_LLEVA_FECHA))
+    return errores
+
+
+def _errores_dia(entrada: CargoEntrada, temporada: Temporada) -> list[tuple[Ubicacion, str]]:
+    """Día: fecha obligatoria y dentro de la temporada; sin período."""
+    errores: list[tuple[Ubicacion, str]] = []
+    if entrada.periodo_cobro_id is not None:
+        errores.append((("periodo_cobro_id",), MENSAJE_DIA_SIN_PERIODO))
+    fecha = entrada.fecha_dia
+    if fecha is None:
+        errores.append((("fecha_dia",), MENSAJE_OBLIGATORIO))
+    elif not temporada.fecha_inicio <= fecha <= temporada.fecha_cierre:
+        errores.append(
+            (
+                ("fecha_dia",),
+                f"La fecha está fuera de la temporada, del {_fecha(temporada.fecha_inicio)} "
+                f"al {_fecha(temporada.fecha_cierre)}.",
+            )
+        )
+    return errores
+
+
+def _comprobar_forma(
+    sesion: Session, entrada: CargoEntrada, tipo: TipoCargo, temporada: Temporada
+) -> Inscripcion | None:
+    """Paso 5: forma y referencias, con todos los errores juntos en un solo
+    `ReglaIncumplida`. Devuelve la inscripción (solo en los de tarifario)."""
+    if tipo.calculo is CalculoCargo.MONTO_FIJO:
+        errores = _errores_monto_fijo(sesion, entrada, tipo)
+        if errores:
+            raise ReglaIncumplida(errores)
+        return None
+
+    inscripcion, errores = _errores_inscripcion(sesion, entrada, tipo)
+    if entrada.modalidad is None:
+        errores.append((("modalidad",), MENSAJE_OBLIGATORIO))
+    elif entrada.modalidad is Modalidad.DIA:
+        errores.extend(_errores_dia(entrada, temporada))
+    else:
+        errores.extend(_errores_periodo(sesion, entrada, tipo, entrada.modalidad))
     if errores or inscripcion is None:
         raise ReglaIncumplida(errores)
     return inscripcion
@@ -268,9 +387,8 @@ def preparar_cargo(sesion: Session, entrada: CargoEntrada) -> CargoPreparado:
     """Pasos 3 a 7. Levanta ReglaIncumplida (422 por campo) o ConflictoDeCargo
     (409); no escribe nada."""
     alumno, tipo = _comprobar_existencia(sesion, entrada)
-    inscripcion = (
-        _comprobar_inscripcion(sesion, entrada) if tipo.calculo is CalculoCargo.TARIFARIO else None
-    )
+    temporada = _comprobar_cerrada(sesion, tipo)
+    inscripcion = _comprobar_forma(sesion, entrada, tipo, temporada)
 
     # El 409 de repetido va antes que el de configuración: si el cargo ya
     # existe, avisar que falta una tarifa empujaría a cargarla para nada.
