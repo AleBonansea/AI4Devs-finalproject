@@ -69,7 +69,7 @@ Cada registro de asistencia SHALL pertenecer a una inscripción y a una fecha, y
 - **THEN** la respuesta es 200 y Juan Pérez trae `presente` true
 
 ### Requirement: Guardar la asistencia de un grupo en una fecha
-`PUT /api/v1/grupos/{grupo_id}/asistencias/{fecha}` con `asistencias` (cada una con `inscripcion_id` y `presente`) SHALL crear o actualizar un registro por inscripción y fecha, con quien llama como autor, y responder 200 con lo mismo que devuelve abrir esa asistencia después de guardar. Las inscripciones que no vienen no se modifican.
+`PUT /api/v1/grupos/{grupo_id}/asistencias/{fecha}` con `asistencias` (cada una con `inscripcion_id` y `presente`) SHALL crear los registros que faltan y actualizar los que cambian de valor, con quien llama como autor, y responder 200 con lo mismo que devuelve abrir esa asistencia. Un registro con el mismo `presente` no cambia, tampoco su autor ni su momento (`aclaraciones-cliente.md`, sección 4). Las inscripciones que no vienen no se tocan.
 
 #### Scenario: Tomar la asistencia del día
 - **GIVEN** Juan Pérez, Sofía Ruiz y Martín Gómez inscriptos en «Delfines» mañana, sin asistencia registrada, y `jperez` asignado a ese grupo
@@ -87,6 +87,18 @@ Cada registro de asistencia SHALL pertenecer a una inscripción y a una fecha, y
 - **GIVEN** la asistencia del 2027-01-05 de «Delfines» mañana registrada por `jperez`, con Juan Pérez presente y Martín Gómez ausente
 - **WHEN** un Coordinador llama al `PUT` de esa fecha con solo Martín Gómez `presente` true
 - **THEN** el registro de Juan Pérez sigue con `presente` true y `jperez` como autor
+
+#### Scenario: Corregir a uno no cambia el autor de los demás
+- **GIVEN** la asistencia del 2027-01-05 de «Delfines» mañana registrada por `jperez` el 2027-01-05 a las 09:00, con Juan Pérez y Sofía Ruiz presentes y Martín Gómez ausente
+- **WHEN** un Coordinador llama al `PUT` de esa fecha con las tres inscripciones: Juan Pérez y Sofía Ruiz `presente` true y Martín Gómez `presente` true
+- **THEN** los registros de Juan Pérez y Sofía Ruiz siguen con `jperez` como autor y `registrado_en` el 2027-01-05 a las 09:00
+- **AND** el de Martín Gómez tiene `presente` true, el Coordinador como autor y un `registrado_en` distinto del 2027-01-05 a las 09:00
+
+#### Scenario: Guardar lo mismo no cambia nada
+- **GIVEN** la asistencia del 2027-01-05 de «Delfines» mañana registrada por `jperez` el 2027-01-05 a las 09:00, con Juan Pérez presente y Martín Gómez ausente
+- **WHEN** un Coordinador llama al `PUT` de esa fecha con Juan Pérez `presente` true y Martín Gómez `presente` false
+- **THEN** la respuesta es 200 con Juan Pérez `presente` true y Martín Gómez `presente` false
+- **AND** los dos registros siguen con `jperez` como autor y `registrado_en` el 2027-01-05 a las 09:00
 
 #### Scenario: Guardar parte de la lista
 - **GIVEN** Juan Pérez, Sofía Ruiz y Martín Gómez inscriptos en «Delfines» mañana, sin asistencia registrada
@@ -226,6 +238,12 @@ Los dos endpoints SHALL estar disponibles para Admin y Coordinador en cualquier 
 - **WHEN** `jperez` guarda la asistencia de ese grupo del 2027-01-05
 - **THEN** la respuesta es 403 con `detail` `Solo podés tomar asistencia de tus grupos.`
 
+#### Scenario: Profesor cuela en su grupo una inscripción de otro grupo
+- **GIVEN** `jperez` asignado solo a «Delfines» mañana, con Juan Pérez inscripto, y Ana Pérez inscripta en «Tiburones» mañana, sin asistencia registrada
+- **WHEN** `jperez` llama al `PUT` de «Delfines» mañana del 2027-01-05 con Juan Pérez `presente` true y, segunda, la inscripción de Ana Pérez `presente` true
+- **THEN** la respuesta es 422 con un error con `loc` terminado en `asistencias`, `1`, `inscripcion_id` y `msg` `Esa inscripción no es de este grupo.`
+- **AND** no hay ningún registro de asistencia del 2027-01-05, tampoco el de Juan Pérez
+
 #### Scenario: Coordinador sin grupos asignados
 - **GIVEN** un Coordinador sin grupos asignados, y Lucía Gómez inscripta en «Pulpos» tarde
 - **WHEN** el Coordinador guarda la asistencia de «Pulpos» tarde del 2027-01-05 con Lucía Gómez `presente` true
@@ -251,7 +269,7 @@ La dirección `/asistencia`, dentro de la zona protegida, SHALL mostrar el campo
 - **AND** `Grupo` está sin elegir
 
 #### Scenario: Un solo grupo queda elegido y abre la asistencia de hoy
-- **GIVEN** la fecha del dispositivo es 2027-01-05, `GET /api/v1/grupos` responde solo «Delfines» mañana, y su asistencia del 2027-01-05 trae a Martín Gómez, Juan Pérez y Sofía Ruiz sin tomar
+- **GIVEN** el dispositivo está en el huso de Argentina y son las 21:30 del 2027-01-05 (en UTC ya es el 2027-01-06), `GET /api/v1/grupos` responde solo «Delfines» mañana, y su asistencia del 2027-01-05 trae a Martín Gómez, Juan Pérez y Sofía Ruiz sin tomar
 - **WHEN** se abre `/asistencia`
 - **THEN** `Grupo` está en `Delfines · Mañana` y `Fecha` tiene `2027-01-05`
 - **AND** se ven `Martín Gómez`, `Juan Pérez` y `Sofía Ruiz`, en ese orden, cada uno con las opciones `Presente` y `Ausente` sin elegir
@@ -269,7 +287,7 @@ La dirección `/asistencia`, dentro de la zona protegida, SHALL mostrar el campo
 - **AND** no se ve el botón `Guardar`
 
 ### Requirement: Guardar desde la pantalla
-El botón `Guardar` SHALL estar deshabilitado mientras ningún alumno tenga elegido `Presente` o `Ausente`. Al pulsarlo manda en el `PUT` solo los alumnos con una opción elegida; con 200 muestra `Asistencia guardada.` y la lista de la respuesta. Si la API rechaza, muestra su `detail` y conserva lo marcado.
+El botón `Guardar` SHALL estar deshabilitado mientras ninguna marca sea distinta de lo que trajo la API, así que `Asistencia guardada.` nunca aparece sin un cambio. Al pulsarlo manda en el `PUT` solo los alumnos con una opción elegida; con 200 muestra `Asistencia guardada.` y la lista de la respuesta. Si la API rechaza, muestra su `detail` y conserva lo marcado.
 
 #### Scenario: Marcar y guardar
 - **GIVEN** `/asistencia` abierta en «Delfines» mañana del 2027-01-05 con Martín Gómez, Juan Pérez y Sofía Ruiz sin tomar
@@ -298,3 +316,29 @@ El botón `Guardar` SHALL estar deshabilitado mientras ningún alumno tenga eleg
 - **THEN** se ve `El grupo no está activo.`
 - **AND** Juan Pérez sigue con `Presente` elegido
 - **AND** no se ve `Asistencia guardada.`
+
+### Requirement: Lo ya tomado y el guardado en curso
+Un alumno que la API trajo tomado SHALL poder cambiarse entre `Presente` y `Ausente`, pero no volver a sin elegir (`aclaraciones-cliente.md`, sección 4, «Asistencia ya tomada»); una opción elegida y todavía no guardada sí se puede quitar. Mientras el guardado está en curso, `Grupo`, `Fecha` y `Guardar` están deshabilitados, y una respuesta que llega cuando el grupo o la fecha ya no son los del guardado se descarta.
+
+#### Scenario: Lo ya tomado sin cambios no se guarda
+- **GIVEN** `/asistencia` abierta en «Delfines» mañana del 2027-01-05 con Martín Gómez ausente, Juan Pérez presente y Sofía Ruiz presente
+- **WHEN** no se cambia nada, o se elige `Presente` para Martín Gómez y después otra vez `Ausente`
+- **THEN** el botón `Guardar` está deshabilitado
+
+#### Scenario: Lo ya tomado no se puede desmarcar
+- **GIVEN** `/asistencia` abierta en «Delfines» mañana del 2027-01-05 con Martín Gómez ausente
+- **WHEN** se pulsa `Ausente` de Martín Gómez, que es la opción elegida
+- **THEN** Martín Gómez sigue con `Ausente` elegido
+- **AND** el botón `Guardar` está deshabilitado
+
+#### Scenario: Lo elegido sin guardar se puede quitar
+- **GIVEN** `/asistencia` abierta en «Delfines» mañana del 2027-01-05 con Martín Gómez, Juan Pérez y Sofía Ruiz sin tomar
+- **WHEN** se elige `Presente` para Juan Pérez y se vuelve a pulsar `Presente` de Juan Pérez
+- **THEN** Juan Pérez no tiene ninguna opción elegida
+- **AND** el botón `Guardar` está deshabilitado
+
+#### Scenario: Mientras se guarda
+- **GIVEN** `/asistencia` abierta en «Delfines» mañana del 2027-01-05 con Juan Pérez sin tomar, y el `PUT` todavía no respondió
+- **WHEN** se elige `Presente` para Juan Pérez y se pulsa `Guardar`
+- **THEN** `Grupo`, `Fecha` y `Guardar` están deshabilitados
+- **AND** cuando el `PUT` responde 200, `Grupo` y `Fecha` vuelven a estar habilitados y se ve `Asistencia guardada.`

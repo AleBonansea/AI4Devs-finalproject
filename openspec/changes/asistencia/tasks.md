@@ -59,6 +59,20 @@
 ## 7. Revisión adversarial
 
 - [ ] 7.1 Un pase del subagente `adversarial-reviewer` sobre el change terminado, antes del pull request. Rige `REVIEW.md`, «Cuándo se deja de revisar». **Se verifica con** sus hallazgos resueltos o justificados por escrito en esta tarea.
+  - **Primer pase (14/11/2026):** un grave y un menor, más tres preguntas. Reabren el change con las tareas 7.2 a 7.4.
+    - [GRAVE] Ningún test distingue la fecha local de hoy de la UTC: `fijarHoy` fija las 10:00 y el huso de los tests no está fijado (el CI corre en UTC). → 7.4.
+    - [Menor] La respuesta de un `PUT` que llega tarde pisa la lista de otra fecha o grupo, y los campos siguen habilitados mientras se guarda. → 7.4.
+    - Pregunta: ¿se puede desmarcar lo ya tomado? Decidido: no (`aclaraciones-cliente.md`, sección 4). Además, `Asistencia guardada.` no aparece sin cambios. → 7.4.
+    - Pregunta: al corregir a uno, ¿cambia el autor de los demás? Decidido: no, solo cambia lo que cambió de valor, y la regla va en el backend. → 7.3.
+    - Pregunta: la inscripción de otro grupo solo se probaba con un Coordinador. Decidido: se agrega el test con un Profesor. → 7.3.
+- [x] 7.2 Incorporar al delta de `asistencia`, al design y a `aclaraciones-cliente.md` lo decidido sobre el primer pase. **Se verifica con** los Scenarios nuevos escritos: «Corregir a uno no cambia el autor de los demás», «Guardar lo mismo no cambia nada», «Profesor cuela en su grupo una inscripción de otro grupo», «Lo ya tomado sin cambios no se guarda», «Lo ya tomado no se puede desmarcar», «Lo elegido sin guardar se puede quitar» y «Mientras se guarda», más el cambio de «Un solo grupo queda elegido y abre la asistencia de hoy».
+- [ ] 7.3 Con la skill `backend-feature`, el `PUT` actualiza solo los registros que cambian de valor, según los Scenarios «Corregir a uno no cambia el autor de los demás», «Guardar lo mismo no cambia nada» y «Profesor cuela en su grupo una inscripción de otro grupo»: 3 Scenarios.
+  - `where` en el `DO UPDATE`, según design, «Escribir con `INSERT … ON CONFLICT DO UPDATE`». Los tests fijan el `registrado_en` previo a mano.
+  - **Se verifica con** los dos primeros tests en rojo por el motivo correcto y después en verde (el del Profesor ya pasa: fija una frontera que existía sin test, y se comprueba que se pondría en rojo quitando el filtro por `grupo_id`); `python tasks.py test`, `lint`, `typecheck` y `openapi-check` en verde.
+- [ ] 7.4 Con la skill `frontend-feature`, el huso fijo de los tests y la pantalla según los Scenarios «Un solo grupo queda elegido y abre la asistencia de hoy» (modificado), «Lo ya tomado sin cambios no se guarda», «Lo ya tomado no se puede desmarcar», «Lo elegido sin guardar se puede quitar» y «Mientras se guarda»: 5 Scenarios.
+  - `TZ=America/Argentina/Buenos_Aires` en `vite.config.ts`, en `tasks.py` y en el workflow del CI; `fijarHoy` a las 21:30.
+  - La respuesta del `PUT` se descarta si el grupo o la fecha cambiaron mientras se guardaba (design, «Marcas y guardado»).
+  - **Se verifica con** el rojo a propósito: con `hoyLocal()` reemplazada por `toISOString()`, `python tasks.py front-test` se pone en rojo, y se revierte; los tests nuevos en rojo por el motivo correcto y después en verde; la huella de `frontend/tests/` intacta después de implementar; `python tasks.py front-test` y `front-lint` en verde.
 
 ## Workflow follow-up
 

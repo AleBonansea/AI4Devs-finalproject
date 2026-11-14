@@ -44,6 +44,8 @@ Fuente complementaria de `prd-escuelita-de-verano.md`. Recoge las respuestas a l
 - Cada grupo tiene un nombre y un rango de fechas de nacimiento (desde/hasta).
 - Los grupos son **por temporada**: el rango de fechas de nacimiento se corre cada año. Al abrir una temporada nueva se pueden **copiar los grupos de la anterior** y ajustar sus rangos.
 - Al cargar un alumno, el sistema sugiere el grupo que corresponde por su fecha de nacimiento, y el usuario puede elegir otro.
+- **Asistencia ya tomada (14/11/2026, change `asistencia`).** La marca de un alumno en una fecha se puede **corregir** (presente ↔ ausente), pero no volver a «sin tomar»: eso diría que ese día no se tomó asistencia cuando sí se tomó, y acá nada se borra.
+- **Quién registró la asistencia (14/11/2026, change `asistencia`).** Al guardar, solo cambian autor y momento de las marcas nuevas o de las que cambiaron de valor. Guardar de nuevo una marca igual no la atribuye a quien guarda: un rastro que dice que alguien registró lo que no registró es peor que no tenerlo, porque se le cree.
 
 ## 5. Modalidades y tarifario
 

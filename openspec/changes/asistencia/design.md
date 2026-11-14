@@ -16,7 +16,7 @@
 - Una sola forma de respuesta para abrir y para guardar, que la pantalla pinta tal cual.
 
 **Non-Goals:**
-- Historial de correcciones. `registrado_por` y `registrado_en` dicen quién y cuándo tocó el registro por última vez, como dice el modelo; no hay tabla de auditoría.
+- Historial de correcciones. `registrado_por` y `registrado_en` dicen quién y cuándo fijó por última vez el valor del registro; no hay tabla de auditoría.
 - Optimizar para grupos grandes: un grupo tiene decenas de alumnos, no miles.
 
 ## Decisions
@@ -70,6 +70,8 @@ Un solo `insert(Asistencia).values([...]).on_conflict_do_update(constraint="uq_a
 
 - Alternativa descartada: leer los registros existentes y decidir insert o update en Python. Dos personas guardando la misma fecha a la vez pasarían las dos el «no existe» y la segunda chocaría con el `UNIQUE` (500). El upsert lo resuelve la base: gana la última escritura, que es lo esperable al corregir.
 - Es una sola sentencia, así que todo o nada sin manejo extra. Las validaciones del paso 5 corren antes, y si alguna falla no se escribe nada.
+- **Solo se actualiza lo que cambió** (pase adversarial, decisión en `aclaraciones-cliente.md`, sección 4): el `DO UPDATE` lleva `where=Asistencia.presente.is_distinct_from(excluded.presente)`. Un registro que llega con el mismo valor no se reescribe, así que conserva su `registrado_por` y su `registrado_en`, y guardar dos veces lo mismo es idempotente. Lo compara la base en la misma sentencia, sin leer antes, así que sigue sin carrera.
+- Los tests de esto fijan el `registrado_en` previo a mano (2027-01-05 09:00). `now()` de Postgres es la hora de inicio de la transacción, y los tests corren dentro de una sola: sin fijarlo, el «no cambió» pasaría aunque se reescribiera.
 
 ### Una sola respuesta para abrir y para guardar
 
@@ -86,7 +88,12 @@ Un solo `insert(Asistencia).values([...]).on_conflict_do_update(constraint="uq_a
 - `src/components/SelectorGrupoDeAsistencia.tsx`: el campo `Grupo` de esta pantalla, con la misma escritura que el del alta (`Delfines · Mañana`, con `NOMBRE_DEL_TURNO`) y la regla de elegir el único grupo. No se reusa `SelectorGrupo`: su regla es la sugerencia por fecha de nacimiento y la elección a mano que no se pisa, que acá no existe; meterle un modo más lo vuelve dos componentes en uno.
 - `src/components/ListaAsistencia.tsx`: una fila por alumno con `Nombre Apellido` y un `ToggleButtonGroup` exclusivo `Presente` / `Ausente`, de ancho completo en el celular y con al menos 44 px de alto por botón, para el dedo. Los colores de lo elegido salen de `tema.ts`: se agregan `presente` (igual a `marca`) y `ausente` (igual a `deuda`), con nombre por uso. Sin elegir, ninguno de los dos está marcado (`value={null}`).
 - `src/pages/TomarAsistencia.tsx` en `/asistencia`: estado `marcas: Record<inscripcion_id, boolean | null>` que arranca de la respuesta del `GET`; `Guardar` deshabilitado si ninguna marca es distinta de null; el `PUT` lleva las marcas no null. Al cambiar grupo o fecha se vuelve a pedir y se descartan las marcas sin guardar. Mensajes en un `Alert`: éxito `Asistencia guardada.`, error con el `mensaje` del `ErrorDeApi`.
+- **Marcas y guardado** (pase adversarial):
+  - `Guardar` se habilita solo si alguna marca difiere de lo que trajo la última respuesta de la API. Eso cubre «nada marcado», «nada cambió» y el doble envío después de un guardado exitoso, y hace que `Asistencia guardada.` no aparezca sin cambios.
+  - Una marca que la API trajo no null no vuelve a null: el `ToggleButtonGroup` exclusivo manda null al pulsar la opción elegida, y para esas filas se ignora. Una marca elegida en la pantalla y sin guardar sí se puede quitar.
+  - Mientras corre el `PUT`, `Grupo`, `Fecha` y `Guardar` se deshabilitan. Además, la respuesta se descarta si el grupo o la fecha ya no son los del guardado, con el mismo criterio de «solo vale el último» que la apertura y que `SelectorGrupo`. Con los campos deshabilitados esa carrera no se puede provocar desde la pantalla, así que esta guarda no tiene test: es defensa por si un cambio futuro habilita los campos.
 - **La fecha de hoy se arma con la fecha local**, año, mes y día del `Date` del dispositivo, nunca con `toISOString()`, que da la fecha en UTC: en Argentina, después de las 21 h sería mañana.
+  - Los tests del frontend corren con `TZ=America/Argentina/Buenos_Aires`, puesto en tres lugares: `vite.config.ts` (para `npm run test` y `npx vitest` sueltos), `tasks.py` y el workflow del CI. Si quedara en uno solo, la máquina local y el CI podrían correr en husos distintos. `fijarHoy` fija las 21:30, cuando en UTC ya es el día siguiente: un `toISOString()` da otra fecha y el test falla. Con el huso fijo, el caso de las 23:30 de `formatearFecha` también discrimina en el CI, que corre en UTC.
 - `Fecha` es un `TextField type="date"`, como `Fecha de nacimiento` en el alta.
 - Ruta en `App.tsx` dentro de `RutaProtegida`; acceso `Tomar asistencia` en `Inicio.tsx`, junto a `Registrar alumno`.
 - Tests en `frontend/tests/asistencia/` con `fetch` fingido y la fecha fijada con `vi.useFakeTimers({ toFake: ["Date"] })`, para no dormir los temporizadores de `userEvent`.
@@ -122,7 +129,7 @@ Grupo inactivo: se consulta, pero no se le toma asistencia nueva (409). Va como 
 
 - [El orden alfabético depende de la intercalación de la base: con `C`, «Álvarez» quedaría después de «Zárate»] → Los datos actuales no lo muestran. Si aparece, se ordena por una expresión con `unaccent` o una intercalación ICU en la consulta, sin tocar la spec.
 - [Un Profesor puede probar ids de grupo y distinguir los suyos de los ajenos] → No aprende nada más que eso: el 403 es el mismo para un grupo ajeno, inexistente, cerrado o inactivo, y no trae datos.
-- [Quien corrige pisa a quien tomó: `registrado_por` pasa a ser el último] → Es lo que dice el modelo. Si el cliente pide historial, es otra tabla.
+- [Quien corrige pisa a quien tomó: `registrado_por` pasa a ser el último que cambió el valor] → Es lo que dice el modelo, y solo en los registros que cambian. Si el cliente pide historial, es otra tabla.
 - [Al cambiar grupo o fecha con marcas sin guardar, se pierden sin aviso] → Aceptado para este lote; un aviso de «cambios sin guardar» es una mejora de pantalla que no pide ninguna historia.
 - [Sin red en el club, el guardado falla] → `api.ts` ya da `No se pudo conectar con el servidor. Revisá tu conexión.` y las marcas se conservan para reintentar.
 
