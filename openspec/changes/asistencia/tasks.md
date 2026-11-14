@@ -21,11 +21,11 @@
 
 ## 3. Supuesto
 
-- [ ] 3.1 Registrar en `docs/prd/aclaraciones-cliente.md`, «Preguntas abiertas», la del grupo inactivo: ¿se le puede seguir tomando asistencia, o al desactivarlo deja de tomarse? Con el **[SUPUESTO]** vigente (se consulta, no se guarda: 409) y la referencia al change `asistencia`. **Se verifica con** la entrada escrita y el Requirement «Grupos donde no se guarda asistencia» apuntando a ella.
+- [x] 3.1 Registrar en `docs/prd/aclaraciones-cliente.md`, «Preguntas abiertas», la del grupo inactivo: ¿se le puede seguir tomando asistencia, o al desactivarlo deja de tomarse? Con el **[SUPUESTO]** vigente (se consulta, no se guarda: 409) y la referencia al change `asistencia`. **Se verifica con** la entrada escrita y el Requirement «Grupos donde no se guarda asistencia» apuntando a ella.
 
 ## 4. Contrato
 
-- [ ] 4.1 Comprobar que `docs/api/openapi.json` tiene los dos endpoints nuevos con sus esquemas, que `AlumnoEnAsistencia` tiene solo `inscripcion_id`, `nombre`, `apellido` y `presente`, y que ningún endpoint existente cambió. **Se verifica con** `python tasks.py openapi-check` en verde y el diff de `openapi.json` limitado a lo nuevo.
+- [x] 4.1 Comprobar que `docs/api/openapi.json` tiene los dos endpoints nuevos con sus esquemas, que `AlumnoEnAsistencia` tiene solo `inscripcion_id`, `nombre`, `apellido` y `presente`, y que ningún endpoint existente cambió. **Se verifica con** `python tasks.py openapi-check` en verde y el diff de `openapi.json` limitado a lo nuevo.
 
 ## 5. Pantalla «Tomar asistencia»
 
