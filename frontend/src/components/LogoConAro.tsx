@@ -9,12 +9,19 @@ import { colores } from "../tema";
  * ocho gajos que alterna el naranja del dinero con blanco. Se usa grande en
  * el encuadre de las pantallas sin sesion y chico en la barra superior.
  */
-// `aire`: margen entre el circulo blanco y el dibujo, para que el redondeo
-// no le coma las letras del borde del logo.
 const MEDIDAS = {
-  grande: { lado: 108, aro: 9, aire: 6 },
-  chico: { lado: 46, aro: 4, aire: 2 },
+  grande: { lado: 108, aro: 9 },
+  chico: { lado: 46, aro: 4 },
 } as const;
+
+// Lado de la imagen respecto del circulo blanco. El dibujo de `logo.png` no
+// es un circulo inscripto en el cuadrado: las letras de «CENTRO MÉDICO»
+// llegan hasta las esquinas, a unos 270 px del centro en una imagen de 512.
+// Por eso la imagen NO se recorta en circulo (eso le comia las letras): va
+// entera, centrada y al 94 % del circulo, que es lo maximo con el que el
+// dibujo completo entra (512 / 540 = 0,95, menos un pelo de margen). Las
+// esquinas del cuadrado que sobresalen son transparentes.
+const LADO_DE_LA_IMAGEN = "94%";
 
 // Ocho gajos de 45 grados, empezando por el naranja.
 const GAJOS = Array.from({ length: 8 }, (_, i) => {
@@ -27,7 +34,7 @@ interface Props {
 }
 
 export default function LogoConAro({ tamano = "grande" }: Props) {
-  const { lado, aro, aire } = MEDIDAS[tamano];
+  const { lado, aro } = MEDIDAS[tamano];
   return (
     <Box
       sx={{
@@ -40,22 +47,31 @@ export default function LogoConAro({ tamano = "grande" }: Props) {
         flexShrink: 0,
       }}
     >
+      {/* El circulo blanco con su contorno, separado de la imagen para no recortarla. */}
       <Box
-        component="img"
-        src="/logo.png"
-        alt="Logo de la Escuela de Verano"
         sx={{
-          display: "block",
           width: "100%",
           height: "100%",
-          boxSizing: "border-box",
-          p: `${aire}px`,
           borderRadius: "50%",
-          objectFit: "contain",
           bgcolor: colores.superficie,
           boxShadow: `0 0 0 1.5px ${colores.texto}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
-      />
+      >
+        <Box
+          component="img"
+          src="/logo.png"
+          alt="Logo de la Escuela de Verano"
+          sx={{
+            display: "block",
+            width: LADO_DE_LA_IMAGEN,
+            height: LADO_DE_LA_IMAGEN,
+            objectFit: "contain",
+          }}
+        />
+      </Box>
     </Box>
   );
 }
