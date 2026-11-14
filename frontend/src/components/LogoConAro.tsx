@@ -9,9 +9,11 @@ import { colores } from "../tema";
  * ocho gajos que alterna el naranja del dinero con blanco. Se usa grande en
  * el encuadre de las pantallas sin sesion y chico en la barra superior.
  */
+// `aire`: margen entre el circulo blanco y el dibujo, para que el redondeo
+// no le coma las letras del borde del logo.
 const MEDIDAS = {
-  grande: { lado: 108, aro: 9 },
-  chico: { lado: 46, aro: 4 },
+  grande: { lado: 108, aro: 9, aire: 6 },
+  chico: { lado: 46, aro: 4, aire: 2 },
 } as const;
 
 // Ocho gajos de 45 grados, empezando por el naranja.
@@ -25,7 +27,7 @@ interface Props {
 }
 
 export default function LogoConAro({ tamano = "grande" }: Props) {
-  const { lado, aro } = MEDIDAS[tamano];
+  const { lado, aro, aire } = MEDIDAS[tamano];
   return (
     <Box
       sx={{
@@ -46,8 +48,10 @@ export default function LogoConAro({ tamano = "grande" }: Props) {
           display: "block",
           width: "100%",
           height: "100%",
+          boxSizing: "border-box",
+          p: `${aire}px`,
           borderRadius: "50%",
-          objectFit: "cover",
+          objectFit: "contain",
           bgcolor: colores.superficie,
           boxShadow: `0 0 0 1.5px ${colores.texto}`,
         }}
