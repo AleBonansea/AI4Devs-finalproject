@@ -36,6 +36,18 @@ class CalculoCargo(enum.StrEnum):
     TARIFARIO = "tarifario"
 
 
+class TipoMovimiento(enum.StrEnum):
+    INGRESO = "ingreso"
+    EGRESO = "egreso"
+
+
+class OrigenMovimiento(enum.StrEnum):
+    PAGO = "pago"
+    ANULACION_PAGO = "anulacion_pago"
+    CANON = "canon"
+    MANUAL = "manual"
+
+
 def _tipo(clase: type[enum.StrEnum], nombre: str) -> Enum:
     # values_callable: sin esto SQLAlchemy manda los NOMBRES de los miembros
     # ('MANANA') y no sus valores ('manana'). Ver la nota en temporada.py.
@@ -53,3 +65,7 @@ TIPO_MODALIDAD = _tipo(Modalidad, "modalidad")
 # Lo usa descuento_* ahora y `familia` despues: esa migracion no lo vuelve a crear.
 TIPO_CATEGORIA_FAMILIA = _tipo(CategoriaFamilia, "categoria_familia")
 TIPO_CALCULO_CARGO = _tipo(CalculoCargo, "calculo_cargo")
+TIPO_TIPO_MOVIMIENTO = _tipo(TipoMovimiento, "tipo_movimiento")
+# Nace con sus cuatro valores: agregar uno despues (ALTER TYPE ... ADD VALUE)
+# no se puede revertir en un downgrade.
+TIPO_ORIGEN_MOVIMIENTO = _tipo(OrigenMovimiento, "origen_movimiento")

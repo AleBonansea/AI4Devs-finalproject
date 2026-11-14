@@ -734,6 +734,8 @@ Todas las tablas de esta sección cuelgan de `temporada`: cada verano tiene su p
   | `canon` | egreso | `cierre_canon_id` |
   | `manual` | egreso | `descripcion` |
 
+  El `CHECK` no admite `canon` hasta la migración que cree `cierre_canon`: esa migración agrega la columna `cierre_canon_id` y reemplaza el `CHECK` por el de cuatro ramas. El valor `canon` del enumerado `origen_movimiento` existe desde el principio, porque agregar un valor a un enumerado después no se puede revertir.
+
 - `UNIQUE (pago_id, origen)`: un pago genera un solo ingreso y, si se anula, un solo egreso de anulación.
 - **Anulación = contraasiento** (Acl. 7). Al anular un cobro, el ingreso original se conserva y se agrega un egreso `anulacion_pago` por el mismo monto. El neto queda en cero y la trazabilidad se conserva. Ningún movimiento se modifica ni se borra.
 - Saldo disponible = ingresos − egresos de la temporada. Se calcula con la vista `v_tesoreria_saldo`.

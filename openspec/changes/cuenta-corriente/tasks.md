@@ -4,7 +4,7 @@
 
 ## 1. Esquema de pagos y tesorería, y supuestos
 
-- [ ] 1.1 Con la skill `backend-feature`, crear los modelos `Pago` y `TesoreriaMovimiento`, los enumerados `TipoMovimiento` y `OrigenMovimiento`, la vista `v_cuenta_corriente` y la migración `crear_pago_y_tesoreria`, según los Requirements de `pagos` «El pago guarda su monto, su fecha y su autor» (6 Scenarios) y de `tesoreria` «La forma de un movimiento de tesorería» (7) y «Un pago tiene un solo movimiento de cada origen» (2): 15 Scenarios.
+- [x] 1.1 Con la skill `backend-feature`, crear los modelos `Pago` y `TesoreriaMovimiento`, los enumerados `TipoMovimiento` y `OrigenMovimiento`, la vista `v_cuenta_corriente` y la migración `crear_pago_y_tesoreria`, según los Requirements de `pagos` «El pago guarda su monto, su fecha y su autor» (6 Scenarios) y de `tesoreria` «La forma de un movimiento de tesorería» (7) y «Un pago tiene un solo movimiento de cada origen» (2): 15 Scenarios.
   - Columnas según `3-modelo-de-datos.md`; restricciones, nombres e índices según design, «Esquema». `ck_movimiento_origen` sin la rama de `canon`.
   - `metadata_vistas` se mueve de `app/models/familia.py` a `app/models/base.py`; `v_cuenta_corriente` va en `app/models/cuenta_corriente.py`, con el SQL de design, «La vista `v_cuenta_corriente`». Sus Scenarios se prueban por la API en 2.1 y 3.1.
   - Los tests insertan directo en la base: los endpoints todavía no existen. Tests en `backend/tests/functional/pagos/` y `backend/tests/functional/tesoreria/`.

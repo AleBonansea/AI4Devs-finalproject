@@ -12,7 +12,6 @@ from sqlalchemy import (
     Column,
     ForeignKeyConstraint,
     Index,
-    MetaData,
     String,
     Table,
     UniqueConstraint,
@@ -21,7 +20,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
-from app.models.base import MarcaDeCreacion
+from app.models.base import MarcaDeCreacion, metadata_vistas
 from app.models.enums import TIPO_CATEGORIA_FAMILIA, CategoriaFamilia
 
 
@@ -90,11 +89,8 @@ class FamiliaPersona(MarcaDeCreacion, Base):
     )
 
 
-# La vista de la etiqueta "Apellido – Hijo mayor". Va sobre un MetaData
-# PROPIO y no sobre Base.metadata: si estuviera en Base.metadata, autogenerate
-# propondria crearla como tabla en cada migracion. La crea y la borra la
-# migracion con SQL escrito a mano.
-metadata_vistas = MetaData()
+# La vista de la etiqueta "Apellido – Hijo mayor". Va sobre `metadata_vistas`
+# (en `app.models.base`), no sobre Base.metadata: ver la nota ahi.
 
 v_familia_etiqueta = Table(
     "v_familia_etiqueta",
