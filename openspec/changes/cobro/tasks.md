@@ -54,7 +54,7 @@
 
 ## 6. Comprobación de punta a punta
 
-- [ ] 6.1 Con la base de desarrollo migrada y la semilla cargada, la API y el frontend levantados, comprobar a mano en el navegador:
+- [x] 6.1 Con la base de desarrollo migrada y la semilla cargada, la API y el frontend levantados, comprobar a mano en el navegador:
   - como `lrodriguez` (coordinador) y como `jperez` (profesor), el inicio no muestra `Registrar cargo` y `/cargos/nuevo` vuelve a `/`;
   - como `mgarcia` (admin), en `/cargos/nuevo`, la familia «Pérez – Ana» (empleado, Ana y Juan a la mañana) muestra `Empleado` y ofrece `Ana Pérez · Mañana` y `Juan Pérez · Mañana`;
   - un «Abono» del Mes para Juan, «Mes 1»: con la semilla (empleado, 2 hijos, 32,50 %) el desglose dice `$ 100.000`, `32,5 %` y `$ 67.500`; registrarlo y ver el saldo `$ 67.500`;
@@ -63,7 +63,18 @@
   - en la base, los dos cargos con su desglose y `mgarcia` como autor;
   - la pantalla a 360 px de ancho, sin scroll horizontal, y recorrible con el teclado.
   - **Se verifica con** cada punto anotado como hecho en el informe de la tarea, con lo que haya fallado.
-- [ ] 6.2 `python tasks.py test`, `lint`, `typecheck`, `openapi-check`, `front-test` y `front-lint` en verde. **Se verifica con** la salida de cada uno anotada en el informe.
+  - **Informe (14/11/2026)**, contra la base de desarrollo sembrada y migrada a `crear_cargo`, con API en `:8000` y Vite en `:5173`. Las capturas de pantalla de la extensión no respondían, así que la pantalla se manejó con JavaScript en la página, como en los changes anteriores.
+    - Hecho: `lrodriguez` y `jperez` ven `Registrar alumno` y `Tomar asistencia`, sin `Registrar cargo`; `/cargos/nuevo` vuelve a `/` y no sale ningún pedido a `cargos` ni a `inscripciones`.
+    - Hecho: como `mgarcia`, el inicio muestra `Registrar cargo` y lleva a `/cargos/nuevo`. `Pér` ofrece `Pérez – Ana`; al elegirla se ve `Categoría: Empleado` y `Alumno y turno` ofrece `Ana Pérez · Mañana` y `Juan Pérez · Mañana`.
+    - Hecho: Juan · Mañana, «Abono», `Mes`: `Período` ofrece solo `Mes 1 · 04/01/2027 al 29/01/2027` y `Mes 2 · 01/02/2027 al 26/02/2027`. Con «Mes 1», el desglose dice `Tarifa base · Mañana · Mes` `$ 100.000`, `Descuento Empleado · 2 hijos en el turno` `32,5 %`, `Total del cargo` `$ 67.500`. Registrado: `Cargo registrado. Saldo pendiente de la familia: $ 67.500.`, con la familia elegida y el alumno y el tipo vacíos.
+    - Hecho: el mismo cargo otra vez muestra `El alumno ya tiene un cargo «Abono» de «Mes 1» en el turno mañana.`, sin total y con `Registrar cargo` deshabilitado.
+    - Hecho: «Preinscripción» de Ana: `Monto fijo` `$ 20.000`, `Sin descuento`, `Total del cargo` `$ 20.000`; registrada, saldo `$ 87.500`.
+    - Hecho: en la base hay dos cargos, Juan Abono Mes (empleado, 2 hijos, 100000.00, 32.50, 67500.00) y Ana Preinscripción (empleado, 20000.00, 0.00, 20000.00), los dos de `mgarcia`.
+    - Hecho, medido en un iframe de 360 px con un Abono del «Mes 2»: sin scroll horizontal (`scrollWidth` = `clientWidth` = 356, por la barra) y ningún elemento fuera del cuadro. Orden de tabulación: `Volver al inicio`, `Familia`, `Alumno y turno`, `Tipo de cargo`, `Modalidad`, `Período`, `Registrar cargo`.
+    - Observación, no falla: como en asistencia, la pantalla trae un `Volver al inicio` que la spec no nombra.
+- [x] 6.2 `python tasks.py test`, `lint`, `typecheck`, `openapi-check`, `front-test` y `front-lint` en verde. **Se verifica con** la salida de cada uno anotada en el informe.
+  - **Estado (14/11/2026):** backend 388 tests, `lint` (ruff check y format), `typecheck` (mypy, 51 archivos) y `openapi-check` en verde; frontend 112 tests en 17 archivos y `front-lint` en verde.
+  - Nota: con `core.autocrlf=true`, cambiar de rama dejó varios archivos del frontend con CRLF en la copia de trabajo, y `prettier --check` los marcaba aunque el contenido en git estuviera bien (`--end-of-line auto` los daba por buenos). Se normalizaron a LF sin cambios de contenido.
 
 ## 7. Revisión adversarial
 
