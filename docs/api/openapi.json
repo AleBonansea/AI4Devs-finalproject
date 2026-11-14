@@ -275,6 +275,97 @@
         }
       }
     },
+    "/api/v1/familias/{familia_id}/inscripciones": {
+      "get": {
+        "tags": [
+          "familias"
+        ],
+        "summary": "Inscripciones De Familia",
+        "description": "Inscripciones de los hijos de la familia en la temporada vigente. Solo\nel Admin: el 403 llega antes de buscar la familia.",
+        "operationId": "inscripciones_de_familia_api_v1_familias__familia_id__inscripciones_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "familia_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Familia Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InscripcionDeFamilia"
+                  },
+                  "title": "Response Inscripciones De Familia Api V1 Familias  Familia Id  Inscripciones Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La familia no existe.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "La familia no existe."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/personas": {
       "get": {
         "tags": [
@@ -737,6 +828,59 @@
         ]
       }
     },
+    "/api/v1/cargos/opciones": {
+      "get": {
+        "tags": [
+          "cargos"
+        ],
+        "summary": "Opciones",
+        "description": "Tipos de cargo y períodos de la temporada vigente.",
+        "operationId": "opciones_api_v1_cargos_opciones_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpcionesDeCargo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/cargos/simulacion": {
       "post": {
         "tags": [
@@ -1064,6 +1208,14 @@
           "presente"
         ],
         "title": "AsistenciaMarcada"
+      },
+      "CalculoCargo": {
+        "type": "string",
+        "enum": [
+          "monto_fijo",
+          "tarifario"
+        ],
+        "title": "CalculoCargo"
       },
       "CargoEntrada": {
         "properties": {
@@ -1466,6 +1618,44 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "InscripcionDeFamilia": {
+        "properties": {
+          "inscripcion_id": {
+            "type": "integer",
+            "title": "Inscripcion Id"
+          },
+          "alumno_id": {
+            "type": "integer",
+            "title": "Alumno Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "apellido": {
+            "type": "string",
+            "title": "Apellido"
+          },
+          "turno": {
+            "$ref": "#/components/schemas/Turno"
+          },
+          "grupo": {
+            "type": "string",
+            "title": "Grupo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inscripcion_id",
+          "alumno_id",
+          "nombre",
+          "apellido",
+          "turno",
+          "grupo"
+        ],
+        "title": "InscripcionDeFamilia",
+        "description": "Una inscripción de un hijo de la familia en la temporada vigente. Solo\nestos seis campos: ningún dato médico ni de personas."
+      },
       "InscripcionDelAlumno": {
         "properties": {
           "grupo_id": {
@@ -1561,6 +1751,66 @@
           "dia"
         ],
         "title": "Modalidad"
+      },
+      "OpcionesDeCargo": {
+        "properties": {
+          "tipos_cargo": {
+            "items": {
+              "$ref": "#/components/schemas/TipoDeCargoOpcion"
+            },
+            "type": "array",
+            "title": "Tipos Cargo"
+          },
+          "periodos": {
+            "items": {
+              "$ref": "#/components/schemas/PeriodoOpcion"
+            },
+            "type": "array",
+            "title": "Periodos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tipos_cargo",
+          "periodos"
+        ],
+        "title": "OpcionesDeCargo",
+        "description": "Lo que la pantalla necesita para armar un cargo: los tipos y los\nperíodos de la temporada vigente."
+      },
+      "PeriodoOpcion": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "modalidad": {
+            "$ref": "#/components/schemas/Modalidad"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "fecha_desde": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Desde"
+          },
+          "fecha_hasta": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Hasta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "modalidad",
+          "nombre",
+          "fecha_desde",
+          "fecha_hasta"
+        ],
+        "title": "PeriodoOpcion",
+        "description": "Un período de cobro (Mes, Quincena o Semana) de la temporada vigente."
       },
       "PersonaEncontrada": {
         "properties": {
@@ -1662,6 +1912,42 @@
           "profesor"
         ],
         "title": "RolUsuario"
+      },
+      "TipoDeCargoOpcion": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "calculo": {
+            "$ref": "#/components/schemas/CalculoCargo"
+          },
+          "monto_fijo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monto Fijo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "calculo",
+          "monto_fijo"
+        ],
+        "title": "TipoDeCargoOpcion",
+        "description": "Un tipo de cargo de la temporada vigente."
       },
       "Turno": {
         "type": "string",

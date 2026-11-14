@@ -9,9 +9,10 @@ from sqlalchemy.orm import Session
 from app.core.db import obtener_sesion
 from app.core.deps import MENSAJE_SESION_INVALIDA, MENSAJE_SIN_PERMISO, exigir_rol
 from app.models.usuario import RolUsuario, Usuario
-from app.schemas.cargos import CargoEntrada, CargoRegistrado, CargoSimulado
+from app.schemas.cargos import CargoEntrada, CargoRegistrado, CargoSimulado, OpcionesDeCargo
 from app.schemas.errores import ErroresDeCampo, respuesta_de_error
 from app.services.cargos import ConflictoDeCargo, registrar_cargo, simular_cargo
+from app.services.opciones_cargo import obtener_opciones_de_cargo
 
 router = APIRouter(prefix="/cargos", tags=["cargos"])
 
@@ -48,6 +49,22 @@ def registrar(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail=conflicto.mensaje
         ) from None
+
+
+@router.get(
+    "/opciones",
+    response_model=OpcionesDeCargo,
+    responses={
+        status.HTTP_401_UNAUTHORIZED: respuesta_de_error(MENSAJE_SESION_INVALIDA),
+        status.HTTP_403_FORBIDDEN: respuesta_de_error(MENSAJE_SIN_PERMISO),
+    },
+)
+def opciones(
+    _usuario: Annotated[Usuario, Depends(exigir_rol(RolUsuario.ADMIN))],
+    sesion: Annotated[Session, Depends(obtener_sesion)],
+) -> OpcionesDeCargo:
+    """Tipos de cargo y períodos de la temporada vigente."""
+    return obtener_opciones_de_cargo(sesion)
 
 
 @router.post(

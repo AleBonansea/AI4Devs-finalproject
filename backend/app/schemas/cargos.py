@@ -14,7 +14,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models.enums import CategoriaFamilia, Modalidad
+from app.models.enums import CalculoCargo, CategoriaFamilia, Modalidad
 
 
 class CargoEntrada(BaseModel):
@@ -26,6 +26,37 @@ class CargoEntrada(BaseModel):
     modalidad: Modalidad | None = None
     periodo_cobro_id: int | None = None
     fecha_dia: date | None = None
+
+
+class TipoDeCargoOpcion(BaseModel):
+    """Un tipo de cargo de la temporada vigente."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    nombre: str
+    calculo: CalculoCargo
+    monto_fijo: Decimal | None
+
+
+class PeriodoOpcion(BaseModel):
+    """Un período de cobro (Mes, Quincena o Semana) de la temporada vigente."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    modalidad: Modalidad
+    nombre: str
+    fecha_desde: date
+    fecha_hasta: date
+
+
+class OpcionesDeCargo(BaseModel):
+    """Lo que la pantalla necesita para armar un cargo: los tipos y los
+    períodos de la temporada vigente."""
+
+    tipos_cargo: list[TipoDeCargoOpcion]
+    periodos: list[PeriodoOpcion]
 
 
 class CargoSimulado(BaseModel):

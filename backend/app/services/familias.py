@@ -6,8 +6,18 @@ from typing import Any
 from sqlalchemy import Row, exists, func, literal, select
 from sqlalchemy.orm import Session
 
-from app.models.alumno import Alumno
+from app.models.alumno import Alumno, Inscripcion
 from app.models.familia import Familia, v_familia_etiqueta
+from app.models.grupo import Grupo
+from app.models.temporada import EstadoTemporada, Temporada
+from app.services.comunes import id_posible
+
+MENSAJE_FAMILIA_INEXISTENTE = "La familia no existe."
+
+
+class FamiliaInexistente(Exception):
+    """La familia no existe (o su id no cabe en un bigint): un 404."""
+
 
 # Tope de la busqueda: la pantalla la usa como autocompletado.
 MAXIMO_DE_FAMILIAS = 20
@@ -48,5 +58,29 @@ def buscar_familias_por_apellido(sesion: Session, texto: str) -> Sequence[Row[An
         .where(coincide)
         .order_by(etiqueta, Familia.id)
         .limit(MAXIMO_DE_FAMILIAS)
+    )
+    return sesion.execute(consulta).all()
+
+
+def listar_inscripciones_de_familia(sesion: Session, familia_id: int) -> Sequence[Row[Any]]:
+    """Inscripciones de los hijos de la familia en la temporada vigente, por
+    apellido, nombre, turno e id. Levanta FamiliaInexistente si no existe."""
+    if not id_posible(familia_id) or sesion.get(Familia, familia_id) is None:
+        raise FamiliaInexistente(MENSAJE_FAMILIA_INEXISTENTE)
+    consulta = (
+        select(
+            Inscripcion.id.label("inscripcion_id"),
+            Alumno.id.label("alumno_id"),
+            Alumno.nombre,
+            Alumno.apellido,
+            Inscripcion.turno,
+            Grupo.nombre.label("grupo"),
+        )
+        .select_from(Inscripcion)
+        .join(Alumno, Alumno.id == Inscripcion.alumno_id)
+        .join(Grupo, Grupo.id == Inscripcion.grupo_id)
+        .join(Temporada, Temporada.id == Inscripcion.temporada_id)
+        .where(Alumno.familia_id == familia_id, Temporada.estado == EstadoTemporada.VIGENTE)
+        .order_by(Alumno.apellido, Alumno.nombre, Inscripcion.turno, Inscripcion.id)
     )
     return sesion.execute(consulta).all()

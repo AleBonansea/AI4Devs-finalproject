@@ -3,7 +3,7 @@ a HTTP."""
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import AfterValidator, StringConstraints
 from sqlalchemy.orm import Session
 
@@ -11,9 +11,14 @@ from app.core.db import obtener_sesion
 from app.core.deps import MENSAJE_SESION_INVALIDA, MENSAJE_SIN_PERMISO, exigir_rol
 from app.models.usuario import RolUsuario, Usuario
 from app.schemas.errores import respuesta_de_error
-from app.schemas.familias import FamiliaEncontrada
+from app.schemas.familias import FamiliaEncontrada, InscripcionDeFamilia
 from app.schemas.validadores import sin_caracteres_de_control
-from app.services.familias import buscar_familias_por_apellido
+from app.services.familias import (
+    MENSAJE_FAMILIA_INEXISTENTE,
+    FamiliaInexistente,
+    buscar_familias_por_apellido,
+    listar_inscripciones_de_familia,
+)
 
 router = APIRouter(prefix="/familias", tags=["familias"])
 
@@ -45,3 +50,28 @@ def buscar_familias(
     # Sin filtro por grupo para el Profesor: lo que se limita es la respuesta.
     filas = buscar_familias_por_apellido(sesion, apellido)
     return [FamiliaEncontrada.model_validate(fila) for fila in filas]
+
+
+@router.get(
+    "/{familia_id}/inscripciones",
+    response_model=list[InscripcionDeFamilia],
+    responses={
+        status.HTTP_401_UNAUTHORIZED: respuesta_de_error(MENSAJE_SESION_INVALIDA),
+        status.HTTP_403_FORBIDDEN: respuesta_de_error(MENSAJE_SIN_PERMISO),
+        status.HTTP_404_NOT_FOUND: respuesta_de_error(MENSAJE_FAMILIA_INEXISTENTE),
+    },
+)
+def inscripciones_de_familia(
+    familia_id: int,
+    _: Annotated[Usuario, Depends(exigir_rol(RolUsuario.ADMIN))],
+    sesion: Annotated[Session, Depends(obtener_sesion)],
+) -> list[InscripcionDeFamilia]:
+    """Inscripciones de los hijos de la familia en la temporada vigente. Solo
+    el Admin: el 403 llega antes de buscar la familia."""
+    try:
+        filas = listar_inscripciones_de_familia(sesion, familia_id)
+    except FamiliaInexistente:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=MENSAJE_FAMILIA_INEXISTENTE
+        ) from None
+    return [InscripcionDeFamilia.model_validate(fila) for fila in filas]
