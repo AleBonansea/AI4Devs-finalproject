@@ -398,6 +398,8 @@ Dos salidas, en este orden:
 1. Probar happy-dom en lugar de jsdom en `vite.config.ts`. Es una línea y suele dar 2-3x, pero cambia la huella de los tests congelados, así que lo decide una persona con la suite verde antes y después y verificando que el DataGrid siga andando.
 2. Sedimentar el catálogo de componentes (módulo 12) para que las comprobaciones de estado bajen a nivel componente y solo los tests de integración monten `abrir()`.
 
+**Tema oscuro.** El prototipo define un tema oscuro completo con prefers-color-scheme. Se deja fuera de alcance: ninguna historia lo pide y duplica la revisión visual, que hoy es a ojo. tema.ts nombra los colores por función, así que se puede agregar después sin tocar las pantallas.
+
 ## Excluido por no estar en las fuentes
 
 Hoy no queda ningún tema del documento técnico fuera de las fuentes. El cambio y el blanqueo de contraseña y el bloqueo por intentos ya tienen historias (HU-UT-06 a HU-UT-08). Si aparece otro tema, va acá hasta que se confirme y se sume a `aclaraciones-cliente.md`.

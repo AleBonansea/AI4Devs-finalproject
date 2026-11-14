@@ -11,46 +11,51 @@ import { createTheme } from "@mui/material/styles";
  * vez, y a los dos meses hay catorce grises y ninguno es el del sistema.
  *
  * Cada nombre dice PARA QUE sirve, no como se ve. `deuda` sigue significando
- * lo mismo si manana el naranja cambia de tono; `naranjaOscuro` no.
+ * lo mismo si manana el rojo cambia de tono; `rojoOscuro` no.
  *
- * Los valores salen del prototipo que valido el cliente (docs/previews/).
- * Las decisiones estan en openspec/changes/paleta-y-encuadre/design.md.
+ * Los valores salen del CSS del prototipo que valido el cliente. Entre
+ * parentesis, la variable original.
  */
-const accion = "#1870b0";
-const dinero = "#d85018";
-const textoTenue = "#58717f";
+const deuda = "#B42318";
+const textoTenue = "#58717F";
+const marca = "#16823A";
 
 export const colores = {
-  // Botones, item activo del menu, enlaces. Es el `primary` de MUI.
-  accion,
-  // El dinero: saldo a cobrar y la accion de cobrar. Va en negrita o grande:
-  // contra blanco da 4,13:1, que no alcanza para texto corrido.
-  dinero,
-  // La marca es SOLO el logotipo y el titulo de las pantallas sin sesion.
-  // No se mapea a la paleta de MUI para que ningun boton la tome por defecto.
-  marca: "#108038",
+  // Botones, item activo del menu, enlaces. Es el `primary` de MUI. (--shark)
+  accion: "#1C77B5",
+  accionSuave: "#DCEEF8",
+  // El dinero: saldo a cobrar y la accion de cobrar. (--buoy)
+  dinero: "#D9541B",
+  dineroSuave: "#FCE7DC",
+  // La marca es SOLO el logotipo y el titulo de la marca. No se mapea a la
+  // paleta de MUI para que ningun boton la tome por defecto. (--leaf)
+  marca,
+  marcaSuave: "#DDF1E3",
 
-  fondo: "#eef5f9",
-  superficie: "#ffffff",
-  borde: "#d5e4ec",
-
-  texto: "#14303f",
-  textoTenue,
+  texto: "#14303F", // (--ink)
+  textoTenue, // (--muted)
+  borde: "#D5E4EC", // (--line)
+  fondo: "#EEF5F9", // (--bg)
+  superficie: "#FFFFFF",
+  // Superficie secundaria: la barra lateral, los bloques dentro de una tarjeta.
+  superficie2: "#F6FAFC",
 
   // Estados del negocio. Se nombran por lo que significan en el dominio.
-  // La deuda es dinero que falta cobrar, no una falla: va en el naranja del
-  // dinero, como en el prototipo.
-  deuda: dinero,
-  // Mismo valor que `marca`, pero otro nombre: si el estado cambia de tono,
-  // el logotipo no se mueve.
-  saldado: "#108038",
-  pendiente: "#986000",
+  pendiente: "#9A6200",
+  pendienteSuave: "#FBEFD6",
+  deuda,
+  deudaSuave: "#FBE3E0",
+  // Mismo valor que `marca`, otro nombre: si el estado cambia de tono, el
+  // logotipo no se mueve.
+  saldado: marca,
   anulado: textoTenue,
 
-  // Fallos de la API y de validacion. No es `deuda`: si lo fuera, un error
-  // de formulario saldria del color del dinero.
-  error: "#b3261e",
+  // Fallos de la API y de validacion. Comparte el rojo con `deuda`, pero es
+  // otro nombre: un error de formulario no es una deuda.
+  error: deuda,
 } as const;
+
+const tituloDeMarca = ['"Baloo 2"', "system-ui", "sans-serif"].join(",");
 
 export const tema = createTheme({
   palette: {
@@ -63,10 +68,17 @@ export const tema = createTheme({
     text: { primary: colores.texto, secondary: colores.textoTenue },
     divider: colores.borde,
   },
+  // Las fuentes se cargan desde Google Fonts en frontend/index.html.
   typography: {
-    fontFamily: ['"Inter"', "system-ui", "sans-serif"].join(","),
+    fontFamily: ['"Nunito Sans"', "system-ui", "sans-serif"].join(","),
+    h1: { fontFamily: tituloDeMarca },
+    h2: { fontFamily: tituloDeMarca },
+    h3: { fontFamily: tituloDeMarca },
+    h4: { fontFamily: tituloDeMarca },
+    h5: { fontFamily: tituloDeMarca },
+    h6: { fontFamily: tituloDeMarca },
   },
-  shape: { borderRadius: 8 },
+  shape: { borderRadius: 12 },
   components: {
     MuiButton: { defaultProps: { variant: "contained", disableElevation: true } },
     MuiTextField: { defaultProps: { size: "small", fullWidth: true } },
