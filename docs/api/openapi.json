@@ -966,6 +966,116 @@
         ]
       }
     },
+    "/api/v1/cargos/{cargo_id}/pagos": {
+      "post": {
+        "tags": [
+          "cargos"
+        ],
+        "summary": "Pagar",
+        "description": "Registra un pago del cargo y su ingreso en tesorería. Solo el Admin.",
+        "operationId": "pagar_api_v1_cargos__cargo_id__pagos_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cargo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Cargo Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PagoEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagoRegistrado"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El cargo no existe.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "El cargo no existe."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El cargo ya está saldado.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "El cargo ya está saldado."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Monto o fecha inválidos, o monto mayor que el saldo del cargo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErroresDeCampo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/salud": {
       "get": {
         "tags": [
@@ -1776,6 +1886,79 @@
         ],
         "title": "OpcionesDeCargo",
         "description": "Lo que la pantalla necesita para armar un cargo: los tipos y los\nperíodos de la temporada vigente."
+      },
+      "PagoEntrada": {
+        "properties": {
+          "monto": {
+            "type": "string",
+            "title": "Monto"
+          },
+          "fecha_pago": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Pago"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "monto",
+          "fecha_pago"
+        ],
+        "title": "PagoEntrada"
+      },
+      "PagoRegistrado": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "cargo_id": {
+            "type": "integer",
+            "title": "Cargo Id"
+          },
+          "monto": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto"
+          },
+          "fecha_pago": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Pago"
+          },
+          "registrado_por": {
+            "type": "integer",
+            "title": "Registrado Por"
+          },
+          "registrado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Registrado En"
+          },
+          "saldo_cargo": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Saldo Cargo"
+          },
+          "saldo_pendiente": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Saldo Pendiente"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "cargo_id",
+          "monto",
+          "fecha_pago",
+          "registrado_por",
+          "registrado_en",
+          "saldo_cargo",
+          "saldo_pendiente"
+        ],
+        "title": "PagoRegistrado"
       },
       "PeriodoOpcion": {
         "properties": {

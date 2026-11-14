@@ -11,8 +11,10 @@ from app.core.deps import MENSAJE_SESION_INVALIDA, MENSAJE_SIN_PERMISO, exigir_r
 from app.models.usuario import RolUsuario, Usuario
 from app.schemas.cargos import CargoEntrada, CargoRegistrado, CargoSimulado, OpcionesDeCargo
 from app.schemas.errores import ErroresDeCampo, respuesta_de_error
+from app.schemas.pagos import PagoEntrada, PagoRegistrado
 from app.services.cargos import ConflictoDeCargo, registrar_cargo, simular_cargo
 from app.services.opciones_cargo import obtener_opciones_de_cargo
+from app.services.pagos import CargoInexistente, ConflictoDePago, registrar_pago
 
 router = APIRouter(prefix="/cargos", tags=["cargos"])
 
@@ -85,6 +87,40 @@ def simular(
     try:
         return simular_cargo(sesion, entrada)
     except ConflictoDeCargo as conflicto:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=conflicto.mensaje
+        ) from None
+
+
+@router.post(
+    "/{cargo_id}/pagos",
+    status_code=status.HTTP_201_CREATED,
+    response_model=PagoRegistrado,
+    responses={
+        status.HTTP_401_UNAUTHORIZED: respuesta_de_error(MENSAJE_SESION_INVALIDA),
+        status.HTTP_403_FORBIDDEN: respuesta_de_error(MENSAJE_SIN_PERMISO),
+        status.HTTP_404_NOT_FOUND: respuesta_de_error("El cargo no existe."),
+        status.HTTP_409_CONFLICT: respuesta_de_error("El cargo ya está saldado."),
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "model": ErroresDeCampo,
+            "description": "Monto o fecha inválidos, o monto mayor que el saldo del cargo.",
+        },
+    },
+)
+def pagar(
+    cargo_id: int,
+    entrada: PagoEntrada,
+    usuario: Annotated[Usuario, Depends(exigir_rol(RolUsuario.ADMIN))],
+    sesion: Annotated[Session, Depends(obtener_sesion)],
+) -> PagoRegistrado:
+    """Registra un pago del cargo y su ingreso en tesorería. Solo el Admin."""
+    try:
+        return registrar_pago(sesion, usuario, cargo_id, entrada)
+    except CargoInexistente as inexistente:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(inexistente)
+        ) from None
+    except ConflictoDePago as conflicto:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail=conflicto.mensaje
         ) from None
