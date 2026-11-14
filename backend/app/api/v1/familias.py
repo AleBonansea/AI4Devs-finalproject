@@ -10,9 +10,11 @@ from sqlalchemy.orm import Session
 from app.core.db import obtener_sesion
 from app.core.deps import MENSAJE_SESION_INVALIDA, MENSAJE_SIN_PERMISO, exigir_rol
 from app.models.usuario import RolUsuario, Usuario
+from app.schemas.cuenta_corriente import CuentaCorriente
 from app.schemas.errores import respuesta_de_error
 from app.schemas.familias import FamiliaEncontrada, InscripcionDeFamilia
 from app.schemas.validadores import sin_caracteres_de_control
+from app.services.cuenta_corriente import obtener_cuenta_corriente
 from app.services.familias import (
     MENSAJE_FAMILIA_INEXISTENTE,
     FamiliaInexistente,
@@ -75,3 +77,27 @@ def inscripciones_de_familia(
             status_code=status.HTTP_404_NOT_FOUND, detail=MENSAJE_FAMILIA_INEXISTENTE
         ) from None
     return [InscripcionDeFamilia.model_validate(fila) for fila in filas]
+
+
+@router.get(
+    "/{familia_id}/cuenta-corriente",
+    response_model=CuentaCorriente,
+    responses={
+        status.HTTP_401_UNAUTHORIZED: respuesta_de_error(MENSAJE_SESION_INVALIDA),
+        status.HTTP_403_FORBIDDEN: respuesta_de_error(MENSAJE_SIN_PERMISO),
+        status.HTTP_404_NOT_FOUND: respuesta_de_error(MENSAJE_FAMILIA_INEXISTENTE),
+    },
+)
+def cuenta_corriente_de_familia(
+    familia_id: int,
+    _: Annotated[Usuario, Depends(exigir_rol(RolUsuario.ADMIN))],
+    sesion: Annotated[Session, Depends(obtener_sesion)],
+) -> CuentaCorriente:
+    """Cargos, pagos y saldos de la familia en la temporada vigente. Solo el
+    Admin: el 403 llega antes de buscar la familia."""
+    try:
+        return obtener_cuenta_corriente(sesion, familia_id)
+    except FamiliaInexistente:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=MENSAJE_FAMILIA_INEXISTENTE
+        ) from None
