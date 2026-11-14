@@ -286,7 +286,7 @@ export default function RegistrarCargo() {
       const registrado = await registrarCargo(desglose.entrada);
       setCampos(CAMPOS_VACIOS);
       setExito(
-        `Cargo registrado. Saldo pendiente de la familia: ${formatearMonto(registrado.saldo_pendiente)}.`,
+        `Cargo registrado por ${formatearMonto(registrado.monto_total)}. Saldo pendiente de la familia: ${formatearMonto(registrado.saldo_pendiente)}.`,
       );
     } catch (causa) {
       mostrarError(causa);

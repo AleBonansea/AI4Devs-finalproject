@@ -267,10 +267,15 @@ def _comprobar_forma(
     return inscripcion
 
 
-def _existe_repetido(
+def existe_cargo_repetido(
     sesion: Session, entrada: CargoEntrada, tipo: TipoCargo, inscripcion: Inscripcion | None
 ) -> bool:
-    """Paso 6: la misma condición que el índice único que corresponde."""
+    """Paso 6: la misma condición que el índice único que corresponde.
+
+    Es un punto de prueba declarado en design.md («El servicio»): los tests
+    la reemplazan para simular el doble clic que pasa la comprobación previa
+    y choca con el índice. El nombre es fijo; no se renombra.
+    """
     if inscripcion is None:
         condicion = and_(
             Cargo.alumno_id == entrada.alumno_id,
@@ -393,7 +398,7 @@ def preparar_cargo(sesion: Session, entrada: CargoEntrada) -> CargoPreparado:
     # El 409 de repetido va antes que el de configuración: si el cargo ya
     # existe, avisar que falta una tarifa empujaría a cargarla para nada.
     mensaje_repetido = _mensaje_repetido(sesion, entrada, tipo, inscripcion)
-    if _existe_repetido(sesion, entrada, tipo, inscripcion):
+    if existe_cargo_repetido(sesion, entrada, tipo, inscripcion):
         raise ConflictoDeCargo(mensaje_repetido)
 
     # Categoría actual de la familia del alumno: el cargo guarda la que se usó.

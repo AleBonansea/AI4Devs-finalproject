@@ -240,10 +240,13 @@ describe("El desglose en la pantalla", () => {
 });
 
 describe("Registrar desde la pantalla", () => {
-  it("al registrar el Abono del Mes se envían solo alumno_id, tipo_cargo_id, inscripcion_id, modalidad y periodo_cobro_id, se ve Cargo registrado. Saldo pendiente de la familia: $ 105.000. y quedan la familia elegida y Alumno y turno y Tipo de cargo vacíos", async () => {
+  it("al registrar el Abono del Mes se envían solo alumno_id, tipo_cargo_id, inscripcion_id, modalidad y periodo_cobro_id, se ve Cargo registrado por $ 85.000. Saldo pendiente de la familia: $ 105.000. y quedan la familia elegida y Alumno y turno y Tipo de cargo vacíos", async () => {
     const api = fingirApi({
       registrar: (cuerpo) =>
-        respuestaJson(201, cargoRegistrado(cuerpo, SIMULADO_ABONO_MES_1, "105000.00")),
+        respuestaJson(201, {
+          ...cargoRegistrado(cuerpo, SIMULADO_ABONO_MES_1, "105000.00"),
+          monto_total: "85000.00",
+        }),
     });
     await abrirRegistrarCargo();
     const usuario = userEvent.setup();
@@ -255,7 +258,7 @@ describe("Registrar desde la pantalla", () => {
 
     expect(
       await screen.findByText(
-        porTexto("Cargo registrado. Saldo pendiente de la familia: $ 105.000."),
+        porTexto("Cargo registrado por $ 85.000. Saldo pendiente de la familia: $ 105.000."),
       ),
     ).toBeInTheDocument();
 
@@ -282,6 +285,33 @@ describe("Registrar desde la pantalla", () => {
       expect(textoElegido(lista("Alumno y turno"))).toBe("");
       expect(textoElegido(lista("Tipo de cargo"))).toBe("");
     });
+  });
+
+  it("si el registro responde un total distinto del simulado, se ve Cargo registrado por $ 80.000. Saldo pendiente de la familia: $ 80.000.", async () => {
+    // Entre la simulacion y el registro se inscribio un hermano: la API
+    // registra otro total. Solo cambia lo que devuelve el registro; la
+    // simulacion sigue siendo la de la spec ($ 85.000).
+    fingirApi({
+      registrar: (cuerpo) =>
+        respuestaJson(201, {
+          ...cargoRegistrado(cuerpo, SIMULADO_ABONO_MES_1, "80000.00"),
+          monto_total: "80000.00",
+        }),
+    });
+    await abrirRegistrarCargo();
+    const usuario = userEvent.setup();
+    await elegirAbonoMes(usuario);
+    await esperarDesgloseAbonoMes1();
+    await waitFor(() => expect(botonRegistrar()).toBeEnabled());
+
+    await usuario.click(botonRegistrar());
+
+    expect(
+      await screen.findByText(
+        porTexto("Cargo registrado por $ 80.000. Saldo pendiente de la familia: $ 80.000."),
+      ),
+    ).toBeInTheDocument();
+    expect(textoDeLaPagina()).not.toContain("Cargo registrado por $ 85.000");
   });
 
   it("con familia, alumno y Abono elegidos y sin modalidad, Registrar cargo está deshabilitado", async () => {
