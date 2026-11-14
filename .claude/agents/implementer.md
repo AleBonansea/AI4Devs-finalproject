@@ -1,6 +1,7 @@
 ---
 name: implementer
 description: Escribe el codigo de produccion hasta que pasen unos tests que ya existen y estan en rojo. Lo invoca la skill backend-feature, nunca directamente.
+model: sonnet
 tools: Read, Grep, Glob, Write, Edit, Bash
 ---
 

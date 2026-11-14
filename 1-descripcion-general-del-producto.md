@@ -65,7 +65,9 @@ Las imágenes corresponden a un **prototipo navegable** construido a partir del 
 
 El sistema se usa desde la computadora y desde el celular, porque la asistencia se toma en el patio.
 
-**1. Ingreso.** El usuario entra con su usuario y contraseña, y el sistema lo lleva a lo que su rol le permite ver. El prototipo permite recorrerlo como Administrador, Coordinadora o Profesor para comparar qué ve cada uno.
+**1. Ingreso.** El usuario entra con su usuario y contraseña, y el sistema lo lleva a lo que su rol le permite ver. El prototipo permite recorrerlo como Administrador, Coordinadora o Profesor para comparar qué ve cada uno. Eso es andamiaje del prototipo: el recuadro «Prototipo» y los tres botones «Entrar como…» no existen en el sistema, que tiene un solo botón «Ingresar» y toma el rol del usuario. Tampoco lleva el año de la temporada en el subtítulo, porque antes de ingresar no hay sesión para consultarla.
+
+![Pantalla de ingreso](docs/previews/00-ingreso.png)
 
 **2. Inicio.** La pantalla de entrada resume el día: cuántos alumnos hay inscriptos, cuántos están presentes, qué fichas tienen documentación pendiente y cuánto falta cobrar. Desde acá se toma asistencia de cada grupo y se entra a las familias con saldo.
 

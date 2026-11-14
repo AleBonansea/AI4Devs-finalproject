@@ -25,7 +25,7 @@ export default function Inicio() {
       <Paper variant="outlined" sx={{ p: 4 }}>
         <Stack spacing={2} alignItems="flex-start">
           <Typography variant="h4" component="h1">
-            Escuelita de Verano
+            Escuela de Verano
           </Typography>
           <Typography variant="h6" component="p">
             {`${usuario.nombre} ${usuario.apellido}`}

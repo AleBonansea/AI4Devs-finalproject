@@ -1,6 +1,7 @@
 ---
 name: ui-implementer
 description: Construye pantallas con los componentes del catalogo existente hasta que pasen unos tests que ya existen y estan en rojo. Lo invoca la skill frontend-feature, nunca directamente.
+model: sonnet
 tools: Read, Grep, Glob, Write, Edit, Bash
 ---
 
