@@ -29,10 +29,10 @@
 
 ## 5. Pantalla «Tomar asistencia»
 
-- [ ] 5.0 Con la skill `frontend-feature`, crear `src/lib/fechas.ts` con `formatearFecha`, según design, «Frontend: las fechas como texto, en `src/lib/fechas.ts`». La regla ya está en CLAUDE.md, sección Frontend.
+- [x] 5.0 Con la skill `frontend-feature`, crear `src/lib/fechas.ts` con `formatearFecha`, según design, «Frontend: las fechas como texto, en `src/lib/fechas.ts`». La regla ya está en CLAUDE.md, sección Frontend.
   - Test de la función pura en `frontend/tests/lib/fechas.test.ts`, con los cinco casos del design.
   - **Se verifica con** el test en rojo por el motivo correcto (no existe el módulo) y después en verde, la huella de `frontend/tests/` intacta, y `python tasks.py front-test` y `cd frontend && npm run lint && npm run build` en verde.
-- [ ] 5.1 Con la skill `frontend-feature`, construir la pantalla `/asistencia` y el acceso desde el inicio, según los Requirements de `asistencia` «Pantalla «Tomar asistencia»» (4 Scenarios) y «Guardar desde la pantalla» (5), y el Scenario nuevo de `auth` «Ir a tomar asistencia» (1): 10 Scenarios.
+- [x] 5.1 Con la skill `frontend-feature`, construir la pantalla `/asistencia` y el acceso desde el inicio, según los Requirements de `asistencia` «Pantalla «Tomar asistencia»» (4 Scenarios) y «Guardar desde la pantalla» (5), y el Scenario nuevo de `auth` «Ir a tomar asistencia» (1): 10 Scenarios.
   - Las llamadas y sus tipos en `src/lib/api.ts`; `SelectorGrupoDeAsistencia` y `ListaAsistencia` en `src/components/`; los colores `presente` y `ausente` en `src/tema.ts`; la página en `src/pages/TomarAsistencia.tsx`; la ruta en `App.tsx` y el acceso en `Inicio.tsx` (design, «Frontend: la pantalla y sus piezas»). La fecha de hoy con la fecha local, no con `toISOString()`.
   - Tests en `frontend/tests/asistencia/` con `fetch` fingido y la fecha fijada solo en `Date`. Los tests de `frontend/tests/auth/` que ya existen no se tocan.
   - **Se verifica con** los 10 tests en rojo por el motivo correcto, la huella de `frontend/tests/` intacta después de implementar, y `python tasks.py front-test` y `cd frontend && npm run lint && npm run build` en verde.

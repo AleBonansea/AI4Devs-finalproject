@@ -4,6 +4,7 @@ import { ProveedorSesion } from "./lib/sesion";
 import Ingreso from "./pages/Ingreso";
 import Inicio from "./pages/Inicio";
 import RegistrarAlumno from "./pages/RegistrarAlumno";
+import TomarAsistencia from "./pages/TomarAsistencia";
 import RutaProtegida from "./routes/RutaProtegida";
 
 /**
@@ -18,6 +19,7 @@ export default function App() {
         <Route element={<RutaProtegida />}>
           <Route path="/" element={<Inicio />} />
           <Route path="/alumnos/nuevo" element={<RegistrarAlumno />} />
+          <Route path="/asistencia" element={<TomarAsistencia />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
