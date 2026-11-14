@@ -40,10 +40,10 @@
 
 ## 5. Pantalla «Registrar cargo»
 
-- [ ] 5.1 Con la skill `frontend-feature`, crear `src/lib/montos.ts` con `formatearMonto` y `formatearPorcentaje`, según design, «Frontend», y sumar la regla a CLAUDE.md, sección Frontend, junto a la de `fechas.ts`.
+- [x] 5.1 Con la skill `frontend-feature`, crear `src/lib/montos.ts` con `formatearMonto` y `formatearPorcentaje`, según design, «Frontend», y sumar la regla a CLAUDE.md, sección Frontend, junto a la de `fechas.ts`.
   - Test de las funciones puras en `frontend/tests/lib/montos.test.ts`, con los casos del design.
   - **Se verifica con** el test en rojo por el motivo correcto (no existe el módulo) y después en verde, la huella de `frontend/tests/` intacta, y `python tasks.py front-test` y `cd frontend && npm run lint && npm run build` en verde.
-- [ ] 5.2 Con la skill `frontend-feature`, el acceso solo para el Admin: `src/routes/RutaSoloAdmin.tsx`, la ruta `/cargos/nuevo` en `App.tsx` (con una página mínima que la 5.3 completa) y el botón en `Inicio.tsx`, según los Scenarios de `auth` «Ir a registrar un cargo», «El Coordinador no ve el acceso a cobrar» y «El Profesor no ve el acceso a cobrar», y el de `cargos` «Coordinador abre la pantalla»: 4 Scenarios.
+- [x] 5.2 Con la skill `frontend-feature`, el acceso solo para el Admin: `src/routes/RutaSoloAdmin.tsx`, la ruta `/cargos/nuevo` en `App.tsx` (con una página mínima que la 5.3 completa) y el botón en `Inicio.tsx`, según los Scenarios de `auth` «Ir a registrar un cargo», «El Coordinador no ve el acceso a cobrar» y «El Profesor no ve el acceso a cobrar», y el de `cargos` «Coordinador abre la pantalla»: 4 Scenarios.
   - Tests en `frontend/tests/auth/` y `frontend/tests/cargos/`. Los tests de `auth` que ya existen no se tocan.
   - **Se verifica con** los 4 tests en rojo por el motivo correcto y después en verde, la huella de `frontend/tests/` intacta después de implementar, y `python tasks.py front-test` y `cd frontend && npm run lint && npm run build` en verde.
 - [ ] 5.3 Con la skill `frontend-feature`, construir la pantalla `/cargos/nuevo`, según los Requirements de `cargos` «Pantalla «Registrar cargo»» (los 3 Scenarios que no son del Coordinador), «El desglose en la pantalla» (4) y «Registrar desde la pantalla» (4): 11 Scenarios.

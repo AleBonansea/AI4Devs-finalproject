@@ -114,6 +114,8 @@ Los colores salen de `src/tema.ts`, el único archivo del frontend donde un valo
 
 Las fechas que se muestran como texto se formatean en `src/lib/fechas.ts`, en dd/mm/aaaa. En los campos de formulario se usa `<input type="date">`, cuyo valor es siempre ISO.
 
+Los montos y porcentajes que se muestran se formatean en `src/lib/montos.ts` (`$ 85.000`, `$ 4.462,50`, `36,25 %`). Trabaja sobre el texto con dos decimales que manda la API, sin pasar por `Number` ni `parseFloat`: un centavo no se pierde en un `float`. Un monto nunca se calcula en el frontend: se muestra el que devolvió la API.
+
 Una pieza de interfaz nueva sale del catálogo de `src/components/` o se crea ahí con nombre propio, nunca improvisada dentro de una pantalla.
 
 ## Roles
