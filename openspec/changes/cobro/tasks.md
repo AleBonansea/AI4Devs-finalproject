@@ -36,7 +36,7 @@
 
 ## 4. Contrato
 
-- [ ] 4.1 Comprobar que `docs/api/openapi.json` tiene los cuatro endpoints nuevos con sus esquemas, que `CargoEntrada` no tiene ningún campo de monto ni de porcentaje y no admite campos extra, que `InscripcionDeFamilia` tiene solo sus seis campos, y que ningún endpoint existente cambió. **Se verifica con** `python tasks.py openapi-check` en verde y el diff de `openapi.json` limitado a lo nuevo.
+- [x] 4.1 Comprobar que `docs/api/openapi.json` tiene los cuatro endpoints nuevos con sus esquemas, que `CargoEntrada` no tiene ningún campo de monto ni de porcentaje y no admite campos extra, que `InscripcionDeFamilia` tiene solo sus seis campos, y que ningún endpoint existente cambió. **Se verifica con** `python tasks.py openapi-check` en verde y el diff de `openapi.json` limitado a lo nuevo.
 
 ## 5. Pantalla «Registrar cargo»
 
