@@ -326,3 +326,103 @@ export function guardarAsistencia(
 ): Promise<AsistenciaDelGrupo> {
   return api.put<AsistenciaDelGrupo>(`/grupos/${grupoId}/asistencias/${fecha}`, { asistencias });
 }
+
+// --- Cargos ---------------------------------------------------------------------
+// Los tipos copian los esquemas del contrato (docs/api/openapi.json). Los montos
+// y porcentajes son texto (`"85000.00"`), nunca `number`: no pasan por un flotante.
+
+export type Modalidad = "mes" | "quincena" | "semana" | "dia";
+
+/** `CalculoCargo`: como se calcula un tipo de cargo. */
+export type CalculoCargo = "tarifario" | "monto_fijo";
+
+/** `TipoDeCargoOpcion`: un tipo de cargo de la temporada vigente. */
+export interface TipoDeCargoOpcion {
+  id: number;
+  nombre: string;
+  calculo: CalculoCargo;
+  monto_fijo: string | null;
+}
+
+/** `PeriodoOpcion`: un Mes, Quincena o Semana de la temporada vigente. */
+export interface PeriodoOpcion {
+  id: number;
+  modalidad: Modalidad;
+  nombre: string;
+  fecha_desde: string;
+  fecha_hasta: string;
+}
+
+/** `OpcionesDeCargo`: lo que la pantalla necesita para armar un cargo. */
+export interface OpcionesDeCargo {
+  tipos_cargo: TipoDeCargoOpcion[];
+  periodos: PeriodoOpcion[];
+}
+
+/** `InscripcionDeFamilia`: un hijo inscripto en un turno de la temporada vigente. */
+export interface InscripcionDeFamilia {
+  inscripcion_id: number;
+  alumno_id: number;
+  nombre: string;
+  apellido: string;
+  turno: Turno;
+  grupo: string;
+}
+
+/**
+ * `CargoEntrada`: QUE se cobra. Nunca lleva un monto: lo calcula la API.
+ * Solo se mandan las claves que corresponden al tipo y a la modalidad.
+ */
+export interface CargoEntrada {
+  alumno_id: number;
+  tipo_cargo_id: number;
+  inscripcion_id?: number | null;
+  modalidad?: Modalidad | null;
+  periodo_cobro_id?: number | null;
+  fecha_dia?: string | null;
+}
+
+/** `CargoSimulado`: el desglose que calcula la API, sin guardar nada. */
+export interface CargoSimulado {
+  familia_id: number;
+  categoria_aplicada: CategoriaFamilia;
+  cantidad_hijos_aplicada: number | null;
+  monto_base: string;
+  porcentaje_aplicado: string;
+  monto_total: string;
+}
+
+/** `CargoRegistrado`: la respuesta 201, con el saldo pendiente de la familia. */
+export interface CargoRegistrado extends CargoSimulado {
+  id: number;
+  temporada_id: number;
+  alumno_id: number;
+  tipo_cargo_id: number;
+  inscripcion_id: number | null;
+  modalidad: Modalidad | null;
+  periodo_cobro_id: number | null;
+  fecha_dia: string | null;
+  creado_por: number;
+  creado_en: string;
+  saldo_pendiente: string;
+}
+
+/** Los tipos de cargo y los periodos de la temporada vigente. */
+export function opcionesDeCargo(): Promise<OpcionesDeCargo> {
+  return api.get<OpcionesDeCargo>("/cargos/opciones");
+}
+
+/** Los hijos inscriptos de la familia en la temporada vigente, uno por turno. */
+export function inscripcionesDeFamilia(familiaId: number): Promise<InscripcionDeFamilia[]> {
+  return api.get<InscripcionDeFamilia[]>(`/familias/${familiaId}/inscripciones`);
+}
+
+/** El desglose de un cargo, calculado por la API. No guarda nada. */
+export function simularCargo(entrada: CargoEntrada): Promise<CargoSimulado> {
+  return api.post<CargoSimulado>("/cargos/simulacion", entrada);
+}
+
+/** Registra el cargo; la API lo calcula de nuevo y devuelve lo guardado. */
+export function registrarCargo(entrada: CargoEntrada): Promise<CargoRegistrado> {
+  return api.post<CargoRegistrado>("/cargos", entrada);
+}
