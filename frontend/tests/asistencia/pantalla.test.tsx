@@ -55,6 +55,10 @@ describe("Pantalla «Tomar asistencia»", () => {
 
   it("con un solo grupo, Grupo queda en Delfines · Mañana, Fecha en 2027-01-05 y se ven los tres alumnos en orden sin elegir", async () => {
     fijarHoy("2027-01-05");
+    // Guarda: en el huso de Argentina a las 21:30 del 05, en UTC ya es el 06.
+    // Si alguien cambia la hora o el huso, este test deja de distinguir fecha
+    // local de fecha UTC y tiene que fallar aca, no aprobar a ciegas.
+    expect(new Date().toISOString().slice(0, 10)).toBe("2027-01-06");
     const api = fingirApi({
       grupos: [DELFINES_MANANA],
       abrir: (grupoId, fecha) =>

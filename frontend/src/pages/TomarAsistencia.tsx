@@ -14,7 +14,7 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import ListaAsistencia from "../components/ListaAsistencia";
@@ -48,6 +48,9 @@ export default function TomarAsistencia() {
   const [fecha, setFecha] = useState<string>(hoyLocal);
   const [asistencia, setAsistencia] = useState<AsistenciaDelGrupo | null>(null);
   const [marcas, setMarcas] = useState<Record<number, boolean | null>>({});
+  // Lo que trajo la ultima respuesta de la API (GET o PUT): la base contra la
+  // que se compara para saber si hay algo que guardar.
+  const [guardadas, setGuardadas] = useState<Record<number, boolean | null>>({});
   const [cargando, setCargando] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [errorAlAbrir, setErrorAlAbrir] = useState<string | null>(null);
@@ -57,6 +60,7 @@ export default function TomarAsistencia() {
   useEffect(() => {
     setAsistencia(null);
     setMarcas({});
+    setGuardadas({});
     setErrorAlAbrir(null);
     setErrorAlGuardar(null);
     setExito(false);
@@ -73,6 +77,7 @@ export default function TomarAsistencia() {
         if (!vigente) return;
         setAsistencia(respuesta);
         setMarcas(marcasDe(respuesta));
+        setGuardadas(marcasDe(respuesta));
         setCargando(false);
       })
       .catch((causa: unknown) => {
@@ -85,21 +90,40 @@ export default function TomarAsistencia() {
     };
   }, [grupoId, fecha]);
 
+  // Grupo y fecha vigentes: la respuesta de un guardado de otro grupo o fecha se descarta.
+  const vigentes = useRef({ grupoId, fecha });
+  useEffect(() => {
+    vigentes.current = { grupoId, fecha };
+  });
+
   const marcadas: AsistenciaMarcada[] = Object.entries(marcas).flatMap(([id, presente]) =>
     presente === null ? [] : [{ inscripcion_id: Number(id), presente }],
   );
 
+  // Hay algo que guardar solo si alguna marca difiere de lo que trajo la API.
+  const hayCambios = Object.entries(marcas).some(
+    ([id, presente]) => presente !== (guardadas[Number(id)] ?? null),
+  );
+
+  function sigueVigente(grupo: number, fechaPedida: string): boolean {
+    return vigentes.current.grupoId === grupo && vigentes.current.fecha === fechaPedida;
+  }
+
   async function alGuardar() {
-    if (grupoId === null || guardando || marcadas.length === 0) return;
+    if (grupoId === null || guardando || !hayCambios) return;
+    const fechaGuardada = fecha;
     setGuardando(true);
     setExito(false);
     setErrorAlGuardar(null);
     try {
-      const respuesta = await guardarAsistencia(grupoId, fecha, marcadas);
+      const respuesta = await guardarAsistencia(grupoId, fechaGuardada, marcadas);
+      if (!sigueVigente(grupoId, fechaGuardada)) return;
       setAsistencia(respuesta);
       setMarcas(marcasDe(respuesta));
+      setGuardadas(marcasDe(respuesta));
       setExito(true);
     } catch (causa) {
+      if (!sigueVigente(grupoId, fechaGuardada)) return;
       // Se conservan las marcas: no se pierde lo que se cargo.
       setErrorAlGuardar(causa instanceof ErrorDeApi ? causa.message : MENSAJE_INESPERADO);
     } finally {
@@ -121,11 +145,16 @@ export default function TomarAsistencia() {
           </Stack>
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-            <SelectorGrupoDeAsistencia valor={grupoId} onCambiar={setGrupoId} />
+            <SelectorGrupoDeAsistencia
+              valor={grupoId}
+              onCambiar={setGrupoId}
+              disabled={guardando}
+            />
             <TextField
               label="Fecha"
               type="date"
               value={fecha}
+              disabled={guardando}
               onChange={(evento) => setFecha(evento.target.value)}
               // El campo de fecha siempre muestra su mascara: la etiqueta va arriba.
               slotProps={{ inputLabel: { shrink: true } }}
@@ -150,6 +179,9 @@ export default function TomarAsistencia() {
                 alumnos={asistencia.alumnos}
                 marcas={marcas}
                 onMarcar={(inscripcionId, presente) => {
+                  // Lo que la API ya trajo tomado no vuelve a «sin elegir»: se
+                  // corrige a la otra opcion, no se quita.
+                  if (presente === null && guardadas[inscripcionId] != null) return;
                   setExito(false);
                   setMarcas((anteriores) => ({ ...anteriores, [inscripcionId]: presente }));
                 }}
@@ -157,7 +189,7 @@ export default function TomarAsistencia() {
               {errorAlGuardar ? <Alert severity="error">{errorAlGuardar}</Alert> : null}
               {exito ? <Alert severity="success">Asistencia guardada.</Alert> : null}
               <Stack alignItems="flex-start">
-                <Button onClick={alGuardar} disabled={marcadas.length === 0 || guardando}>
+                <Button onClick={alGuardar} disabled={!hayCambios || guardando}>
                   Guardar
                 </Button>
               </Stack>

@@ -82,6 +82,11 @@ jobs:
   frontend:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      # El huso de la escuela, como en tasks.py y vite.config.ts. El runner
+      # esta en UTC, donde la fecha local y la de toISOString() coinciden
+      # hasta las 21 h de Argentina y un test de la fecha de hoy no discrimina.
+      TZ: America/Argentina/Buenos_Aires
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

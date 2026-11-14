@@ -97,14 +97,17 @@ export function tresAlumnos(
 // ---------------------------------------------------------------------------
 
 /**
- * Fija la fecha del dispositivo en `AAAA-MM-DD`, a las 10 de la manana
- * locales. Solo se finge `Date`, para no dormir los temporizadores de
- * `userEvent`. Se deshace con `vi.useRealTimers()` en el `afterEach`.
+ * Fija la fecha del dispositivo en `AAAA-MM-DD`, a las 21:30 locales. Los
+ * tests corren con `TZ=America/Argentina/Buenos_Aires` (UTC-3), asi que a esa
+ * hora en UTC ya es el dia siguiente: una pantalla que tome "hoy" de la fecha
+ * UTC (`toISOString`) en lugar de la local muestra un dia de mas. Solo se
+ * finge `Date`, para no dormir los temporizadores de `userEvent`. Se deshace
+ * con `vi.useRealTimers()` en el `afterEach`.
  */
 export function fijarHoy(fecha: string = HOY) {
   const [anio, mes, dia] = fecha.split("-").map(Number) as [number, number, number];
   vi.useFakeTimers({ toFake: ["Date"] });
-  vi.setSystemTime(new Date(anio, mes - 1, dia, 10, 0, 0));
+  vi.setSystemTime(new Date(anio, mes - 1, dia, 21, 30, 0));
 }
 
 // ---------------------------------------------------------------------------

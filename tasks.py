@@ -53,7 +53,12 @@ def ejecutable(nombre: str) -> str:
     )
 
 
-def correr(partes: list[str], cwd: Path = RAIZ, permitir_fallo: bool = False) -> int:
+def correr(
+    partes: list[str],
+    cwd: Path = RAIZ,
+    permitir_fallo: bool = False,
+    entorno_extra: dict[str, str] | None = None,
+) -> int:
     """Corre un comando y corta con su mismo codigo de salida.
 
     Propagar el codigo no es un detalle: es lo que hace que el CI falle
@@ -67,6 +72,7 @@ def correr(partes: list[str], cwd: Path = RAIZ, permitir_fallo: bool = False) ->
     entorno = dict(os.environ)
     if BIN.is_dir():
         entorno["PATH"] = str(BIN) + os.pathsep + entorno.get("PATH", "")
+    entorno.update(entorno_extra or {})
     codigo = subprocess.run(partes, cwd=cwd, env=entorno).returncode
     if codigo != 0 and not permitir_fallo:
         sys.exit(codigo)
@@ -174,9 +180,16 @@ def front_lint() -> None:
     correr([NPM, "run", "build"], cwd=FRONTEND)
 
 
+# Los tests del frontend corren en el huso de la escuela. Esta en tres
+# lugares (aca, vite.config.ts y el workflow del CI) para que la maquina
+# local y el CI no se separen: con el huso del runner, que es UTC, un
+# toISOString() en lugar de la fecha local pasaba en verde.
+HUSO_DE_LOS_TESTS = "America/Argentina/Buenos_Aires"
+
+
 def front_test() -> None:
     """Tests del frontend (Vitest)."""
-    correr([NPM, "run", "test"], cwd=FRONTEND)
+    correr([NPM, "run", "test"], cwd=FRONTEND, entorno_extra={"TZ": HUSO_DE_LOS_TESTS})
 
 
 def front_dev() -> None:

@@ -18,9 +18,11 @@ interface Props {
   /** El id del grupo elegido, o null. */
   valor: number | null;
   onCambiar: (grupoId: number | null) => void;
+  /** Deshabilitado, por ejemplo mientras se guarda. */
+  disabled?: boolean;
 }
 
-export default function SelectorGrupoDeAsistencia({ valor, onCambiar }: Props) {
+export default function SelectorGrupoDeAsistencia({ valor, onCambiar, disabled = false }: Props) {
   const [grupos, setGrupos] = useState<GrupoParaInscribir[]>([]);
   const [cargando, setCargando] = useState(true);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
@@ -62,6 +64,7 @@ export default function SelectorGrupoDeAsistencia({ valor, onCambiar }: Props) {
     <TextField
       select
       label="Grupo"
+      disabled={disabled}
       value={valorVisible}
       onChange={(evento) => {
         if (evento.target.value === "") return;
