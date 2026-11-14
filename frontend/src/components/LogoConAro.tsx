@@ -9,8 +9,10 @@ import { colores } from "../tema";
  * ocho gajos que alterna el naranja del dinero con blanco. Se usa grande en
  * el encuadre de las pantallas sin sesion y chico en la barra superior.
  */
+// El grande es mas que los 108 px del prototipo: a 140 el logo se lee mejor
+// en el ingreso (decidido con el usuario, probado en el navegador).
 const MEDIDAS = {
-  grande: { lado: 108, aro: 9 },
+  grande: { lado: 140, aro: 9 },
   chico: { lado: 46, aro: 4 },
 } as const;
 
