@@ -21,6 +21,10 @@ Cada cargo SHALL guardar temporada, familia, alumno, tipo de cargo, categoría a
 - **WHEN** se inserta un cargo con `porcentaje_aplicado` 100.01, y aparte otro con -0.01
 - **THEN** la base rechaza las dos filas
 
+#### Scenario: Porcentaje en el límite de 100
+- **WHEN** se inserta un cargo con `monto_base` 8000.00, `porcentaje_aplicado` 100.00 y `monto_total` 0.00
+- **THEN** la fila queda guardada
+
 ### Requirement: La forma del cargo según el tipo y la modalidad
 Un cargo sin modalidad (monto fijo) MUST NOT tener inscripción, período, fecha ni cantidad de hijos. Un cargo con modalidad SHALL tener inscripción; período si es Mes, Quincena o Semana, y del mismo modo que el cargo; fecha si es Día; y cantidad de hijos (1 o más) si y solo si es Mes. La base MUST rechazar cualquier otra combinación.
 
@@ -148,6 +152,11 @@ El total del Abono SHALL ser la tarifa base del turno de la inscripción y la mo
 - **WHEN** un Admin registra un «Abono» del Día para él
 - **THEN** `monto_total` es `"500.03"`, no `"500.02"`
 
+#### Scenario: Descuento del cien por ciento
+- **GIVEN** una familia `empleado` con un hijo inscripto en el turno mañana; la tarifa base de la mañana para el Día es 8000.00 y el descuento de `empleado` para el Día es 100.00
+- **WHEN** un Admin registra un «Abono» del Día para él
+- **THEN** la respuesta es 201 con `porcentaje_aplicado` `"100.00"` y `monto_total` `"0.00"`
+
 ### Requirement: El tramo de hijos del Mes
 En el Mes, la cantidad de hijos SHALL ser la de alumnos de la familia inscriptos en el mismo turno y la misma temporada que la inscripción del cargo, incluido el propio. Con 4 o más vale el tramo «4 o más». El porcentaje del tramo SHALL aplicarse a cada hijo, incluido el primero.
 
@@ -177,6 +186,11 @@ En el Mes, la cantidad de hijos SHALL ser la de alumnos de la familia inscriptos
 - **WHEN** un Admin registra para Juan un «Abono» del Mes con la inscripción de la mañana y otro con la de la tarde, los dos del «Mes 1»
 - **THEN** el de la mañana tiene `cantidad_hijos_aplicada` 2 y `monto_total` `"85000.00"`
 - **AND** el de la tarde tiene `cantidad_hijos_aplicada` 1 y `monto_total` `"72000.00"`
+
+#### Scenario: Un alumno de otra familia en el mismo turno no cuenta
+- **GIVEN** Juan, único hijo de una familia `no_socio`, inscripto en «Delfines» mañana, y Sofía, de otra familia, inscripta en el mismo grupo; la tarifa base de la mañana para el Mes es 100000.00 y los descuentos de `no_socio` en el Mes son 0.00, 10.00, 15.00 y 20.00 para 1, 2, 3 y 4 o más hijos
+- **WHEN** un Admin registra un «Abono» del Mes para Juan, turno mañana
+- **THEN** `cantidad_hijos_aplicada` es 1 y `monto_total` `"100000.00"`
 
 #### Scenario: Un hermano de otra temporada no cuenta
 - **GIVEN** una familia `empleado` con Juan inscripto en el turno mañana de 2026-27 y Ana inscripta en el turno mañana solo de la temporada cerrada 2025-26
@@ -364,6 +378,12 @@ El registro y la simulación SHALL responder 409 cuando ya existe el mismo cargo
 - **WHEN** un Admin registra otra vez un «Abono» del Día de Juan, turno mañana, del 2027-01-05
 - **THEN** la respuesta es 409 con `detail` `El alumno ya tiene un cargo «Abono» del día 05/01/2027 en el turno mañana.`
 
+#### Scenario: El repetido llega después de la comprobación previa
+- **GIVEN** un «Abono» del Mes de Juan, turno mañana, «Mes 1», que otro pedido guardó después de que este pasó su comprobación de repetido (el doble clic)
+- **WHEN** el registro intenta guardar el mismo cargo
+- **THEN** la respuesta es 409 con `detail` `El alumno ya tiene un cargo «Abono» de «Mes 1» en el turno mañana.`, no 500
+- **AND** la base sigue teniendo un solo cargo de esa inscripción y período
+
 #### Scenario: Dos Preinscripciones del mismo alumno
 - **GIVEN** una «Preinscripción» de Juan en 2026-27, ya registrada
 - **WHEN** un Admin registra otra «Preinscripción» de 2026-27 para Juan
@@ -458,14 +478,19 @@ Con todos los datos del cargo elegidos, la pantalla SHALL pedir la simulación a
 - **THEN** el desglose que queda es el del «Mes 2»
 
 ### Requirement: Registrar desde la pantalla
-`Registrar cargo` SHALL enviar a `POST /api/v1/cargos` solo qué se cobra, sin ningún monto, y estar deshabilitado mientras no haya un desglose del cargo elegido y mientras se registra. Al registrarse, muestra `Cargo registrado. Saldo pendiente de la familia: $ X.` y deja la familia elegida y el resto de los campos vacíos.
+`Registrar cargo` SHALL enviar a `POST /api/v1/cargos` solo qué se cobra, sin ningún monto, y estar deshabilitado mientras no haya un desglose del cargo elegido y mientras se registra. Al registrarse, muestra `Cargo registrado por $ T. Saldo pendiente de la familia: $ S.`, con el total y el saldo que devolvió el registro, y deja la familia elegida y el resto de los campos vacíos.
 
 #### Scenario: Registrar el Abono del Mes
 - **GIVEN** la sesión de un Admin con el desglose del «Abono» del Mes de Juan, «Mes 1», a la vista
-- **WHEN** pulsa `Registrar cargo` y la API responde 201 con `saldo_pendiente` `"105000.00"`
+- **WHEN** pulsa `Registrar cargo` y la API responde 201 con `monto_total` `"85000.00"` y `saldo_pendiente` `"105000.00"`
 - **THEN** el cuerpo enviado tiene `alumno_id`, `tipo_cargo_id`, `inscripcion_id`, `modalidad` y `periodo_cobro_id`, y ningún campo de monto ni de porcentaje
-- **AND** ve `Cargo registrado. Saldo pendiente de la familia: $ 105.000.`
+- **AND** ve `Cargo registrado por $ 85.000. Saldo pendiente de la familia: $ 105.000.`
 - **AND** `Familia` sigue en `Pérez – Ana` y `Alumno y turno` y `Tipo de cargo` quedan vacíos
+
+#### Scenario: El total registrado difiere del simulado
+- **GIVEN** la sesión de un Admin con el desglose del «Abono» del Mes de Juan a la vista, con `Total del cargo` `$ 85.000`
+- **WHEN** pulsa `Registrar cargo` y la API responde 201 con `monto_total` `"80000.00"` (se inscribió un hermano entre la simulación y el registro) y `saldo_pendiente` `"80000.00"`
+- **THEN** ve `Cargo registrado por $ 80.000. Saldo pendiente de la familia: $ 80.000.`
 
 #### Scenario: Sin desglose no se registra
 - **GIVEN** la sesión de un Admin con familia, alumno y «Abono» elegidos, sin modalidad

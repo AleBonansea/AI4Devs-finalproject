@@ -78,7 +78,20 @@
 
 ## 7. Revisión adversarial
 
-- [ ] 7.1 Un pase del subagente `adversarial-reviewer` sobre el change terminado, antes del pull request. Rige `REVIEW.md`, «Cuándo se deja de revisar». **Se verifica con** sus hallazgos resueltos o justificados por escrito en esta tarea.
+- [x] 7.1 Un pase del subagente `adversarial-reviewer` sobre el change terminado, antes del pull request. Rige `REVIEW.md`, «Cuándo se deja de revisar». **Se verifica con** sus hallazgos resueltos o justificados por escrito en esta tarea.
+  - **Primer pase (14/11/2026):** dos graves (los dos de la categoría «el verde no significa nada»), una sugerencia y dos preguntas. Reabren el change con las tareas 7.2 a 7.4.
+    - [GRAVE] El test de la carrera inserta el cargo antes del pedido: corta la comprobación previa y nunca llega al `IntegrityError` del índice único, así que borrar ese manejo deja el test en verde. → 7.3, con la comprobación previa como punto de prueba declarado (opción elegida por el usuario).
+    - [GRAVE] El `CHECK` del porcentaje se prueba solo de afuera en el límite de 100: nada inserta un cargo al 100.00, y un `< 100` pasaría la suite mientras el tarifario admite 100. → 7.3.
+    - Sugerencia: el filtro de familia en el conteo de hijos solo se guarda de forma indirecta. → 7.3, con un test directo.
+    - Pregunta: si entre la simulación y el registro cambia el total, el mensaje de éxito no lo muestra. Decidido por el usuario: el mensaje lleva el total registrado. → 7.4.
+    - Pregunta: dos hermanos cobrados a la vez mientras se inscribe un tercero pueden quedar con distinto tramo. Aceptado y anotado en el design, «Risks / Trade-offs».
+    - Observación del revisor, no hallazgo: los archivos del frontend que figuran modificados son solo de final de línea (ver 6.2); no entran en ningún commit.
+  - **Resolución:** en 7.2 a 7.4. Según `REVIEW.md`, un segundo pase solo reabre el change por un hallazgo grave.
+- [x] 7.2 Incorporar al delta de `cargos` y al design lo decidido sobre el primer pase. **Se verifica con** los Scenarios nuevos escritos: «Porcentaje en el límite de 100», «Descuento del cien por ciento», «Un alumno de otra familia en el mismo turno no cuenta», «El repetido llega después de la comprobación previa» y «El total registrado difiere del simulado», más el cambio de «Registrar el Abono del Mes» y del texto de «Registrar desde la pantalla»; y en el design, el punto de prueba `existe_cargo_repetido`, el mensaje con el total y el riesgo del tramo simultáneo.
+- [ ] 7.3 Con la skill `backend-feature`, según los Scenarios «Porcentaje en el límite de 100», «Descuento del cien por ciento», «Un alumno de otra familia en el mismo turno no cuenta» y «El repetido llega después de la comprobación previa»: 4 Scenarios.
+  - La comprobación previa pasa a llamarse `existe_cargo_repetido` y queda pública (design, «El servicio»). El test de la carrera la reemplaza con `monkeypatch`; el que inserta antes del pedido se queda como está.
+  - **Se verifica con** los tests en rojo por el motivo correcto donde el código no exista todavía (la función con su nombre nuevo); los que ya pasen, comprobados con una mutación (el `CHECK` en `< 100`, sin el manejo del `IntegrityError`, sin el filtro de familia) que los pone en rojo; la huella intacta; `python tasks.py test`, `lint`, `typecheck` y `openapi-check` en verde.
+- [ ] 7.4 Con la skill `frontend-feature`, el mensaje de éxito con el total registrado, según los Scenarios «Registrar el Abono del Mes» (modificado) y «El total registrado difiere del simulado»: 2 Scenarios. El test existente de «Registrar el Abono del Mes» lo corrige el test-writer, que es quien lo escribió. **Se verifica con** los 2 tests en rojo por el motivo correcto, la huella de `frontend/tests/` intacta después de implementar, y `python tasks.py front-test` y `front-lint` en verde.
 
 ## Workflow follow-up
 
