@@ -38,6 +38,12 @@ export default function Inicio() {
             <Button component={Link} to="/asistencia">
               Tomar asistencia
             </Button>
+            {/* Cobrar es solo del Admin: al resto ni se le ofrece. */}
+            {usuario.rol === "admin" && (
+              <Button component={Link} to="/cargos/nuevo">
+                Registrar cargo
+              </Button>
+            )}
             <Button variant="outlined" onClick={alSalir}>
               Salir
             </Button>

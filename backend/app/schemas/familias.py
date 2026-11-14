@@ -2,7 +2,21 @@
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models.enums import CategoriaFamilia
+from app.models.enums import CategoriaFamilia, Turno
+
+
+class InscripcionDeFamilia(BaseModel):
+    """Una inscripción de un hijo de la familia en la temporada vigente. Solo
+    estos seis campos: ningún dato médico ni de personas."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    inscripcion_id: int
+    alumno_id: int
+    nombre: str
+    apellido: str
+    turno: Turno
+    grupo: str
 
 
 class FamiliaEncontrada(BaseModel):
