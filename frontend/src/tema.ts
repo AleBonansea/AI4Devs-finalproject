@@ -11,32 +11,52 @@ import { createTheme } from "@mui/material/styles";
  * vez, y a los dos meses hay catorce grises y ninguno es el del sistema.
  *
  * Cada nombre dice PARA QUE sirve, no como se ve. `deuda` sigue significando
- * lo mismo si manana el rojo cambia de tono; `rojoClaro` no.
+ * lo mismo si manana el naranja cambia de tono; `naranjaOscuro` no.
+ *
+ * Los valores salen del prototipo que valido el cliente (docs/previews/).
+ * Las decisiones estan en openspec/changes/paleta-y-encuadre/design.md.
  */
+const accion = "#1870b0";
+const dinero = "#d85018";
+const textoTenue = "#58717f";
+
 export const colores = {
-  marca: "#1b5e20",
-  marcaClara: "#4c8c4a",
-  acento: "#f9a825",
+  // Botones, item activo del menu, enlaces. Es el `primary` de MUI.
+  accion,
+  // El dinero: saldo a cobrar y la accion de cobrar. Va en negrita o grande:
+  // contra blanco da 4,13:1, que no alcanza para texto corrido.
+  dinero,
+  // La marca es SOLO el logotipo y el titulo de las pantallas sin sesion.
+  // No se mapea a la paleta de MUI para que ningun boton la tome por defecto.
+  marca: "#108038",
 
-  fondo: "#f6f7f5",
+  fondo: "#eef5f9",
   superficie: "#ffffff",
-  borde: "#dfe3dc",
+  borde: "#d5e4ec",
 
-  texto: "#1f2420",
-  textoTenue: "#5b625c",
+  texto: "#14303f",
+  textoTenue,
 
   // Estados del negocio. Se nombran por lo que significan en el dominio.
-  deuda: "#b3261e",
-  saldado: "#1b5e20",
-  pendiente: "#9a6700",
-  anulado: "#5b625c",
+  // La deuda es dinero que falta cobrar, no una falla: va en el naranja del
+  // dinero, como en el prototipo.
+  deuda: dinero,
+  // Mismo valor que `marca`, pero otro nombre: si el estado cambia de tono,
+  // el logotipo no se mueve.
+  saldado: "#108038",
+  pendiente: "#986000",
+  anulado: textoTenue,
+
+  // Fallos de la API y de validacion. No es `deuda`: si lo fuera, un error
+  // de formulario saldria del color del dinero.
+  error: "#b3261e",
 } as const;
 
 export const tema = createTheme({
   palette: {
-    primary: { main: colores.marca, light: colores.marcaClara },
-    secondary: { main: colores.acento },
-    error: { main: colores.deuda },
+    primary: { main: colores.accion },
+    secondary: { main: colores.dinero },
+    error: { main: colores.error },
     success: { main: colores.saldado },
     warning: { main: colores.pendiente },
     background: { default: colores.fondo, paper: colores.superficie },
