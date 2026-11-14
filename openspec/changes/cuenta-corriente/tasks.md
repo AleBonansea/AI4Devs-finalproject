@@ -32,7 +32,7 @@
 
 ## 4. Contrato
 
-- [ ] 4.1 Comprobar que `docs/api/openapi.json` tiene los dos endpoints nuevos con sus esquemas, que `PagoEntrada` tiene solo `monto` (texto) y `fecha_pago` y no admite campos extra, que `CargoEnCuenta` tiene solo sus catorce campos, y que ningún endpoint existente cambió de forma. **Se verifica con** `python tasks.py openapi-check` en verde y el diff de `openapi.json` limitado a lo nuevo (más la descripción de `saldo_pendiente`, si cambió).
+- [x] 4.1 Comprobar que `docs/api/openapi.json` tiene los dos endpoints nuevos con sus esquemas, que `PagoEntrada` tiene solo `monto` (texto) y `fecha_pago` y no admite campos extra, que `CargoEnCuenta` tiene solo sus catorce campos, y que ningún endpoint existente cambió de forma. **Se verifica con** `python tasks.py openapi-check` en verde y el diff de `openapi.json` limitado a lo nuevo (más la descripción de `saldo_pendiente`, si cambió).
 
 ## 5. Pantalla «Cuenta corriente»
 
