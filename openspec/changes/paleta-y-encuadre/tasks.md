@@ -23,6 +23,9 @@
     - los botones salen en mayúsculas;
     - la fuente `Inter` no se carga.
 
+- [ ] 2.4 Con la skill `frontend-feature`: el `test-writer` agrega el test del Scenario «En el aviso, el encabezado va antes del aviso» (Requirement «Encabezado de las pantallas sin sesión»), que se sumó por el hallazgo 2 del pase adversarial. Como el encuadre ya está hecho, se espera que pase. Se comprueba que no es vacío alterando el orden de `CambioPendiente.tsx` de forma temporal, y se restaura. Verificación: el test falla con el orden alterado y pasa con el real; toda la suite en verde y la huella nueva congelada.
+- [ ] 2.5 Reemplazar «Escuelita de Verano» por «Escuela de Verano» en `frontend/src/pages/Inicio.tsx` y en el `<title>` de `frontend/index.html`. Es un texto que ningún Scenario fija, así que se hace directo, sin subagentes. Verificación: un `grep -rn "Escuelita de Verano" frontend/src frontend/index.html` sin resultados, y la suite, el lint (`eslint` más `prettier --check --end-of-line auto`) y el build en verde.
+
 ## 3. Documentación
 
 - [x] 3.1 Referenciar `docs/previews/00-ingreso.png` en `1-descripcion-general-del-producto.md`, sección 1.3, debajo del punto «1. Ingreso», con el mismo formato que las otras capturas. Aclarar que el recuadro y los botones por rol de la captura son del prototipo y que el sistema tiene un solo botón. Verificación: la imagen se ve en la vista previa del Markdown y la ruta existe.

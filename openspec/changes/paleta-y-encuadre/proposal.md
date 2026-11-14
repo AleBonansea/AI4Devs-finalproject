@@ -11,6 +11,7 @@ El tema actual (`frontend/src/tema.ts`) usa el verde de la marca como color de a
 - **Paleta del prototipo en `tema.ts`**. Los valores salen de muestrear `docs/previews/01-inicio.png` y `00-ingreso.png`. `palette.primary` pasa a ser el color de acción (azul `#1870b0`), no la marca. La marca (`#108038`) queda para el logotipo y el título de las pantallas sin sesión, nunca para un botón. El naranja `#d85018` es el dinero: el saldo a cobrar y la acción de cobrar. Los grises pasan a ser fríos.
 - **`deuda` se unifica con el naranja del dinero**, como en el prototipo. El rojo deja de ser `deuda` y pasa a llamarse `error`, solo para fallos (errores de la API y de validación). Ver design.md, decisión 2.
 - **Encuadre de las pantallas sin sesión**, como pieza propia en `src/components/`: el logo de la escuela, título `Escuela de Verano` en el color de marca, subtítulo `Centro Médico · Administración de la temporada`, y debajo el contenido de cada pantalla. Lo usan el ingreso y el aviso de cambio de contraseña pendiente.
+- **El nombre de la aplicación es «Escuela de Verano»**, decidido por el usuario al aplicar. «Escuelita de Verano» se reemplaza en el inicio y en el `<title>` de `frontend/index.html`, para que no se vea un nombre antes de ingresar y otro después. La spec del inicio no fija el nombre, así que esto no cambia ningún Requirement.
 - **Logo** servido como `/logo.png` desde `frontend/public/logo.png`. Lo provee el usuario y entra al repo con este change.
 - **Captura del ingreso** (`docs/previews/00-ingreso.png`, exportada del prototipo por el usuario, entra al repo con este change) referenciada en `1-descripcion-general-del-producto.md`, en la sección 1.3, junto a las otras capturas.
 
@@ -31,7 +32,10 @@ Ninguna.
 
 ### Modified Capabilities
 
-- `auth`: se agregan dos Requirements de interfaz, el encabezado de las pantallas sin sesión y el botón único de ingreso. Los Requirements existentes de la pantalla de ingreso y del aviso de cambio pendiente no cambian.
+- `auth`: se agregan dos Requirements de interfaz, el encabezado de las pantallas sin sesión y el botón único de ingreso.
+  - Se modifica «Aviso de cambio de contraseña pendiente»: decía «solo un aviso» y ahora el aviso va debajo del encabezado. Sin ese cambio, la spec archivada se contradecía (pase adversarial, hallazgo 3).
+  - Sus Scenarios no cambian.
+  - La pantalla de ingreso no cambia.
 
 ## Impact
 
