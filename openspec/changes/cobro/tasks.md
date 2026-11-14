@@ -13,7 +13,7 @@
 
 ## 2. El cálculo
 
-- [ ] 2.1 Con la skill `backend-feature`, crear `app/services/calculo_cargo.py` con `calcular_abono`, `calcular_monto_fijo`, `TablaDescuentos`, `Desglose` y `FaltaDescuento`, según design, «El cálculo, en `app/services/calculo_cargo.py`, como función pura».
+- [x] 2.1 Con la skill `backend-feature`, crear `app/services/calculo_cargo.py` con `calcular_abono`, `calcular_monto_fijo`, `TablaDescuentos`, `Desglose` y `FaltaDescuento`, según design, «El cálculo, en `app/services/calculo_cargo.py`, como función pura».
   - Función pura: no importa nada de `app.core.db` ni de los modelos de SQLAlchemy, solo los enumerados.
   - Tests en `backend/tests/functional/cargos/test_calculo_cargo.py`, con los casos de la lista del design, sin base ni cliente.
   - **Se verifica con** los tests en rojo por el motivo correcto (no existe el módulo) y después en verde; el caso 1000.05 al 50 % en rojo a propósito si se cambia `ROUND_HALF_UP` por el redondeo por defecto, y revertido; `python tasks.py test`, `lint` y `typecheck` en verde.
