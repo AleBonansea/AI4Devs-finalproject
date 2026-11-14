@@ -10,13 +10,16 @@ from sqlalchemy.orm import Session
 from app.core.db import obtener_sesion
 from app.core.deps import MENSAJE_GRUPO_NO_ASIGNADO, MENSAJE_SESION_INVALIDA, grupo_asignado
 from app.models.usuario import Usuario
-from app.schemas.asistencias import AsistenciaDelGrupo
+from app.schemas.asistencias import AsistenciaDelGrupo, AsistenciaEntrada
 from app.schemas.errores import respuesta_de_error
 from app.services.asistencias import (
     MENSAJE_GRUPO_INEXISTENTE,
     FechaFueraDeTemporada,
+    GrupoInactivo,
     GrupoInexistente,
+    TemporadaCerrada,
     abrir_asistencia,
+    guardar_asistencia,
 )
 
 router = APIRouter(prefix="/grupos/{grupo_id}/asistencias", tags=["asistencias"])
@@ -45,6 +48,42 @@ def abrir(
     except GrupoInexistente:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=MENSAJE_GRUPO_INEXISTENTE
+        ) from None
+    except FechaFueraDeTemporada as fuera:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=fuera.mensaje
+        ) from None
+
+
+@router.put(
+    "/{fecha}",
+    response_model=AsistenciaDelGrupo,
+    responses={
+        status.HTTP_401_UNAUTHORIZED: respuesta_de_error(MENSAJE_SESION_INVALIDA),
+        status.HTTP_403_FORBIDDEN: respuesta_de_error(MENSAJE_GRUPO_NO_ASIGNADO),
+        status.HTTP_404_NOT_FOUND: respuesta_de_error(MENSAJE_GRUPO_INEXISTENTE),
+        status.HTTP_409_CONFLICT: respuesta_de_error(GrupoInactivo.mensaje),
+        status.HTTP_422_UNPROCESSABLE_ENTITY: respuesta_de_error(
+            "La fecha está fuera de la temporada del grupo, del 04/01/2027 al 26/02/2027."
+        ),
+    },
+)
+def guardar(
+    grupo_id: int,
+    fecha: date,
+    entrada: AsistenciaEntrada,
+    usuario: Annotated[Usuario, Depends(grupo_asignado)],
+    sesion: Annotated[Session, Depends(obtener_sesion)],
+) -> AsistenciaDelGrupo:
+    try:
+        return guardar_asistencia(sesion, usuario, grupo_id, fecha, entrada)
+    except GrupoInexistente:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=MENSAJE_GRUPO_INEXISTENTE
+        ) from None
+    except (TemporadaCerrada, GrupoInactivo) as conflicto:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=conflicto.mensaje
         ) from None
     except FechaFueraDeTemporada as fuera:
         raise HTTPException(

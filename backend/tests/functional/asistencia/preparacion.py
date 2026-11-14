@@ -211,3 +211,77 @@ def errores_con_loc_terminado_en(respuesta: Any, *final: str | int) -> list[dict
     assert isinstance(detalle, list), detalle
     largo = len(final)
     return [e for e in detalle if list(e["loc"])[-largo:] == list(final)]
+
+
+# --- helpers del `PUT` (tarea 2.2) -------------------------------------------
+
+# Import aca y no arriba para no tocar las lineas que ya estaban.
+from datetime import datetime  # noqa: E402
+
+
+def cuerpo_guardado(*pares: tuple[int, bool]) -> dict[str, Any]:
+    """Cuerpo del `PUT`: `(inscripcion_id, presente)` en el orden dado."""
+    return {"asistencias": [{"inscripcion_id": i, "presente": p} for i, p in pares]}
+
+
+def registrar_asistencia_con_hora(
+    sesion: Session,
+    inscripcion_id: int,
+    fecha: date,
+    presente: bool,
+    registrado_por: int,
+    registrado_en: datetime,
+) -> None:
+    """Asistencia «ya registrada» con un `registrado_en` explicito, para poder
+    distinguirlo despues del `now()` de una correccion."""
+    sesion.execute(
+        text(
+            "INSERT INTO asistencia "
+            "(inscripcion_id, fecha, presente, registrado_por, registrado_en) "
+            "VALUES (:i, :f, :p, :r, :e)"
+        ),
+        {"i": inscripcion_id, "f": fecha, "p": presente, "r": registrado_por, "e": registrado_en},
+    )
+
+
+def registros_de(sesion: Session, inscripcion_id: int, fecha: date) -> list[Any]:
+    """Los registros de una inscripcion en una fecha, leidos de la base:
+    filas con `presente`, `registrado_por` y `registrado_en`."""
+    return list(
+        sesion.execute(
+            text(
+                "SELECT presente, registrado_por, registrado_en FROM asistencia "
+                "WHERE inscripcion_id = :i AND fecha = :f"
+            ),
+            {"i": inscripcion_id, "f": fecha},
+        ).all()
+    )
+
+
+def inscripciones_del_grupo(sesion: Session, grupo_id: int) -> list[int]:
+    return [
+        int(i)
+        for i in sesion.execute(
+            text("SELECT id FROM inscripcion WHERE grupo_id = :g ORDER BY id"), {"g": grupo_id}
+        ).scalars()
+    ]
+
+
+def filas_por_tabla(sesion: Session) -> dict[str, int]:
+    """Cantidad de filas de cada tabla del esquema `public`, salvo
+    `alembic_version`. Las tablas salen del catalogo, no de una lista
+    escrita a mano: una tabla nueva entra sola."""
+    nombres = sesion.execute(
+        text(
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema = 'public' AND table_type = 'BASE TABLE' "
+            "AND table_name <> 'alembic_version' ORDER BY table_name"
+        )
+    ).scalars()
+    conteo: dict[str, int] = {}
+    for nombre in nombres:
+        identificador = '"' + str(nombre).replace('"', '""') + '"'
+        conteo[str(nombre)] = int(
+            sesion.execute(text(f"SELECT count(*) FROM public.{identificador}")).scalar_one()
+        )
+    return conteo

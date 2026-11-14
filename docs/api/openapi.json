@@ -530,6 +530,126 @@
             }
           }
         }
+      },
+      "put": {
+        "tags": [
+          "asistencias"
+        ],
+        "summary": "Guardar",
+        "operationId": "guardar_api_v1_grupos__grupo_id__asistencias__fecha__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "grupo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Grupo Id"
+            }
+          },
+          {
+            "name": "fecha",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Fecha"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AsistenciaEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AsistenciaDelGrupo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo podés tomar asistencia de tus grupos.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Solo podés tomar asistencia de tus grupos."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El grupo no existe.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "El grupo no existe."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El grupo no está activo.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "El grupo no está activo."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "La fecha está fuera de la temporada del grupo, del 04/01/2027 al 26/02/2027.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "La fecha está fuera de la temporada del grupo, del 04/01/2027 al 26/02/2027."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/salud": {
@@ -739,6 +859,41 @@
           "alumnos"
         ],
         "title": "AsistenciaDelGrupo"
+      },
+      "AsistenciaEntrada": {
+        "properties": {
+          "asistencias": {
+            "items": {
+              "$ref": "#/components/schemas/AsistenciaMarcada"
+            },
+            "type": "array",
+            "title": "Asistencias"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asistencias"
+        ],
+        "title": "AsistenciaEntrada",
+        "description": "Lo que se guarda: solo quien y si estuvo. Fecha y grupo vienen del path\ny el autor de la sesion; nada de eso se acepta del cuerpo.\n\nSin tope de largo: el limite natural es el tamano del grupo, y los ids de\notro grupo ya se rechazan por elemento."
+      },
+      "AsistenciaMarcada": {
+        "properties": {
+          "inscripcion_id": {
+            "type": "integer",
+            "title": "Inscripcion Id"
+          },
+          "presente": {
+            "type": "boolean",
+            "title": "Presente"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inscripcion_id",
+          "presente"
+        ],
+        "title": "AsistenciaMarcada"
       },
       "CategoriaFamilia": {
         "type": "string",

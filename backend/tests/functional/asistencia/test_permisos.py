@@ -154,3 +154,105 @@ class TestQuienPuedeAbrirYGuardar:
         assert cuerpo["grupo_id"] == pulpos_tarde
         assert nombres_y_presente(cuerpo) == [("Lucía", "Gómez", None)]
         assert cuerpo["alumnos"][0]["inscripcion_id"] == lucia_en_pulpos
+
+
+# --- Requirement: Quién puede abrir y guardar la asistencia (PUT) ----------
+# Tarea 2.2. Clase aparte e imports aca abajo para no tocar lo que ya estaba.
+
+from datetime import date  # noqa: E402
+
+from tests.functional.asistencia.preparacion import (  # noqa: E402
+    contar_asistencias,
+    crear_cerrada,
+    cuerpo_guardado,
+    registros_de,
+)
+
+
+class TestQuienPuedeGuardar:
+    def test_el_profesor_guarda_en_un_grupo_ajeno_y_recibe_403_sin_guardar(
+        self,
+        cliente: TestClient,
+        sesion: Session,
+        juan_en_delfines: int,
+        pulpos_tarde: int,
+        lucia_en_pulpos: int,
+        jperez: dict[str, str],
+    ) -> None:
+        # Scenario: Profesor guarda en un grupo ajeno
+        respuesta = cliente.put(
+            url_asistencia(pulpos_tarde, "2027-01-05"),
+            json=cuerpo_guardado((lucia_en_pulpos, True)),
+            headers=jperez,
+        )
+
+        assert respuesta.status_code == 403, respuesta.text
+        assert respuesta.json()["detail"] == MENSAJE_GRUPO_AJENO
+        assert "Lucía" not in respuesta.text
+        assert contar_asistencias(sesion, date(2027, 1, 5)) == 0
+
+    def test_el_profesor_con_un_grupo_ajeno_cerrado_y_fecha_fuera_recibe_403(
+        self,
+        cliente: TestClient,
+        sesion: Session,
+        autor: int,
+        juan_en_delfines: int,
+        jperez: dict[str, str],
+    ) -> None:
+        # Scenario: Profesor con un grupo ajeno de una temporada cerrada y
+        # fecha fuera de ella
+        # Cuerpo valido para ese grupo: el permiso tiene que decidir antes
+        # que la temporada cerrada (409) y la fecha fuera de rango (422).
+        cerrada = crear_cerrada(sesion)
+        grupo_viejo = insertar_grupo(sesion, cerrada, "Delfines", "manana")
+        lucia = crear_alumno(sesion, "Lucía", "Gómez")
+        inscripcion = inscribir(sesion, lucia, grupo_viejo, cerrada, "manana", autor)
+
+        respuesta = cliente.put(
+            url_asistencia(grupo_viejo, "2027-01-05"),
+            json=cuerpo_guardado((inscripcion, True)),
+            headers=jperez,
+        )
+
+        assert respuesta.status_code == 403, respuesta.text
+        assert respuesta.json()["detail"] == MENSAJE_GRUPO_AJENO
+        assert contar_asistencias(sesion, date(2027, 1, 5)) == 0
+
+    def test_el_coordinador_sin_grupos_guarda_y_queda_como_autor(
+        self,
+        cliente: TestClient,
+        sesion: Session,
+        pulpos_tarde: int,
+        lucia_en_pulpos: int,
+    ) -> None:
+        # Scenario: Coordinador sin grupos asignados
+        # Un Coordinador distinto de `autor`, el que cargo las inscripciones:
+        # asi el autor del registro no coincide con nadie por casualidad.
+        mlopez = crear_usuario(sesion, "mlopez", RolUsuario.COORDINADOR)
+
+        respuesta = cliente.put(
+            url_asistencia(pulpos_tarde, "2027-01-05"),
+            json=cuerpo_guardado((lucia_en_pulpos, True)),
+            headers=ingresar(cliente, "mlopez"),
+        )
+
+        assert respuesta.status_code == 200, respuesta.text
+        assert nombres_y_presente(respuesta.json()) == [("Lucía", "Gómez", True)]
+        registros = registros_de(sesion, lucia_en_pulpos, date(2027, 1, 5))
+        assert [(r.presente, r.registrado_por) for r in registros] == [(True, mlopez)]
+
+    def test_sin_sesion_responde_401_y_no_guarda(
+        self,
+        cliente: TestClient,
+        sesion: Session,
+        delfines_manana: int,
+        juan_en_delfines: int,
+    ) -> None:
+        # Scenario: Sin sesión
+        respuesta = cliente.put(
+            url_asistencia(delfines_manana, "2027-01-05"),
+            json=cuerpo_guardado((juan_en_delfines, True)),
+        )
+
+        assert respuesta.status_code == 401, respuesta.text
+        assert contar_asistencias(sesion, date(2027, 1, 5)) == 0

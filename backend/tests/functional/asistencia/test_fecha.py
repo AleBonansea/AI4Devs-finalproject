@@ -95,3 +95,88 @@ class TestLaFechaEstaDentroDeLaTemporada:
         errores = errores_con_loc_terminado_en(respuesta, "fecha")
         assert errores, f"no hay error en fecha: {respuesta.text}"
         assert [e["msg"] for e in errores] == ["La fecha no es válida."], respuesta.text
+
+
+# --- Requirement: La fecha está dentro de la temporada del grupo (PUT) -----
+# Tarea 2.2. Clase aparte e imports aca abajo para no tocar lo que ya estaba.
+
+from datetime import date  # noqa: E402
+
+from httpx import Response  # noqa: E402
+
+from tests.functional.asistencia.preparacion import (  # noqa: E402
+    contar_asistencias,
+    cuerpo_guardado,
+    inscripciones_del_grupo,
+    nombres_y_presente,
+)
+
+
+def _guardar_juan(
+    cliente: TestClient, sesion: Session, grupo: int, fecha: str, headers: dict[str, str]
+) -> Response:
+    """PUT con Juan Perez, el unico inscripto del grupo, `presente` true."""
+    [juan] = inscripciones_del_grupo(sesion, grupo)
+    return cliente.put(
+        url_asistencia(grupo, fecha), json=cuerpo_guardado((juan, True)), headers=headers
+    )
+
+
+class TestLaFechaEstaDentroDeLaTemporadaAlGuardar:
+    def test_guardar_el_primer_dia_de_la_temporada_responde_200(
+        self,
+        cliente: TestClient,
+        sesion: Session,
+        delfines_manana: int,
+        coordinador: dict[str, str],
+    ) -> None:
+        # Scenario: Primer día de la temporada
+        respuesta = _guardar_juan(cliente, sesion, delfines_manana, "2027-01-04", coordinador)
+
+        assert respuesta.status_code == 200, respuesta.text
+        assert respuesta.json()["fecha"] == "2027-01-04"
+        assert nombres_y_presente(respuesta.json()) == [("Juan", "Pérez", True)]
+        assert contar_asistencias(sesion, date(2027, 1, 4)) == 1
+
+    def test_guardar_el_dia_anterior_al_inicio_responde_422_y_no_guarda(
+        self,
+        cliente: TestClient,
+        sesion: Session,
+        delfines_manana: int,
+        coordinador: dict[str, str],
+    ) -> None:
+        # Scenario: Día anterior al inicio
+        respuesta = _guardar_juan(cliente, sesion, delfines_manana, "2027-01-03", coordinador)
+
+        assert respuesta.status_code == 422, respuesta.text
+        assert respuesta.json()["detail"] == MENSAJE_FUERA_DE_TEMPORADA_VIGENTE
+        assert contar_asistencias(sesion, date(2027, 1, 3)) == 0
+
+    def test_guardar_el_ultimo_dia_de_la_temporada_responde_200(
+        self,
+        cliente: TestClient,
+        sesion: Session,
+        delfines_manana: int,
+        coordinador: dict[str, str],
+    ) -> None:
+        # Scenario: Último día de la temporada
+        respuesta = _guardar_juan(cliente, sesion, delfines_manana, "2027-02-26", coordinador)
+
+        assert respuesta.status_code == 200, respuesta.text
+        assert respuesta.json()["fecha"] == "2027-02-26"
+        assert nombres_y_presente(respuesta.json()) == [("Juan", "Pérez", True)]
+        assert contar_asistencias(sesion, date(2027, 2, 26)) == 1
+
+    def test_guardar_el_dia_posterior_al_cierre_responde_422(
+        self,
+        cliente: TestClient,
+        sesion: Session,
+        delfines_manana: int,
+        coordinador: dict[str, str],
+    ) -> None:
+        # Scenario: Día posterior al cierre
+        respuesta = _guardar_juan(cliente, sesion, delfines_manana, "2027-02-27", coordinador)
+
+        assert respuesta.status_code == 422, respuesta.text
+        assert respuesta.json()["detail"] == MENSAJE_FUERA_DE_TEMPORADA_VIGENTE
+        assert contar_asistencias(sesion, date(2027, 2, 27)) == 0
