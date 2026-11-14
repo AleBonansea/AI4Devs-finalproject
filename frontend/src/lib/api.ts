@@ -286,3 +286,43 @@ export function buscarPersonaPorDni(dni: string): Promise<PersonaEncontrada> {
 export function registrarAlumno(entrada: AltaAlumnoEntrada): Promise<AlumnoRegistrado> {
   return api.post<AlumnoRegistrado>("/alumnos", entrada);
 }
+
+// --- Asistencia -----------------------------------------------------------------
+// Los tipos copian los esquemas del contrato (docs/api/openapi.json).
+
+/** `AlumnoEnAsistencia`: un inscripto del grupo; `presente` es null si no se tomo. */
+export interface AlumnoEnAsistencia {
+  inscripcion_id: number;
+  nombre: string;
+  apellido: string;
+  presente: boolean | null;
+}
+
+/** `AsistenciaDelGrupo`: la lista entera del grupo en una fecha. */
+export interface AsistenciaDelGrupo {
+  grupo_id: number;
+  grupo: string;
+  turno: Turno;
+  fecha: string;
+  alumnos: AlumnoEnAsistencia[];
+}
+
+/** Un elemento de `asistencias` en el cuerpo del guardado: lo marcado de una inscripcion. */
+export interface AsistenciaMarcada {
+  inscripcion_id: number;
+  presente: boolean;
+}
+
+/** La asistencia del grupo en `fecha` (`AAAA-MM-DD`), con lo ya tomado. */
+export function abrirAsistencia(grupoId: number, fecha: string): Promise<AsistenciaDelGrupo> {
+  return api.get<AsistenciaDelGrupo>(`/grupos/${grupoId}/asistencias/${fecha}`);
+}
+
+/** Guarda o corrige las marcas enviadas; la API devuelve la lista entera del grupo. */
+export function guardarAsistencia(
+  grupoId: number,
+  fecha: string,
+  asistencias: AsistenciaMarcada[],
+): Promise<AsistenciaDelGrupo> {
+  return api.put<AsistenciaDelGrupo>(`/grupos/${grupoId}/asistencias/${fecha}`, { asistencias });
+}

@@ -44,6 +44,8 @@ Fuente complementaria de `prd-escuelita-de-verano.md`. Recoge las respuestas a l
 - Cada grupo tiene un nombre y un rango de fechas de nacimiento (desde/hasta).
 - Los grupos son **por temporada**: el rango de fechas de nacimiento se corre cada año. Al abrir una temporada nueva se pueden **copiar los grupos de la anterior** y ajustar sus rangos.
 - Al cargar un alumno, el sistema sugiere el grupo que corresponde por su fecha de nacimiento, y el usuario puede elegir otro.
+- **Asistencia ya tomada (14/11/2026, change `asistencia`).** La marca de un alumno en una fecha se puede **corregir** (presente ↔ ausente), pero no volver a «sin tomar»: eso diría que ese día no se tomó asistencia cuando sí se tomó, y acá nada se borra.
+- **Quién registró la asistencia (14/11/2026, change `asistencia`).** Al guardar, solo cambian autor y momento de las marcas nuevas o de las que cambiaron de valor. Guardar de nuevo una marca igual no la atribuye a quien guarda: un rastro que dice que alguien registró lo que no registró es peor que no tenerlo, porque se le cree.
 
 ## 5. Modalidades y tarifario
 
@@ -184,6 +186,7 @@ Fuente complementaria de `prd-escuelita-de-verano.md`. Recoge las respuestas a l
 Abiertas:
 - **Desbloqueo de una cuenta bloqueada** (sección 9): ¿una cuenta bloqueada se desbloquea sola después de un rato, o sigue dependiendo de que un Admin le blanquee la contraseña, sabiendo que cualquiera puede bloquearla desde internet? Los nombres de usuario son predecibles (inicial + apellido) y el ingreso es público, así que con 5 intentos se puede dejar afuera a cualquier persona del staff, incluidos todos los Admin. La sección 9 dice que depende del Admin, pero se decidió sin este riesgo a la vista. Mientras no se responda rige la sección 9; la mitigación se resuelve con HU-UT-08.
 - **Reutilizar una persona ya cargada** (sección 3): para vincular a otra familia a un adulto que ya está en el sistema, ¿alcanza con buscarlo por su DNI completo, o el staff necesita buscarlo por nombre y apellido? Buscar por nombre deja que cualquier Profesor recorra los adultos de todas las familias, con sus datos de contacto. **[SUPUESTO]** mientras no se responda (change `familias-y-alumnos`): se reutiliza solo escribiendo el DNI exacto, la búsqueda devuelve nombre y apellido y nada más, y quien no tiene DNI cargado se vuelve a cargar como persona nueva. Aun así, como no hay límite de pedidos, un Profesor podría probar DNIs consecutivos y juntar nombres de adultos: antes de producción, ¿alcanza con un límite de búsquedas por usuario, o hay que restringir más quién busca?
+- **Asistencia en un grupo desactivado** (sección 4): cuando un grupo se desactiva, ¿se le puede seguir tomando asistencia, o deja de tomarse? El modelo de datos dice que un grupo inactivo conserva su asistencia, pero no si se le puede registrar una nueva. **[SUPUESTO]** mientras no se responda (change `asistencia`): la asistencia de un grupo inactivo se puede consultar, pero no se guarda una nueva (la API responde 409 `El grupo no está activo.`). Hoy no hay forma de desactivar un grupo (llega con HU-GA-01), así que el caso todavía no se da en la práctica.
 
 Resueltas:
 - **Grupos por temporada y copia de grupos:** sección 4.

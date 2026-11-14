@@ -21,6 +21,11 @@ export default defineConfig({
     environment: "jsdom",
     include: ["tests/**/*.test.{ts,tsx}"],
     setupFiles: ["./tests/preparar.ts"],
+    // Los tests corren en el huso de la escuela, sea cual sea el de la
+    // maquina. Sin esto, en el CI (UTC) un toISOString() en lugar de la fecha
+    // local pasa en verde. Tambien esta en tasks.py y en el workflow del CI,
+    // para que local y CI no se separen.
+    env: { TZ: "America/Argentina/Buenos_Aires" },
     // Los tests que completan el alta tardan de 2 a 5 s con la suite entera
     // (jsdom es lento con las hojas de estilo de MUI) y el de 403 llego a
     // pasarse de los 5 s por defecto. Lo decidio una persona: ver tarea 9.4.

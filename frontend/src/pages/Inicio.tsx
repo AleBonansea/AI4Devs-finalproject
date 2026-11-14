@@ -31,9 +31,12 @@ export default function Inicio() {
             {`${usuario.nombre} ${usuario.apellido}`}
           </Typography>
           <Typography color="text.secondary">{NOMBRE_DEL_ROL[usuario.rol]}</Typography>
-          <Stack direction="row" spacing={2}>
+          <Stack direction="row" spacing={2} useFlexGap sx={{ flexWrap: "wrap" }}>
             <Button component={Link} to="/alumnos/nuevo">
               Registrar alumno
+            </Button>
+            <Button component={Link} to="/asistencia">
+              Tomar asistencia
             </Button>
             <Button variant="outlined" onClick={alSalir}>
               Salir

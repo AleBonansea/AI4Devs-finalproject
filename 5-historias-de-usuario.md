@@ -73,6 +73,8 @@ Datos mínimos del alta (Acl. 3): nombre, apellido y fecha de nacimiento del alu
 Como staff, quiero tomar asistencia por grupo, día y turno desde el celular o la PC, para registrar quién estuvo presente.
 *Sustento:* PRD «Grupos, turnos y asistencia»; Acl. 12.
 
+> **Versión vigente:** HU-GA-04 ya está construida (change `asistencia`, archivado el 14/11/2026). Los criterios que siguen son los que se entregaron en la Entrega 1 y se conservan como documento de esa entrega. El comportamiento vigente, con un Scenario por caso y los que se sumaron al construirla, está en [`openspec/specs/asistencia/spec.md`](openspec/specs/asistencia/spec.md), y el acceso desde el inicio en [`openspec/specs/auth/spec.md`](openspec/specs/auth/spec.md). Si difieren, mandan las specs.
+
 *Criterios de aceptación:*
 
 **Escenario 1 — Tomar asistencia desde el celular** (camino feliz)

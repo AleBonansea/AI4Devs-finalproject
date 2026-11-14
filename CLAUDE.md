@@ -112,6 +112,8 @@ El único punto de contacto con el backend es `src/lib/api.ts`: envuelve `fetch`
 
 Los colores salen de `src/tema.ts`, el único archivo del frontend donde un valor de color puede estar escrito; un hook corta los valores a pelo en el resto. Los nombres dicen **para qué** sirve el color, no cómo se ve: `deuda`, no `rojo`.
 
+Las fechas que se muestran como texto se formatean en `src/lib/fechas.ts`, en dd/mm/aaaa. En los campos de formulario se usa `<input type="date">`, cuyo valor es siempre ISO.
+
 Una pieza de interfaz nueva sale del catálogo de `src/components/` o se crea ahí con nombre propio, nunca improvisada dentro de una pantalla.
 
 ## Roles

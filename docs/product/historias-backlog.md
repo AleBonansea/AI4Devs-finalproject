@@ -398,6 +398,14 @@ Dos salidas, en este orden:
 1. Probar happy-dom en lugar de jsdom en `vite.config.ts`. Es una línea y suele dar 2-3x, pero cambia la huella de los tests congelados, así que lo decide una persona con la suite verde antes y después y verificando que el DataGrid siga andando.
 2. Sedimentar el catálogo de componentes (módulo 12) para que las comprobaciones de estado bajen a nivel componente y solo los tests de integración monten `abrir()`.
 
+**Formato de los campos de fecha.** El formato que el usuario ve en los campos de fecha lo decide el navegador según el idioma del sistema, no la aplicación: una máquina en inglés muestra mm/dd/aaaa. Importa sobre todo en la fecha de nacimiento, que define el grupo y, con él, el tramo de precio. El valor que viaja a la API es siempre ISO, así que lo que está en riesgo es la lectura de la persona, no el dato.
+
+Se actúa cuando pase cualquiera de estas dos cosas:
+- aparece una máquina del club mal configurada, o
+- alguien reporta una fecha mal leída.
+
+La salida es un `DatePicker` de MUI con locale `es-AR` y formato `dd/MM/yyyy` fijo. Cuesta sumar `@mui/x-date-pickers` y `date-fns`, y rehacer cómo los tests escriben fechas.
+
 **Tema oscuro.** El prototipo define un tema oscuro completo con prefers-color-scheme. Se deja fuera de alcance: ninguna historia lo pide y duplica la revisión visual, que hoy es a ojo. tema.ts nombra los colores por función, así que se puede agregar después sin tocar las pantallas.
 
 ## Excluido por no estar en las fuentes

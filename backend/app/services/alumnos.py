@@ -20,6 +20,7 @@ from app.models.grupo import Grupo, GrupoProfesor
 from app.models.temporada import EstadoTemporada, Temporada
 from app.models.usuario import RolUsuario, Usuario
 from app.schemas.alumnos import AltaAlumnoEntrada, PersonaNueva, PersonaReutilizada
+from app.services.comunes import id_posible
 
 MENSAJE_GRUPO_INEXISTENTE = "El grupo no existe."
 MENSAJE_GRUPO_INACTIVO = "El grupo no está activo."
@@ -32,10 +33,6 @@ MENSAJE_PERSONA_REPETIDA = "Esa persona ya está en el alta."
 MENSAJE_PERSONA_YA_VINCULADA = "Esa persona ya está vinculada a la familia."
 MENSAJE_DNI_CARGADO = "Ya hay una persona con ese DNI. Buscala por DNI para reutilizarla."
 MENSAJE_SIN_TUTOR = "La familia nueva necesita al menos un tutor."
-
-# Tope de las columnas BIGINT. Un id mas grande hacia fallar a Postgres y
-# respondia 500; se trata como inexistente.
-_ID_MAXIMO = 2**63 - 1
 
 # Nombre de la restriccion de persona.dni (ver app/models/familia.py).
 _RESTRICCION_DNI = "uq_persona_dni"
@@ -62,10 +59,6 @@ class AltaRegistrada:
     grupo: Grupo
 
 
-def _id_posible(valor: int) -> bool:
-    return 1 <= valor <= _ID_MAXIMO
-
-
 def _comprobar_grupo(sesion: Session, grupo_id: int) -> Grupo:
     """Paso 3: el grupo existe, esta activo y es de la temporada vigente."""
     fila = (
@@ -74,7 +67,7 @@ def _comprobar_grupo(sesion: Session, grupo_id: int) -> Grupo:
             .join(Temporada, Temporada.id == Grupo.temporada_id)
             .where(Grupo.id == grupo_id)
         ).one_or_none()
-        if _id_posible(grupo_id)
+        if id_posible(grupo_id)
         else None
     )
     if fila is None:
@@ -101,7 +94,7 @@ def _comprobar_profesor(sesion: Session, usuario: Usuario, grupo_id: int) -> Non
     # Un id fuera de rango no puede estar asignado; ademas haria fallar a
     # Postgres.
     asignado = (
-        _id_posible(grupo_id)
+        id_posible(grupo_id)
         and sesion.execute(
             select(
                 exists().where(
@@ -127,7 +120,7 @@ def _comprobar_familia_y_personas(
     if entrada.familia_id is not None:
         if entrada.categoria is not None:
             errores.append((("categoria",), MENSAJE_CATEGORIA_EXISTENTE))
-        if _id_posible(entrada.familia_id):
+        if id_posible(entrada.familia_id):
             familia = sesion.get(Familia, entrada.familia_id)
         if familia is None:
             errores.append((("familia_id",), MENSAJE_FAMILIA_INEXISTENTE))
@@ -138,7 +131,7 @@ def _comprobar_familia_y_personas(
     ids_pedidos = {
         p.persona_id
         for p in entrada.personas
-        if isinstance(p, PersonaReutilizada) and _id_posible(p.persona_id)
+        if isinstance(p, PersonaReutilizada) and id_posible(p.persona_id)
     }
     dnis_pedidos = {p.dni for p in entrada.personas if isinstance(p, PersonaNueva) and p.dni}
     ids_existentes = (

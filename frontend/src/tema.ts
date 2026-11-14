@@ -48,6 +48,10 @@ export const colores = {
   // Mismo valor que `marca`, otro nombre: si el estado cambia de tono, el
   // logotipo no se mueve.
   saldado: marca,
+  // La asistencia: lo elegido en cada renglon. Mismos valores que `marca` y
+  // `deuda`, con nombre por uso.
+  presente: marca,
+  ausente: deuda,
   anulado: textoTenue,
 
   // Fallos de la API y de validacion. Comparte el rojo con `deuda`, pero es
