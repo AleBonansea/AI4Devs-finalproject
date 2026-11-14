@@ -433,6 +433,105 @@
         ]
       }
     },
+    "/api/v1/grupos/{grupo_id}/asistencias/{fecha}": {
+      "get": {
+        "tags": [
+          "asistencias"
+        ],
+        "summary": "Abrir",
+        "operationId": "abrir_api_v1_grupos__grupo_id__asistencias__fecha__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "grupo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Grupo Id"
+            }
+          },
+          {
+            "name": "fecha",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Fecha"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AsistenciaDelGrupo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo podés tomar asistencia de tus grupos.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Solo podés tomar asistencia de tus grupos."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El grupo no existe.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "El grupo no existe."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "La fecha está fuera de la temporada del grupo, del 04/01/2027 al 26/02/2027.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "La fecha está fuera de la temporada del grupo, del 04/01/2027 al 26/02/2027."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/salud": {
       "get": {
         "tags": [
@@ -532,6 +631,41 @@
         "title": "AltaAlumnoEntrada",
         "description": "El alta: datos del alumno, grupo, familia (existente o nueva) y\npersonas autorizadas a retirar."
       },
+      "AlumnoEnAsistencia": {
+        "properties": {
+          "inscripcion_id": {
+            "type": "integer",
+            "title": "Inscripcion Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "apellido": {
+            "type": "string",
+            "title": "Apellido"
+          },
+          "presente": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Presente"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inscripcion_id",
+          "nombre",
+          "apellido",
+          "presente"
+        ],
+        "title": "AlumnoEnAsistencia"
+      },
       "AlumnoRegistrado": {
         "properties": {
           "id": {
@@ -569,6 +703,42 @@
         ],
         "title": "AlumnoRegistrado",
         "description": "El alumno recien dado de alta, con su familia y su inscripcion."
+      },
+      "AsistenciaDelGrupo": {
+        "properties": {
+          "grupo_id": {
+            "type": "integer",
+            "title": "Grupo Id"
+          },
+          "grupo": {
+            "type": "string",
+            "title": "Grupo"
+          },
+          "turno": {
+            "$ref": "#/components/schemas/Turno"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha"
+          },
+          "alumnos": {
+            "items": {
+              "$ref": "#/components/schemas/AlumnoEnAsistencia"
+            },
+            "type": "array",
+            "title": "Alumnos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "grupo_id",
+          "grupo",
+          "turno",
+          "fecha",
+          "alumnos"
+        ],
+        "title": "AsistenciaDelGrupo"
       },
       "CategoriaFamilia": {
         "type": "string",

@@ -11,15 +11,19 @@ from typing import Annotated
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
 
 from app.core.db import obtener_sesion
 from app.core.security import leer_token
+from app.models.grupo import GrupoProfesor
 from app.models.usuario import RolUsuario, Usuario
+from app.services.comunes import id_posible
 
 MENSAJE_SESION_INVALIDA = "Sesión inválida o vencida."
 MENSAJE_CAMBIO_PENDIENTE = "Tenés que cambiar tu contraseña antes de continuar."
 MENSAJE_SIN_PERMISO = "No tenés permiso para esta operación."
+MENSAJE_GRUPO_NO_ASIGNADO = "Solo podés tomar asistencia de tus grupos."
 
 # Tope de la columna BIGINT de usuario.id. Un sub mas grande hacia fallar a
 # Postgres y respondia 500; los ids son positivos.
@@ -105,3 +109,35 @@ def exigir_rol(*roles: RolUsuario) -> Callable[[Usuario], Usuario]:
         return usuario
 
     return _verificar_rol
+
+
+def grupo_asignado(
+    grupo_id: int,
+    usuario: Annotated[
+        Usuario,
+        Depends(exigir_rol(RolUsuario.ADMIN, RolUsuario.COORDINADOR, RolUsuario.PROFESOR)),
+    ],
+    sesion: Annotated[Session, Depends(obtener_sesion)],
+) -> Usuario:
+    """Para el Profesor, el grupo del path tiene que ser de los suyos.
+
+    Es una dependencia y no una regla del servicio para que el 403 gane a
+    cualquier 404 o 422: un grupo ajeno da lo mismo exista o no. Admin y
+    Coordinador pasan sin consulta. Un id fuera del rango de BIGINT no puede
+    estar asignado y haria fallar a Postgres.
+    """
+    if usuario.rol != RolUsuario.PROFESOR:
+        return usuario
+    asignado = (
+        id_posible(grupo_id)
+        and sesion.execute(
+            select(
+                exists().where(
+                    GrupoProfesor.grupo_id == grupo_id, GrupoProfesor.usuario_id == usuario.id
+                )
+            )
+        ).scalar_one()
+    )
+    if not asignado:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=MENSAJE_GRUPO_NO_ASIGNADO)
+    return usuario
