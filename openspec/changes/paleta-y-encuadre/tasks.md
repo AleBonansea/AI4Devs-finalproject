@@ -37,8 +37,8 @@
 - [x] 4.1 Pase único del subagente `adversarial-reviewer` sobre el change terminado, antes de abrir el pull request. Verificación: hallazgos resueltos o justificados en este archivo.
   - Pase hecho: 0 graves, 5 menores, 2 preguntas.
     1. *El candado dejaba leer `frontend/dist/`* → **resuelto**. `frontend/dist` entra en las rutas protegidas del hook y en la prosa del test-writer.
-    2. *El orden del encabezado se exige en las dos pantallas y solo se prueba en el ingreso* → **pendiente de decisión del usuario**: **resuelto** con el Scenario «En el aviso, el encabezado va antes del aviso» (tarea 2.4).
-    3. *El Requirement nuevo choca con «Aviso de cambio de contraseña pendiente» («solo un aviso»)* → **pendiente de decisión del usuario**: **resuelto**: el Requirement pasó a MODIFIED y dice «debajo del encabezado de las pantallas sin sesión, solo un aviso».
+    2. *El orden del encabezado se exige en las dos pantallas y solo se prueba en el ingreso* → **resuelto** con el Scenario «En el aviso, el encabezado va antes del aviso» (tarea 2.4).
+    3. *El Requirement nuevo choca con «Aviso de cambio de contraseña pendiente» («solo un aviso»)* → **resuelto**: el Requirement pasó a MODIFIED y dice «debajo del encabezado de las pantallas sin sesión, solo un aviso».
     4. *El proposal y el design decían que los assets «ya estaban en el repo» y prometían un «logo circular»* → **resuelto**: se corrigió el texto.
     5. *El hook fallaba abierto ante un error propio* → **resuelto**: ahora falla cerrado. Con `python` fuera del PATH no se puede cubrir, y quedó documentado en el hook y en CLAUDE.md.
     - Pregunta *¿el test-writer puede escribir en la implementación?* → **resuelto**: el hook corta también `Write`, `Edit` y `NotebookEdit` sobre esas rutas.
