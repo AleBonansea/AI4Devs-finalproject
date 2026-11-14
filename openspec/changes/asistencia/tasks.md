@@ -39,14 +39,22 @@
 
 ## 6. Comprobación de punta a punta
 
-- [ ] 6.1 Con la base de desarrollo migrada y la semilla cargada, la API y el frontend levantados, comprobar a mano en el navegador:
+- [x] 6.1 Con la base de desarrollo migrada y la semilla cargada, la API y el frontend levantados, comprobar a mano en el navegador:
   - como `jperez` (profesor), `Grupo` ofrece solo `Delfines · Mañana` y `Delfines · Tarde`;
   - en «Delfines» mañana, con una fecha de la temporada (la semilla va del 2027-01-04 al 2027-02-26, así que hoy queda afuera y se ve el 422), marcar a Juan Pérez presente, guardar y ver `Asistencia guardada.`;
   - volver a abrir la misma fecha y ver a Juan Pérez presente; cambiarlo a ausente, guardar, y comprobar en la base que hay un solo registro;
   - como `lrodriguez` (coordinador), tomar asistencia de «Tiburones» tarde, que no tiene asignada;
   - la pantalla a 360 px de ancho, sin scroll horizontal, con los botones `Presente` / `Ausente` cómodos de tocar y recorrible con el teclado.
   - **Se verifica con** cada punto anotado como hecho en el informe de la tarea, con lo que haya fallado.
-- [ ] 6.2 `python tasks.py test`, `lint`, `typecheck`, `openapi-check`, `front-test` y `front-lint` en verde.
+  - **Informe (14/11/2026), contra la base de desarrollo sembrada.** En `:8000` atendía un uvicorn viejo de otra sesión (PID 14288, sin las rutas nuevas) que no es de este trabajo y no se tocó; la recorrida usó una API propia en `:8001` (con `CORS_ORIGINS` para el origen de prueba) y un Vite en `:5180` con `VITE_API_URL`. La pantalla se manejó con JavaScript en la página, como en el change anterior.
+    - Hecho: como `jperez`, `Grupo` ofrece solo `Delfines · Mañana` y `Delfines · Tarde`.
+    - Hecho: con la fecha de hoy (2026-11-14) se ve `La fecha está fuera de la temporada del grupo, del 04/01/2027 al 26/02/2027.`
+    - Hecho: en «Delfines» mañana del 2027-01-05, Juan Pérez marcado presente → `Asistencia guardada.`; al pasar al 06 queda sin tomar y al volver al 05 sigue presente; cambiado a ausente y guardado. En la base hay un solo registro de esa inscripción y fecha, con `registrado_en` actualizado.
+    - Hecho: como `lrodriguez`, `Grupo` ofrece los cuatro grupos; en «Tiburones» tarde del 2027-01-07 marcó a Valentina Torres presente y guardó. Por la API, `jperez` sobre ese grupo recibe 403.
+    - Hecho, medido en un iframe de 360 px: sin scroll horizontal (`scrollWidth` = `clientWidth` = 360), ningún elemento fuera del cuadro, botones `Presente` / `Ausente` de 49 px de alto entre x=33 y x=327. Orden de tabulación: `Volver al inicio`, `Grupo`, `Fecha`, los dos botones de cada alumno y `Guardar`.
+    - Observación, no falla: la pantalla agrega un botón `Volver al inicio` que la spec no nombra.
+- [x] 6.2 `python tasks.py test`, `lint`, `typecheck`, `openapi-check`, `front-test` y `front-lint` en verde.
+  - **Estado (14/11/2026):** en verde tras el último cambio de cada lado: backend 276 tests, lint, typecheck y `openapi-check`; frontend 78 tests, `front-lint` y build.
 
 ## 7. Revisión adversarial
 
