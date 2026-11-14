@@ -126,6 +126,8 @@ Como staff, quiero tomar asistencia por grupo, día y turno desde el celular o l
 Como Admin, quiero registrar un cargo a una familia (tipo, alumno, turno, modalidad y período), para dejar asentado lo que tiene que pagar.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar»; Acl. 5, 6.
 
+> **Versión vigente:** HU-CC-01 y el cálculo de HU-TAR-04 ya están construidos (change `cobro`, archivado el 14/11/2026). Los criterios que siguen son los que se entregaron en la Entrega 1 y se conservan como documento de esa entrega. El comportamiento vigente, con un Scenario por caso y los que se sumaron al construirla (cargos repetidos, rechazos por campo, la simulación, la pantalla), está en [`openspec/specs/cargos/spec.md`](openspec/specs/cargos/spec.md), las inscripciones de una familia en [`openspec/specs/familias/spec.md`](openspec/specs/familias/spec.md) y el acceso desde el inicio en [`openspec/specs/auth/spec.md`](openspec/specs/auth/spec.md). Si difieren, mandan las specs.
+
 *Criterios de aceptación* (incluyen el cálculo de HU-TAR-04):
 
 **Contexto común.** Son las precondiciones que dependen del bloque Tarifario (HU-TAR-01 a HU-TAR-03). Los montos y porcentajes son de ejemplo: los porcentajes del Mes siguen el ejemplo del PRD, y el resto se eligió para los escenarios.
