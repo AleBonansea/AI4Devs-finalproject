@@ -9,7 +9,7 @@
   - Los tests insertan directo en la base: los endpoints todavía no existen. Tests en `backend/tests/functional/cargos/`.
   - Sumar a la regla de `cargo` en `3-modelo-de-datos.md` los tres índices únicos parciales, con la nota de que sumarán `AND anulado_en IS NULL` cuando llegue la anulación de cargos.
   - **Se verifica con** los 16 tests en rojo por el motivo correcto (no existe la tabla) y después en verde; la skill `revisar-migracion` sobre la migración (sin `CREATE TYPE`, con los `postgresql_where` de los índices parciales), con `upgrade head` → `downgrade -1` → `upgrade head` contra la base de pruebas; `python tasks.py test`, `lint` y `typecheck` en verde.
-- [ ] 1.2 Registrar en `docs/prd/aclaraciones-cliente.md`, «Preguntas abiertas», las tres entradas de design, «Supuestos registrados»: «Cargos repetidos» (decidido con el usuario el 14/11/2026), «Cargo de un alumno sin inscripción» y «Fecha del cargo del Día», cada una con su **[SUPUESTO]** vigente y la referencia al change `cobro`. **Se verifica con** las tres entradas escritas con esos títulos, que son los que citan los Requirements de `cargos`.
+- [x] 1.2 Registrar en `docs/prd/aclaraciones-cliente.md`, «Preguntas abiertas», las tres entradas de design, «Supuestos registrados»: «Cargos repetidos» (decidido con el usuario el 14/11/2026), «Cargo de un alumno sin inscripción» y «Fecha del cargo del Día», cada una con su **[SUPUESTO]** vigente y la referencia al change `cobro`. **Se verifica con** las tres entradas escritas con esos títulos, que son los que citan los Requirements de `cargos`.
 
 ## 2. El cálculo
 
