@@ -19,7 +19,7 @@
   - El 409 de la temporada cerrada cita Acl. 10 y `3-modelo-de-datos.md`, «`temporada`», en el comentario del servicio (design, paso 4). Validación del monto y la fecha en el esquema, con `PydanticCustomError("regla_de_negocio", …)` (design, «Esquemas»).
   - Los tests de las fechas usan la fecha de hoy del sistema, no una fija. Los de «no se guarda nada» cuentan pagos y movimientos antes y después. Los de pagos anulados insertan la fila con sus tres datos de anulación.
   - **Se verifica con** los 32 tests en rojo por el motivo correcto y después en verde, `docs/api/openapi.json` regenerado, y `python tasks.py test`, `lint` y `typecheck` en verde.
-- [ ] 2.2 Con la skill `backend-feature`, cambiar el saldo de `POST /api/v1/cargos` según el Requirement de `cargos` «Saldo pendiente al registrar», modificado: el Scenario nuevo «La familia ya pagó una parte» (1). Los tests de los otros dos Scenarios ya existen y no se tocan.
+- [x] 2.2 Con la skill `backend-feature`, cambiar el saldo de `POST /api/v1/cargos` según el Requirement de `cargos` «Saldo pendiente al registrar», modificado: el Scenario nuevo «La familia ya pagó una parte» (1). Los tests de los otros dos Scenarios ya existen y no se tocan.
   - El paso 8 de `registrar_cargo` lee `v_cuenta_corriente` en lugar de sumar (design, «El cambio en `cargos`»).
   - **Se verifica con** el test nuevo en rojo por el motivo correcto (el saldo da 105000.00) y después en verde; los tests de `cargos` existentes en verde sin tocarlos; `python tasks.py test`, `lint`, `typecheck` y `openapi-check` en verde.
 

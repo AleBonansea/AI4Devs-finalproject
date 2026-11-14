@@ -81,5 +81,6 @@ class CargoRegistrado(CargoSimulado):
     fecha_dia: date | None
     creado_por: int
     creado_en: datetime
-    # Se calcula en cada respuesta; no se guarda.
+    # Saldo de la familia en la temporada, con los pagos descontados; se calcula en
+    # cada respuesta (vista v_cuenta_corriente), no se guarda.
     saldo_pendiente: Decimal

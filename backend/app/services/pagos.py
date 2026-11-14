@@ -11,12 +11,11 @@ resolvió FastAPI:
 
 from decimal import Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.errores import ReglaIncumplida
 from app.models.cargo import Cargo
-from app.models.cuenta_corriente import v_cuenta_corriente
 from app.models.enums import OrigenMovimiento, TipoMovimiento
 from app.models.pago import Pago
 from app.models.temporada import EstadoTemporada, Temporada
@@ -24,7 +23,7 @@ from app.models.tesoreria import TesoreriaMovimiento
 from app.models.usuario import Usuario
 from app.schemas.pagos import PagoEntrada, PagoRegistrado
 from app.services.comunes import id_posible
-from app.services.cuenta_corriente import saldo_de_cargos
+from app.services.cuenta_corriente import saldo_de_cargos, saldo_de_familia
 
 MENSAJE_CARGO_INEXISTENTE = "El cargo no existe."
 MENSAJE_CARGO_SALDADO = "El cargo ya está saldado."
@@ -95,15 +94,7 @@ def registrar_pago(
     # Se vuelve a consultar (ya ve el pago nuevo): restar en Python sería un
     # segundo cálculo del saldo.
     saldo_cargo = saldo_de_cargos(sesion, [cargo.id])[cargo.id]
-    # El de la familia sale de la vista; sin cargos no hay fila (acá siempre hay una).
-    saldo_pendiente = Decimal(
-        sesion.execute(
-            select(func.coalesce(v_cuenta_corriente.c.saldo_pendiente, 0)).where(
-                v_cuenta_corriente.c.familia_id == cargo.familia_id,
-                v_cuenta_corriente.c.temporada_id == cargo.temporada_id,
-            )
-        ).scalar_one()
-    ).quantize(Decimal("0.01"))
+    saldo_pendiente = saldo_de_familia(sesion, cargo.familia_id, cargo.temporada_id)
     sesion.commit()
     return PagoRegistrado(
         id=pago.id,
