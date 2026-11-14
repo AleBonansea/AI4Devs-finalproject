@@ -23,8 +23,10 @@
     - los botones salen en mayúsculas;
     - la fuente `Inter` no se carga.
 
-- [ ] 2.4 Con la skill `frontend-feature`: el `test-writer` agrega el test del Scenario «En el aviso, el encabezado va antes del aviso» (Requirement «Encabezado de las pantallas sin sesión»), que se sumó por el hallazgo 2 del pase adversarial. Como el encuadre ya está hecho, se espera que pase. Se comprueba que no es vacío alterando el orden de `CambioPendiente.tsx` de forma temporal, y se restaura. Verificación: el test falla con el orden alterado y pasa con el real; toda la suite en verde y la huella nueva congelada.
-- [ ] 2.5 Reemplazar «Escuelita de Verano» por «Escuela de Verano» en `frontend/src/pages/Inicio.tsx` y en el `<title>` de `frontend/index.html`. Es un texto que ningún Scenario fija, así que se hace directo, sin subagentes. Verificación: un `grep -rn "Escuelita de Verano" frontend/src frontend/index.html` sin resultados, y la suite, el lint (`eslint` más `prettier --check --end-of-line auto`) y el build en verde.
+- [x] 2.4 Con la skill `frontend-feature`: el `test-writer` agrega el test del Scenario «En el aviso, el encabezado va antes del aviso» (Requirement «Encabezado de las pantallas sin sesión»), que se sumó por el hallazgo 2 del pase adversarial. Como el encuadre ya está hecho, se espera que pase. Se comprueba que no es vacío alterando el orden de `CambioPendiente.tsx` de forma temporal, y se restaura. Verificación: el test falla con el orden alterado y pasa con el real; toda la suite en verde y la huella nueva congelada.
+  - Resultado: el test pasa con el orden real. Se probó una mutación: el aviso antes del encuadre, que quedaba vacío. Con ella falló solo este test; «El aviso de cambio pendiente muestra el mismo encabezado», que comprueba la presencia, siguió en verde, que es justo el hueco que cubre este test. Suite en 63 de 63 y huella nueva en `.claude/tmp/congelados-front.txt`. Se aclaró en el Scenario que «ese título» es el título del aviso.
+- [x] 2.5 Reemplazar «Escuelita de Verano» por «Escuela de Verano» en `frontend/src/pages/Inicio.tsx` y en el `<title>` de `frontend/index.html`. Es un texto que ningún Scenario fija, así que se hace directo, sin subagentes. Verificación: un `grep -rn "Escuelita de Verano" frontend/src frontend/index.html` sin resultados, y la suite, el lint (`eslint` más `prettier --check --end-of-line auto`) y el build en verde.
+  - Resultado: el `grep` no devuelve nada; suite, lint y build en verde.
 
 ## 3. Documentación
 
@@ -32,15 +34,15 @@
 
 ## 4. Cierre
 
-- [ ] 4.1 Pase único del subagente `adversarial-reviewer` sobre el change terminado, antes de abrir el pull request. Verificación: hallazgos resueltos o justificados en este archivo.
+- [x] 4.1 Pase único del subagente `adversarial-reviewer` sobre el change terminado, antes de abrir el pull request. Verificación: hallazgos resueltos o justificados en este archivo.
   - Pase hecho: 0 graves, 5 menores, 2 preguntas.
     1. *El candado dejaba leer `frontend/dist/`* → **resuelto**. `frontend/dist` entra en las rutas protegidas del hook y en la prosa del test-writer.
-    2. *El orden del encabezado se exige en las dos pantallas y solo se prueba en el ingreso* → **pendiente de decisión del usuario**: requiere un Scenario nuevo.
-    3. *El Requirement nuevo choca con «Aviso de cambio de contraseña pendiente» («solo un aviso»)* → **pendiente de decisión del usuario**: requiere pasarlo a MODIFIED.
+    2. *El orden del encabezado se exige en las dos pantallas y solo se prueba en el ingreso* → **pendiente de decisión del usuario**: **resuelto** con el Scenario «En el aviso, el encabezado va antes del aviso» (tarea 2.4).
+    3. *El Requirement nuevo choca con «Aviso de cambio de contraseña pendiente» («solo un aviso»)* → **pendiente de decisión del usuario**: **resuelto**: el Requirement pasó a MODIFIED y dice «debajo del encabezado de las pantallas sin sesión, solo un aviso».
     4. *El proposal y el design decían que los assets «ya estaban en el repo» y prometían un «logo circular»* → **resuelto**: se corrigió el texto.
     5. *El hook fallaba abierto ante un error propio* → **resuelto**: ahora falla cerrado. Con `python` fuera del PATH no se puede cubrir, y quedó documentado en el hook y en CLAUDE.md.
     - Pregunta *¿el test-writer puede escribir en la implementación?* → **resuelto**: el hook corta también `Write`, `Edit` y `NotebookEdit` sobre esas rutas.
-    - Pregunta *¿«Escuela» o «Escuelita» de Verano?* → **pendiente de decisión del usuario**.
+    - Pregunta *¿«Escuela» o «Escuelita» de Verano?* → **resuelto**: el usuario decidió «Escuela de Verano» (tarea 2.5).
   - Comprobaciones del hook después de los cambios: 18 casos con el resultado esperado, entre ellos un JSON roto y una entrada con forma inesperada, que bloquean.
 
 ## Workflow follow-up

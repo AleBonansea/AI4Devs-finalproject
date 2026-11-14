@@ -8,7 +8,7 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { abrir, fingirFetch, respuestaJson, usuarioYo } from "./montar";
+import { CLAVE_TOKEN, abrir, fingirFetch, respuestaJson, usuarioYo } from "./montar";
 
 const ALT_LOGO = "Logo de la Escuela de Verano";
 const TITULO = "Escuela de Verano";
@@ -94,6 +94,32 @@ describe("Encabezado de las pantallas sin sesión", () => {
     expect(await screen.findByRole("img", { name: ALT_LOGO })).toBeInTheDocument();
     expect(await screen.findByRole("heading", { level: 1, name: TITULO })).toBeInTheDocument();
     expectSubtituloExacto(await screen.findByText(SUBTITULO));
+  });
+
+  it("En el aviso, el encabezado va antes del aviso", async () => {
+    // Recarga: el token ya esta guardado y `GET /auth/yo` devuelve
+    // `UsuarioActual` con el cambio de contrasena pendiente.
+    localStorage.setItem(CLAVE_TOKEN, "tok-vigente");
+    fingirFetch(async (url, init) => {
+      const metodo = (init?.method ?? "GET").toUpperCase();
+      if (metodo === "GET" && url.includes("/api/v1/auth/yo")) {
+        return respuestaJson(200, usuarioYo({ debe_cambiar_password: true }));
+      }
+      return respuestaJson(404, { detail: "No encontrado." });
+    });
+
+    abrir("/");
+
+    const aviso = await screen.findByText(TITULO_CAMBIO_PENDIENTE);
+    const logo = await screen.findByRole("img", { name: ALT_LOGO });
+    const titulo = await screen.findByRole("heading", { level: 1, name: TITULO });
+    const subtitulo = await screen.findByText(SUBTITULO);
+    const salir = await screen.findByRole("button", { name: "Salir" });
+
+    expect(vaAntes(logo, titulo)).toBe(true);
+    expect(vaAntes(titulo, subtitulo)).toBe(true);
+    expect(vaAntes(subtitulo, aviso)).toBe(true);
+    expect(vaAntes(aviso, salir)).toBe(true);
   });
 });
 

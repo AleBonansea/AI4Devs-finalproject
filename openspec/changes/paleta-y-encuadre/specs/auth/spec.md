@@ -24,7 +24,7 @@ La pantalla de ingreso y el aviso de cambio de contraseña pendiente SHALL mostr
 #### Scenario: En el aviso, el encabezado va antes del aviso
 - **GIVEN** hay un token guardado y `GET /api/v1/auth/yo` responde 200 con `debe_cambiar_password` en true
 - **WHEN** se abre `/`
-- **THEN** en el orden del documento, la imagen del logo va antes del título `Escuela de Verano`, el título va antes del texto `Centro Médico · Administración de la temporada`, ese texto va antes de `Tenés que cambiar tu contraseña antes de continuar.` y ese título va antes del botón `Salir`
+- **THEN** en el orden del documento, la imagen del logo va antes del título `Escuela de Verano`, el título va antes del texto `Centro Médico · Administración de la temporada`, ese texto va antes del título del aviso `Tenés que cambiar tu contraseña antes de continuar.`, y el título del aviso va antes del botón `Salir`
 
 ### Requirement: Un solo botón de ingreso
 La pantalla de ingreso SHALL tener un único botón, `Ingresar`: el rol con el que se entra sale del usuario que ingresa. MUST NOT ofrecer botones ni opciones para entrar eligiendo un rol.
