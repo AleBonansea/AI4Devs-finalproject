@@ -81,6 +81,16 @@
     - Tests nuevos: 3 en rojo por el motivo correcto (Guardar habilitado sin cambios, Martín desmarcable, campos habilitados al guardar). «Lo elegido sin guardar se puede quitar» estaba en verde desde antes y fija el límite de la regla.
     - En verde: frontend 82 tests, `front-lint` y build.
     - El descarte de la respuesta tardía del `PUT` no tiene test: con los campos deshabilitados no se puede provocar desde la pantalla (design, «Marcas y guardado»).
+  - **Recorrida en el navegador (14/11/2026)**, contra la base de desarrollo sembrada, con API en `:8000` y Vite en `:5173`. La pantalla se manejó con JavaScript en la página, como en 6.1.
+    - Hecho: a las 11:35 de Argentina, `Fecha` arranca en `2026-11-14`, la fecha local.
+    - Hecho: como `jperez`, en «Delfines» mañana del 2027-01-05 con Juan Pérez ya ausente:
+      - `Guardar` está deshabilitado.
+      - Pulsar `Ausente` deja a Juan en Ausente.
+      - Pasar a Presente lo habilita; volver a Ausente lo deshabilita otra vez.
+    - Hecho: al guardar a Juan presente, `Grupo`, `Fecha` y `Guardar` quedaron deshabilitados mientras duró el `PUT` (unos 65 ms). Después se ve `Asistencia guardada.` con `Guardar` deshabilitado.
+    - Hecho: en «Delfines» tarde, una marca de Lucía Gómez sin guardar se quita al volver a pulsarla.
+    - Hecho: guardadas Lucía presente y Mateo Torres ausente por `jperez`, `lrodriguez` corrigió solo a Mateo desde la pantalla. En la base, Lucía sigue con `jperez` y la misma hora; Mateo pasó a `lrodriguez` con hora nueva.
+    - Hecho: en un iframe de 360 px, sin scroll horizontal, ningún elemento fuera del cuadro y botones de 49 px de alto.
 
 ## Workflow follow-up
 
