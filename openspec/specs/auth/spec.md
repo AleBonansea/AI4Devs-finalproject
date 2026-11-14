@@ -456,7 +456,7 @@ Si `GET /api/v1/auth/yo` responde 401, el navegador SHALL borrar el token guarda
 - **THEN** se ve el inicio con el nombre del usuario
 
 ### Requirement: Inicio de la zona protegida
-La dirección `/` SHALL mostrar el nombre y el apellido del usuario actual, su rol escrito como `Admin`, `Coordinador` o `Profesor`, un botón `Salir` y un acceso `Registrar alumno` que lleva a `/alumnos/nuevo`. Además del nombre de la aplicación, no tiene otro contenido.
+La dirección `/` SHALL mostrar el nombre y el apellido del usuario actual, su rol escrito como `Admin`, `Coordinador` o `Profesor`, un botón `Salir`, un acceso `Registrar alumno` que lleva a `/alumnos/nuevo` y un acceso `Tomar asistencia` que lleva a `/asistencia`. Además del nombre de la aplicación, no tiene otro contenido.
 
 #### Scenario: Inicio de un Profesor
 - **GIVEN** la sesión de un usuario `Carlos Gómez` con rol `profesor` y `debe_cambiar_password` en false
@@ -467,6 +467,11 @@ La dirección `/` SHALL mostrar el nombre y el apellido del usuario actual, su r
 - **GIVEN** la sesión de un Coordinador con `debe_cambiar_password` en false
 - **WHEN** se abre `/` y se pulsa `Registrar alumno`
 - **THEN** la dirección pasa a `/alumnos/nuevo`
+
+#### Scenario: Ir a tomar asistencia
+- **GIVEN** la sesión de un Profesor con `debe_cambiar_password` en false
+- **WHEN** se abre `/` y se pulsa `Tomar asistencia`
+- **THEN** la dirección pasa a `/asistencia`
 
 ### Requirement: Aviso de cambio de contraseña pendiente
 Si el usuario actual tiene `debe_cambiar_password` en true, venga del ingreso o de `GET /api/v1/auth/yo`, toda la zona protegida SHALL mostrar, debajo del encabezado de las pantallas sin sesión, solo un aviso con el título `Tenés que cambiar tu contraseña antes de continuar.` y el texto `El cambio de contraseña todavía no está disponible. Pedile ayuda a un Admin.`, más el botón `Salir`. MUST NOT mostrar el inicio.
