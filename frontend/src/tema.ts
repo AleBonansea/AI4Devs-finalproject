@@ -80,7 +80,11 @@ export const tema = createTheme({
   },
   shape: { borderRadius: 12 },
   components: {
-    MuiButton: { defaultProps: { variant: "contained", disableElevation: true } },
+    MuiButton: {
+      defaultProps: { variant: "contained", disableElevation: true },
+      // Como en el prototipo: «Ingresar» en negrita, no «INGRESAR».
+      styleOverrides: { root: { textTransform: "none", fontWeight: 700 } },
+    },
     MuiTextField: { defaultProps: { size: "small", fullWidth: true } },
   },
 });
