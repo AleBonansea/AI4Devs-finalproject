@@ -256,3 +256,39 @@ class TestQuienPuedeGuardar:
 
         assert respuesta.status_code == 401, respuesta.text
         assert contar_asistencias(sesion, date(2027, 1, 5)) == 0
+
+
+# --- Requirement: Quién puede abrir y guardar la asistencia (tarea 7.3) ----
+
+from tests.functional.asistencia.preparacion import errores_con_loc_terminado_en  # noqa: E402
+
+
+class TestProfesorNoCuelaInscripcionesAjenas:
+    def test_el_profesor_que_cuela_una_inscripcion_de_otro_grupo_recibe_422_sin_guardar(
+        self,
+        cliente: TestClient,
+        sesion: Session,
+        vigente: int,
+        autor: int,
+        delfines_manana: int,
+        juan_en_delfines: int,
+        jperez: dict[str, str],
+    ) -> None:
+        # Scenario: Profesor cuela en su grupo una inscripción de otro grupo
+        tiburones = insertar_grupo(sesion, vigente, "Tiburones", "manana")
+        ana = crear_alumno(sesion, "Ana", "Pérez")
+        ana_en_tiburones = inscribir(sesion, ana, tiburones, vigente, "manana", autor)
+
+        respuesta = cliente.put(
+            url_asistencia(delfines_manana, "2027-01-05"),
+            json=cuerpo_guardado((juan_en_delfines, True), (ana_en_tiburones, True)),
+            headers=jperez,
+        )
+
+        assert respuesta.status_code == 422, respuesta.text
+        errores = errores_con_loc_terminado_en(respuesta, "asistencias", 1, "inscripcion_id")
+        assert [e["msg"] for e in errores] == [
+            "Esa inscripción no es de este grupo."
+        ], respuesta.text
+        assert not errores_con_loc_terminado_en(respuesta, "asistencias", 0, "inscripcion_id")
+        assert contar_asistencias(sesion, date(2027, 1, 5)) == 0

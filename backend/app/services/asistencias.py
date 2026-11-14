@@ -190,6 +190,8 @@ def guardar_asistencia(
                 "registrado_por": insercion.excluded.registrado_por,
                 "registrado_en": func.now(),
             },
+            # Solo se reescribe lo que cambio: lo igual conserva autor y hora.
+            where=Asistencia.presente.is_distinct_from(insercion.excluded.presente),
         )
     )
     sesion.commit()

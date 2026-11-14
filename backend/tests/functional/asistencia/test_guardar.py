@@ -323,3 +323,90 @@ class TestGuardarLaAsistencia:
         assert set(despues) == set(antes)
         esperado = {**antes, "asistencia": antes["asistencia"] + 1}
         assert despues == esperado
+
+
+# --- Requirement: Guardar la asistencia (tarea 7.3) --------------------------
+# Clase aparte para no tocar los tests que ya estaban. El estado previo lleva
+# `registrado_en` fijado a mano (HORA_VIEJA): `now()` de Postgres es la hora
+# de inicio de la transaccion y el test corre dentro de una sola, asi que sin
+# fijarlo un registro reescrito tendria la misma hora que el original.
+
+
+class TestGuardarSoloLoQueCambia:
+    def test_corregir_a_martin_no_cambia_autor_ni_hora_de_juan_y_sofia(
+        self,
+        cliente: TestClient,
+        sesion: Session,
+        delfines_manana: int,
+        ya_tomada_por_jperez: dict[str, int],
+        jperez_id: int,
+        coordinador_id: int,
+        coordinador: dict[str, str],
+    ) -> None:
+        # Scenario: Corregir a uno no cambia el autor de los demás
+        respuesta = cliente.put(
+            url_asistencia(delfines_manana, "2027-01-05"),
+            json=cuerpo_guardado(
+                (ya_tomada_por_jperez["Pérez"], True),
+                (ya_tomada_por_jperez["Ruiz"], True),
+                (ya_tomada_por_jperez["Gómez"], True),
+            ),
+            headers=coordinador,
+        )
+
+        assert respuesta.status_code == 200, respuesta.text
+        assert nombres_y_presente(respuesta.json()) == [
+            ("Martín", "Gómez", True),
+            ("Juan", "Pérez", True),
+            ("Sofía", "Ruiz", True),
+        ]
+
+        for apellido in ("Pérez", "Ruiz"):
+            registros = registros_de(sesion, ya_tomada_por_jperez[apellido], DIA)
+            assert len(registros) == 1, (apellido, registros)
+            assert registros[0].presente is True, apellido
+            assert registros[0].registrado_por == jperez_id, apellido
+            assert registros[0].registrado_en == HORA_VIEJA, (apellido, registros[0])
+
+        martin = registros_de(sesion, ya_tomada_por_jperez["Gómez"], DIA)
+        assert len(martin) == 1, martin
+        assert martin[0].presente is True
+        assert martin[0].registrado_por == coordinador_id
+        assert martin[0].registrado_en != HORA_VIEJA
+        assert contar_asistencias(sesion, DIA) == 3
+
+    def test_guardar_lo_mismo_deja_autor_y_hora_de_jperez(
+        self,
+        cliente: TestClient,
+        sesion: Session,
+        delfines_manana: int,
+        tres_en_delfines: dict[str, int],
+        jperez_id: int,
+        coordinador: dict[str, str],
+    ) -> None:
+        # Scenario: Guardar lo mismo no cambia nada
+        # Given del Scenario: solo Juan presente y Martin ausente (Sofia sin tomar).
+        juan = tres_en_delfines["Pérez"]
+        martin = tres_en_delfines["Gómez"]
+        registrar_asistencia_con_hora(sesion, juan, DIA, True, jperez_id, HORA_VIEJA)
+        registrar_asistencia_con_hora(sesion, martin, DIA, False, jperez_id, HORA_VIEJA)
+
+        respuesta = cliente.put(
+            url_asistencia(delfines_manana, "2027-01-05"),
+            json=cuerpo_guardado((juan, True), (martin, False)),
+            headers=coordinador,
+        )
+
+        assert respuesta.status_code == 200, respuesta.text
+        assert nombres_y_presente(respuesta.json()) == [
+            ("Martín", "Gómez", False),
+            ("Juan", "Pérez", True),
+            ("Sofía", "Ruiz", None),
+        ]
+        for inscripcion, presente in ((juan, True), (martin, False)):
+            registros = registros_de(sesion, inscripcion, DIA)
+            assert len(registros) == 1, registros
+            assert registros[0].presente is presente
+            assert registros[0].registrado_por == jperez_id
+            assert registros[0].registrado_en == HORA_VIEJA, registros[0]
+        assert contar_asistencias(sesion, DIA) == 2
