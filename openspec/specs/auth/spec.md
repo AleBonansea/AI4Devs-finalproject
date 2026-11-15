@@ -456,7 +456,7 @@ Si `GET /api/v1/auth/yo` responde 401, el navegador SHALL borrar el token guarda
 - **THEN** se ve el inicio con el nombre del usuario
 
 ### Requirement: Inicio de la zona protegida
-La dirección `/` SHALL mostrar el nombre y el apellido del usuario actual, su rol escrito como `Admin`, `Coordinador` o `Profesor`, un botón `Salir`, un acceso `Registrar alumno` que lleva a `/alumnos/nuevo` y un acceso `Tomar asistencia` que lleva a `/asistencia`. Solo para el Admin, además, un acceso `Registrar cargo` que lleva a `/cargos/nuevo`. Además del nombre de la aplicación, no tiene otro contenido.
+La dirección `/` SHALL mostrar el nombre y el apellido del usuario actual, su rol escrito como `Admin`, `Coordinador` o `Profesor`, un botón `Salir`, un acceso `Registrar alumno` que lleva a `/alumnos/nuevo` y un acceso `Tomar asistencia` que lleva a `/asistencia`. Solo para el Admin, además, un acceso `Registrar cargo` que lleva a `/cargos/nuevo` y un acceso `Cuenta corriente` que lleva a `/cuenta-corriente`. Además del nombre de la aplicación, no tiene otro contenido.
 
 #### Scenario: Inicio de un Profesor
 - **GIVEN** la sesión de un usuario `Carlos Gómez` con rol `profesor` y `debe_cambiar_password` en false
@@ -478,15 +478,20 @@ La dirección `/` SHALL mostrar el nombre y el apellido del usuario actual, su r
 - **WHEN** se abre `/` y se pulsa `Registrar cargo`
 - **THEN** la dirección pasa a `/cargos/nuevo`
 
+#### Scenario: Ir a la cuenta corriente
+- **GIVEN** la sesión de un Admin con `debe_cambiar_password` en false
+- **WHEN** se abre `/` y se pulsa `Cuenta corriente`
+- **THEN** la dirección pasa a `/cuenta-corriente`
+
 #### Scenario: El Coordinador no ve el acceso a cobrar
 - **GIVEN** la sesión de un Coordinador con `debe_cambiar_password` en false
 - **WHEN** se abre `/`
-- **THEN** se ven `Registrar alumno` y `Tomar asistencia`, y no se ve `Registrar cargo`
+- **THEN** se ven `Registrar alumno` y `Tomar asistencia`, y no se ven `Registrar cargo` ni `Cuenta corriente`
 
 #### Scenario: El Profesor no ve el acceso a cobrar
 - **GIVEN** la sesión de un Profesor con `debe_cambiar_password` en false
 - **WHEN** se abre `/`
-- **THEN** no se ve `Registrar cargo`
+- **THEN** no se ven `Registrar cargo` ni `Cuenta corriente`
 
 ### Requirement: Aviso de cambio de contraseña pendiente
 Si el usuario actual tiene `debe_cambiar_password` en true, venga del ingreso o de `GET /api/v1/auth/yo`, toda la zona protegida SHALL mostrar, debajo del encabezado de las pantallas sin sesión, solo un aviso con el título `Tenés que cambiar tu contraseña antes de continuar.` y el texto `El cambio de contraseña todavía no está disponible. Pedile ayuda a un Admin.`, más el botón `Salir`. MUST NOT mostrar el inicio.
