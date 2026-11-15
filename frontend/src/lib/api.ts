@@ -426,3 +426,80 @@ export function simularCargo(entrada: CargoEntrada): Promise<CargoSimulado> {
 export function registrarCargo(entrada: CargoEntrada): Promise<CargoRegistrado> {
   return api.post<CargoRegistrado>("/cargos", entrada);
 }
+
+// --- Cuenta corriente -------------------------------------------------------------
+// Los tipos copian los esquemas del contrato (docs/api/openapi.json). Los montos
+// son texto: la pantalla los muestra tal como llegan, sin sumarlos ni restarlos.
+
+/** `PagoEnCuenta`: un pago aplicado a un cargo. */
+export interface PagoEnCuenta {
+  id: number;
+  monto: string;
+  fecha_pago: string;
+}
+
+/** `PeriodoDeCargo`: el Mes, Quincena o Semana al que corresponde un cargo. */
+export interface PeriodoDeCargo {
+  nombre: string;
+  fecha_desde: string;
+  fecha_hasta: string;
+}
+
+/** `CargoEnCuenta`: un cargo con lo pagado, su saldo y sus pagos. */
+export interface CargoEnCuenta {
+  id: number;
+  alumno_id: number;
+  nombre: string;
+  apellido: string;
+  tipo_cargo: string;
+  modalidad: Modalidad | null;
+  turno: Turno | null;
+  periodo: PeriodoDeCargo | null;
+  fecha_dia: string | null;
+  monto_total: string;
+  pagado: string;
+  saldo: string;
+  creado_en: string;
+  pagos: PagoEnCuenta[];
+}
+
+/** `CuentaCorriente`: los cargos de la familia en la temporada vigente y su saldo. */
+export interface CuentaCorriente {
+  familia_id: number;
+  etiqueta: string;
+  categoria: CategoriaFamilia;
+  total_cargos: string;
+  total_pagado: string;
+  saldo_pendiente: string;
+  cargos: CargoEnCuenta[];
+}
+
+/** La cuenta corriente de la familia en la temporada vigente. */
+export function cuentaCorriente(familiaId: number): Promise<CuentaCorriente> {
+  return api.get<CuentaCorriente>(`/familias/${familiaId}/cuenta-corriente`);
+}
+
+// --- Pagos --------------------------------------------------------------------------
+
+/** `PagoEntrada`: QUE se paga. `monto` es texto con dos decimales (`"4462.50"`). */
+export interface PagoEntrada {
+  monto: string;
+  fecha_pago: string;
+}
+
+/** `PagoRegistrado`: la respuesta 201, con el saldo del cargo y el de la familia. */
+export interface PagoRegistrado {
+  id: number;
+  cargo_id: number;
+  monto: string;
+  fecha_pago: string;
+  registrado_por: number;
+  registrado_en: string;
+  saldo_cargo: string;
+  saldo_pendiente: string;
+}
+
+/** Registra un pago del cargo; la API valida que no supere el saldo. */
+export function registrarPago(cargoId: number, entrada: PagoEntrada): Promise<PagoRegistrado> {
+  return api.post<PagoRegistrado>(`/cargos/${cargoId}/pagos`, entrada);
+}

@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, func
+from sqlalchemy import DateTime, MetaData, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 
@@ -21,3 +21,9 @@ class MarcaDeCreacion:
         server_default=func.now(),
         nullable=False,
     )
+
+
+# Las vistas van sobre un MetaData PROPIO y no sobre Base.metadata: si
+# estuvieran en Base.metadata, autogenerate propondria crearlas como tabla en
+# cada migracion. Las crea y las borra la migracion con SQL escrito a mano.
+metadata_vistas = MetaData()

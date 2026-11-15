@@ -366,6 +366,93 @@
         }
       }
     },
+    "/api/v1/familias/{familia_id}/cuenta-corriente": {
+      "get": {
+        "tags": [
+          "familias"
+        ],
+        "summary": "Cuenta Corriente De Familia",
+        "description": "Cargos, pagos y saldos de la familia en la temporada vigente. Solo el\nAdmin: el 403 llega antes de buscar la familia.",
+        "operationId": "cuenta_corriente_de_familia_api_v1_familias__familia_id__cuenta_corriente_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "familia_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Familia Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CuentaCorriente"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La familia no existe.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "La familia no existe."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/personas": {
       "get": {
         "tags": [
@@ -966,6 +1053,116 @@
         ]
       }
     },
+    "/api/v1/cargos/{cargo_id}/pagos": {
+      "post": {
+        "tags": [
+          "cargos"
+        ],
+        "summary": "Pagar",
+        "description": "Registra un pago del cargo y su ingreso en tesorería. Solo el Admin.",
+        "operationId": "pagar_api_v1_cargos__cargo_id__pagos_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cargo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Cargo Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PagoEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagoRegistrado"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El cargo no existe.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "El cargo no existe."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El cargo ya está saldado.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "El cargo ya está saldado."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Monto o fecha inválidos, o monto mayor que el saldo del cargo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErroresDeCampo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/salud": {
       "get": {
         "tags": [
@@ -1216,6 +1413,118 @@
           "tarifario"
         ],
         "title": "CalculoCargo"
+      },
+      "CargoEnCuenta": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "alumno_id": {
+            "type": "integer",
+            "title": "Alumno Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "apellido": {
+            "type": "string",
+            "title": "Apellido"
+          },
+          "tipo_cargo": {
+            "type": "string",
+            "title": "Tipo Cargo"
+          },
+          "modalidad": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Modalidad"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "turno": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Turno"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "periodo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PeriodoDeCargo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fecha_dia": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Dia"
+          },
+          "monto_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto Total"
+          },
+          "pagado": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Pagado"
+          },
+          "saldo": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Saldo"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          },
+          "pagos": {
+            "items": {
+              "$ref": "#/components/schemas/PagoEnCuenta"
+            },
+            "type": "array",
+            "title": "Pagos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "alumno_id",
+          "nombre",
+          "apellido",
+          "tipo_cargo",
+          "modalidad",
+          "turno",
+          "periodo",
+          "fecha_dia",
+          "monto_total",
+          "pagado",
+          "saldo",
+          "creado_en",
+          "pagos"
+        ],
+        "title": "CargoEnCuenta",
+        "description": "Un cargo de la familia: exactamente estos catorce campos."
       },
       "CargoEntrada": {
         "properties": {
@@ -1468,6 +1777,54 @@
           "no_socio"
         ],
         "title": "CategoriaFamilia"
+      },
+      "CuentaCorriente": {
+        "properties": {
+          "familia_id": {
+            "type": "integer",
+            "title": "Familia Id"
+          },
+          "etiqueta": {
+            "type": "string",
+            "title": "Etiqueta"
+          },
+          "categoria": {
+            "$ref": "#/components/schemas/CategoriaFamilia"
+          },
+          "total_cargos": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Cargos"
+          },
+          "total_pagado": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Pagado"
+          },
+          "saldo_pendiente": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Saldo Pendiente"
+          },
+          "cargos": {
+            "items": {
+              "$ref": "#/components/schemas/CargoEnCuenta"
+            },
+            "type": "array",
+            "title": "Cargos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "familia_id",
+          "etiqueta",
+          "categoria",
+          "total_cargos",
+          "total_pagado",
+          "saldo_pendiente",
+          "cargos"
+        ],
+        "title": "CuentaCorriente"
       },
       "ErrorDeCampo": {
         "properties": {
@@ -1776,6 +2133,130 @@
         ],
         "title": "OpcionesDeCargo",
         "description": "Lo que la pantalla necesita para armar un cargo: los tipos y los\nperíodos de la temporada vigente."
+      },
+      "PagoEnCuenta": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "monto": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto"
+          },
+          "fecha_pago": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Pago"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "monto",
+          "fecha_pago"
+        ],
+        "title": "PagoEnCuenta",
+        "description": "Un pago no anulado: exactamente estos tres campos."
+      },
+      "PagoEntrada": {
+        "properties": {
+          "monto": {
+            "type": "string",
+            "title": "Monto"
+          },
+          "fecha_pago": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Pago"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "monto",
+          "fecha_pago"
+        ],
+        "title": "PagoEntrada"
+      },
+      "PagoRegistrado": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "cargo_id": {
+            "type": "integer",
+            "title": "Cargo Id"
+          },
+          "monto": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto"
+          },
+          "fecha_pago": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Pago"
+          },
+          "registrado_por": {
+            "type": "integer",
+            "title": "Registrado Por"
+          },
+          "registrado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Registrado En"
+          },
+          "saldo_cargo": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Saldo Cargo"
+          },
+          "saldo_pendiente": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Saldo Pendiente"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "cargo_id",
+          "monto",
+          "fecha_pago",
+          "registrado_por",
+          "registrado_en",
+          "saldo_cargo",
+          "saldo_pendiente"
+        ],
+        "title": "PagoRegistrado"
+      },
+      "PeriodoDeCargo": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "fecha_desde": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Desde"
+          },
+          "fecha_hasta": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Hasta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "fecha_desde",
+          "fecha_hasta"
+        ],
+        "title": "PeriodoDeCargo"
       },
       "PeriodoOpcion": {
         "properties": {

@@ -26,16 +26,9 @@ import {
   type AsistenciaDelGrupo,
   type AsistenciaMarcada,
 } from "../lib/api";
+import { hoyLocal } from "../lib/fechas";
 
 const MENSAJE_INESPERADO = "No se pudo completar la operación.";
-
-/** Hoy como `AAAA-MM-DD` con la fecha LOCAL del dispositivo (`toISOString` da la de UTC). */
-function hoyLocal(): string {
-  const ahora = new Date();
-  const mes = String(ahora.getMonth() + 1).padStart(2, "0");
-  const dia = String(ahora.getDate()).padStart(2, "0");
-  return `${ahora.getFullYear()}-${mes}-${dia}`;
-}
 
 function marcasDe(asistencia: AsistenciaDelGrupo): Record<number, boolean | null> {
   return Object.fromEntries(

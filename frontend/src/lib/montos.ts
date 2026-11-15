@@ -43,3 +43,32 @@ export function formatearPorcentaje(porcentaje: string): string {
   const sinCeros = decimales.replace(/0+$/, "");
   return sinCeros === "" ? `${entero} %` : `${entero},${sinCeros} %`;
 }
+
+/**
+ * Escribe un monto de la API para un campo de formulario: como
+ * `formatearMonto` pero sin el `$ ` (`55.000`, `4.462,50`). Un texto mal
+ * formado lanza `Error`.
+ */
+export function montoParaEditar(monto: string): string {
+  const [entero, centavos] = partir(monto, "monto");
+  const parteEntera = conMiles(entero);
+  return centavos === "00" ? parteEntera : `${parteEntera},${centavos}`;
+}
+
+/** Lo que escribe una persona: miles con punto (opcionales) y hasta dos decimales con coma. */
+const MONTO_ESCRITO = /^(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d{1,2}))?$/;
+
+/**
+ * Lee un monto escrito a mano (`55.000`, `4.462,50`, `4462,5`) y lo devuelve
+ * como texto de la API con dos decimales (`"4462.50"`), o `null` si no se
+ * entiende. Ignora los espacios alrededor. Trabaja sobre el texto, sin
+ * `Number` ni `parseFloat`.
+ */
+export function leerMonto(texto: string): string | null {
+  const partes = MONTO_ESCRITO.exec(texto.trim());
+  if (!partes) {
+    return null;
+  }
+  const [, entero = "", decimales = ""] = partes;
+  return `${entero.replace(/\./g, "")}.${decimales.padEnd(2, "0")}`;
+}

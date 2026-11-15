@@ -68,7 +68,9 @@ Todo el cálculo de un cargo está en `app/services/calculo_cargo.py`, como **fu
 
 ### El precio nunca viene del cliente
 
-El frontend manda **qué** se cobra (alumno, tipo, modalidad, período). El monto lo calcula y lo guarda la API. Un endpoint que acepte un importe del cuerpo de la petición es un error.
+El frontend manda **qué** se cobra (alumno, tipo, modalidad, período). El monto lo calcula y lo guarda la API. Un endpoint que acepte el precio de un cargo en el cuerpo de la petición es un error.
+
+La regla es sobre el **precio de un cargo**, no sobre todo importe. El monto de un **pago** sí viene del cuerpo: es lo que la familia entregó, un hecho que solo el Admin conoce. La API lo acota (positivo, hasta dos decimales, nunca más que el saldo del cargo) y no lo calcula.
 
 ### Todo cargo guarda su cálculo
 

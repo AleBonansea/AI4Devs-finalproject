@@ -47,6 +47,7 @@ from app.services.calculo_cargo import (
     calcular_monto_fijo,
 )
 from app.services.comunes import id_posible
+from app.services.cuenta_corriente import saldo_de_familia
 
 MENSAJE_ALUMNO_INEXISTENTE = "El alumno no existe."
 MENSAJE_TIPO_INEXISTENTE = "El tipo de cargo no existe."
@@ -65,7 +66,6 @@ MENSAJE_TEMPORADA_CERRADA = (
     "El tipo de cargo es de una temporada cerrada, que queda solo para consulta."
 )
 
-_CENTAVO = Decimal("0.01")
 # Los tres índices únicos de `cargo` empiezan así (ver app/models/cargo.py).
 _PREFIJO_INDICES_UNICOS = "uq_cargo_"
 
@@ -443,7 +443,7 @@ def _es_choque_de_repetido(exc: IntegrityError) -> bool:
 
 
 def registrar_cargo(sesion: Session, usuario: Usuario, entrada: CargoEntrada) -> CargoRegistrado:
-    """Paso 8 sobre `preparar_cargo`: guarda y suma el saldo. El monto es el
+    """Paso 8 sobre `preparar_cargo`: guarda y devuelve el saldo. El monto es el
     del cálculo, nunca uno del cliente."""
     preparado = preparar_cargo(sesion, entrada)
     d = preparado.desglose
@@ -474,14 +474,9 @@ def registrar_cargo(sesion: Session, usuario: Usuario, entrada: CargoEntrada) ->
             raise ConflictoDeCargo(preparado.mensaje_repetido) from None
         raise
 
-    # El saldo no se guarda: es la suma de los cargos de la familia en la
-    # temporada del cargo. Se cuantiza porque la suma vacía daría `0` sin decimales.
-    suma = sesion.execute(
-        select(func.coalesce(func.sum(Cargo.monto_total), Decimal(0))).where(
-            Cargo.familia_id == preparado.familia_id,
-            Cargo.temporada_id == preparado.temporada_id,
-        )
-    ).scalar_one()
+    # El saldo no se guarda: sale de la vista de cuenta corriente, que descuenta
+    # los pagos no anulados de la familia en la temporada del cargo.
+    saldo_pendiente = saldo_de_familia(sesion, preparado.familia_id, preparado.temporada_id)
     sesion.commit()
     return CargoRegistrado(
         familia_id=cargo.familia_id,
@@ -500,5 +495,5 @@ def registrar_cargo(sesion: Session, usuario: Usuario, entrada: CargoEntrada) ->
         fecha_dia=cargo.fecha_dia,
         creado_por=cargo.creado_por,
         creado_en=cargo.creado_en,
-        saldo_pendiente=Decimal(suma).quantize(_CENTAVO),
+        saldo_pendiente=saldo_pendiente,
     )
