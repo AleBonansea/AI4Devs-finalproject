@@ -32,3 +32,11 @@ export function formatearFecha(fecha: string | Date): string {
   const [, anio, mes, dia] = partes;
   return `${dia}/${mes}/${anio}`;
 }
+
+/** Hoy como `AAAA-MM-DD` con la fecha LOCAL del dispositivo (`toISOString` da la de UTC). */
+export function hoyLocal(): string {
+  const ahora = new Date();
+  const mes = String(ahora.getMonth() + 1).padStart(2, "0");
+  const dia = String(ahora.getDate()).padStart(2, "0");
+  return `${ahora.getFullYear()}-${mes}-${dia}`;
+}

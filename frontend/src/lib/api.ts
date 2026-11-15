@@ -478,3 +478,28 @@ export interface CuentaCorriente {
 export function cuentaCorriente(familiaId: number): Promise<CuentaCorriente> {
   return api.get<CuentaCorriente>(`/familias/${familiaId}/cuenta-corriente`);
 }
+
+// --- Pagos --------------------------------------------------------------------------
+
+/** `PagoEntrada`: QUE se paga. `monto` es texto con dos decimales (`"4462.50"`). */
+export interface PagoEntrada {
+  monto: string;
+  fecha_pago: string;
+}
+
+/** `PagoRegistrado`: la respuesta 201, con el saldo del cargo y el de la familia. */
+export interface PagoRegistrado {
+  id: number;
+  cargo_id: number;
+  monto: string;
+  fecha_pago: string;
+  registrado_por: number;
+  registrado_en: string;
+  saldo_cargo: string;
+  saldo_pendiente: string;
+}
+
+/** Registra un pago del cargo; la API valida que no supere el saldo. */
+export function registrarPago(cargoId: number, entrada: PagoEntrada): Promise<PagoRegistrado> {
+  return api.post<PagoRegistrado>(`/cargos/${cargoId}/pagos`, entrada);
+}

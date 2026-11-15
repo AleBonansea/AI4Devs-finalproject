@@ -12,6 +12,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
 import type { CargoEnCuenta } from "../lib/api";
+import { descripcionDeCargo } from "../lib/descripcionDeCargo";
 import { formatearFecha } from "../lib/fechas";
 import { formatearMonto } from "../lib/montos";
 import { NOMBRE_DEL_TURNO } from "../lib/nombres";
@@ -19,16 +20,8 @@ import { colores } from "../tema";
 
 interface Props {
   cargo: CargoEnCuenta;
-  /** Lo que pasa al tocar «Registrar pago»; la pantalla de pagos lo conecta. */
+  /** Lo que pasa al tocar «Registrar pago»: la pantalla abre el formulario del cargo. */
   alPagar?: (cargo: CargoEnCuenta) => void;
-}
-
-function descripcion(cargo: CargoEnCuenta): string {
-  if (cargo.periodo) return `${cargo.tipo_cargo} · ${cargo.periodo.nombre}`;
-  if (cargo.modalidad === "dia" && cargo.fecha_dia) {
-    return `${cargo.tipo_cargo} · Día ${formatearFecha(cargo.fecha_dia)}`;
-  }
-  return cargo.tipo_cargo;
 }
 
 function aQuien(cargo: CargoEnCuenta): string {
@@ -61,7 +54,7 @@ export default function RenglonDeCargo({ cargo, alPagar }: Props) {
       <Stack spacing={1.5}>
         <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>
           <Stack>
-            <Typography fontWeight={700}>{descripcion(cargo)}</Typography>
+            <Typography fontWeight={700}>{descripcionDeCargo(cargo)}</Typography>
             <Typography variant="body2" color="text.secondary">
               {aQuien(cargo)}
             </Typography>

@@ -17,12 +17,15 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import BuscadorFamilia from "../components/BuscadorFamilia";
+import FormularioPago from "../components/FormularioPago";
 import RenglonDeCargo from "../components/RenglonDeCargo";
 import {
   ErrorDeApi,
   cuentaCorriente,
+  type CargoEnCuenta,
   type CuentaCorriente as Cuenta,
   type FamiliaEncontrada,
+  type PagoRegistrado,
 } from "../lib/api";
 import { formatearMonto } from "../lib/montos";
 import { NOMBRE_DE_LA_CATEGORIA } from "../lib/nombres";
@@ -32,12 +35,18 @@ export default function CuentaCorriente() {
   const [familia, setFamilia] = useState<FamiliaEncontrada | null>(null);
   const [cuenta, setCuenta] = useState<Cuenta | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cargoAPagar, setCargoAPagar] = useState<CargoEnCuenta | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+  // Cada pago registrado sube el contador y la cuenta se vuelve a pedir.
+  const [version, setVersion] = useState(0);
 
   const familiaId = familia?.id ?? null;
   useEffect(() => {
-    setCuenta(null);
     setError(null);
-    if (familiaId === null) return;
+    if (familiaId === null) {
+      setCuenta(null);
+      return;
+    }
     let vigente = true;
     cuentaCorriente(familiaId)
       .then((leida) => {
@@ -52,7 +61,24 @@ export default function CuentaCorriente() {
     return () => {
       vigente = false;
     };
-  }, [familiaId]);
+  }, [familiaId, version]);
+
+  function elegirFamilia(elegida: FamiliaEncontrada | null) {
+    // Otra familia: ni el aviso ni el formulario abierto son de esta cuenta.
+    setCuenta(null);
+    setAviso(null);
+    setCargoAPagar(null);
+    setFamilia(elegida);
+  }
+
+  function alRegistrar(pago: PagoRegistrado) {
+    setCargoAPagar(null);
+    setAviso(
+      `Pago registrado por ${formatearMonto(pago.monto)}. ` +
+        `Saldo pendiente de la familia: ${formatearMonto(pago.saldo_pendiente)}.`,
+    );
+    setVersion((v) => v + 1);
+  }
 
   const cargando = familia !== null && cuenta === null && error === null;
 
@@ -70,7 +96,7 @@ export default function CuentaCorriente() {
           </Stack>
 
           <Stack spacing={2}>
-            <BuscadorFamilia familia={familia} onElegir={setFamilia} etiqueta="Familia" />
+            <BuscadorFamilia familia={familia} onElegir={elegirFamilia} etiqueta="Familia" />
 
             {cargando ? (
               <Stack alignItems="center" role="status" aria-label="Cargando la cuenta corriente">
@@ -78,6 +104,7 @@ export default function CuentaCorriente() {
               </Stack>
             ) : null}
             {error ? <Alert severity="error">{error}</Alert> : null}
+            {aviso ? <Alert severity="success">{aviso}</Alert> : null}
 
             {cuenta ? (
               <Stack spacing={2}>
@@ -95,13 +122,23 @@ export default function CuentaCorriente() {
                 {cuenta.cargos.length === 0 ? (
                   <Alert severity="info">La familia no tiene cargos en la temporada.</Alert>
                 ) : (
-                  cuenta.cargos.map((cargo) => <RenglonDeCargo key={cargo.id} cargo={cargo} />)
+                  cuenta.cargos.map((cargo) => (
+                    <RenglonDeCargo key={cargo.id} cargo={cargo} alPagar={setCargoAPagar} />
+                  ))
                 )}
               </Stack>
             ) : null}
           </Stack>
         </Stack>
       </Paper>
+      {cargoAPagar ? (
+        <FormularioPago
+          cargo={cargoAPagar}
+          abierto
+          alCerrar={() => setCargoAPagar(null)}
+          alRegistrar={alRegistrar}
+        />
+      ) : null}
     </Container>
   );
 }
