@@ -8,7 +8,8 @@ nunca diverjan.
 from collections.abc import Sequence
 from decimal import Decimal
 
-from sqlalchemy import Subquery, func, select
+from sqlalchemy import Subquery, Text, cast, func, select
+from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.orm import Session
 
 from app.models.alumno import Alumno, Inscripcion
@@ -68,9 +69,9 @@ def saldo_de_familia(sesion: Session, familia_id: int, temporada_id: int) -> Dec
 def obtener_cuenta_corriente(sesion: Session, familia_id: int) -> CuentaCorriente:
     """Cargos y pagos de la familia en la temporada vigente, con sus saldos.
 
-    Dos consultas (cargos y pagos), no una por cargo. Nada se suma en Python:
-    `pagado` y `saldo` salen del mismo subselect que usa `registrar_pago` y los
-    totales, de `v_cuenta_corriente`.
+    Una sola sentencia (cargos, pagos agregados y totales): ve una sola foto de
+    la base. Nada se suma en Python: `pagado` y `saldo` salen del mismo subselect
+    que usa `registrar_pago` y los totales, de `v_cuenta_corriente`.
     """
     if not id_posible(familia_id):
         raise FamiliaInexistente(MENSAJE_FAMILIA_INEXISTENTE)
@@ -83,6 +84,42 @@ def obtener_cuenta_corriente(sesion: Session, familia_id: int) -> CuentaCorrient
         raise FamiliaInexistente(MENSAJE_FAMILIA_INEXISTENTE)
 
     pagado = pagado_por_cargo()
+    # Los pagos no anulados de cada cargo, en una lista JSON ordenada. Monto y
+    # fecha viajan como texto: un monto dentro de un JSON no pasa por `float`.
+    pagos_agregados = (
+        select(
+            Pago.cargo_id.label("cargo_id"),
+            func.json_agg(
+                aggregate_order_by(
+                    func.json_build_object(
+                        "id",
+                        Pago.id,
+                        "monto",
+                        cast(Pago.monto, Text),
+                        "fecha_pago",
+                        cast(Pago.fecha_pago, Text),
+                    ),
+                    Pago.fecha_pago,
+                    Pago.id,
+                )
+            ).label("pagos"),
+        )
+        .where(Pago.anulado_en.is_(None))
+        .group_by(Pago.cargo_id)
+        .cte("pagos_agregados")
+    )
+    totales = (
+        select(
+            v_cuenta_corriente.c.temporada_id,
+            v_cuenta_corriente.c.total_cargos,
+            v_cuenta_corriente.c.total_pagos,
+            v_cuenta_corriente.c.saldo_pendiente,
+        )
+        .where(v_cuenta_corriente.c.familia_id == familia_id)
+        .cte("totales")
+    )
+    # Una sola sentencia: una sola foto de la base, aunque se commitee un pago
+    # mientras tanto. Los totales se repiten en cada fila.
     filas = sesion.execute(
         select(
             Cargo,
@@ -95,6 +132,10 @@ def obtener_cuenta_corriente(sesion: Session, familia_id: int) -> CuentaCorrient
             PeriodoCobro.fecha_hasta,
             func.coalesce(pagado.c.pagado, 0).label("pagado"),
             (Cargo.monto_total - func.coalesce(pagado.c.pagado, 0)).label("saldo"),
+            pagos_agregados.c.pagos,
+            func.coalesce(totales.c.total_cargos, 0).label("total_cargos"),
+            func.coalesce(totales.c.total_pagos, 0).label("total_pagos"),
+            func.coalesce(totales.c.saldo_pendiente, 0).label("saldo_pendiente"),
         )
         .join(Temporada, Temporada.id == Cargo.temporada_id)
         .join(Alumno, Alumno.id == Cargo.alumno_id)
@@ -102,35 +143,17 @@ def obtener_cuenta_corriente(sesion: Session, familia_id: int) -> CuentaCorrient
         .outerjoin(Inscripcion, Inscripcion.id == Cargo.inscripcion_id)
         .outerjoin(PeriodoCobro, PeriodoCobro.id == Cargo.periodo_cobro_id)
         .outerjoin(pagado, pagado.c.cargo_id == Cargo.id)
+        .outerjoin(pagos_agregados, pagos_agregados.c.cargo_id == Cargo.id)
+        .outerjoin(totales, totales.c.temporada_id == Cargo.temporada_id)
         .where(Cargo.familia_id == familia_id, Temporada.estado == EstadoTemporada.VIGENTE)
         .order_by(Cargo.creado_en, Cargo.id)
     ).all()
-
-    pagos_por_cargo: dict[int, list[PagoEnCuenta]] = {}
-    if filas:
-        pagos = sesion.execute(
-            select(Pago.cargo_id, Pago.id, Pago.monto, Pago.fecha_pago)
-            .where(Pago.cargo_id.in_([fila.Cargo.id for fila in filas]), Pago.anulado_en.is_(None))
-            .order_by(Pago.fecha_pago, Pago.id)
-        ).all()
-        for pago in pagos:
-            pagos_por_cargo.setdefault(pago.cargo_id, []).append(
-                PagoEnCuenta(id=pago.id, monto=pago.monto, fecha_pago=pago.fecha_pago)
-            )
-
-    totales = sesion.execute(
-        select(
-            func.coalesce(v_cuenta_corriente.c.total_cargos, 0),
-            func.coalesce(v_cuenta_corriente.c.total_pagos, 0),
-            func.coalesce(v_cuenta_corriente.c.saldo_pendiente, 0),
-        )
-        .join(Temporada, Temporada.id == v_cuenta_corriente.c.temporada_id)
-        .where(
-            v_cuenta_corriente.c.familia_id == familia_id,
-            Temporada.estado == EstadoTemporada.VIGENTE,
-        )
-    ).one_or_none()
-    total_cargos, total_pagado, saldo_pendiente = totales or (0, 0, 0)
+    # Sin cargos no hay filas ni fila en la vista: los totales son 0.
+    total_cargos, total_pagado, saldo_pendiente = (
+        (filas[0].total_cargos, filas[0].total_pagos, filas[0].saldo_pendiente)
+        if filas
+        else (0, 0, 0)
+    )
 
     cargos = [
         CargoEnCuenta(
@@ -155,7 +178,7 @@ def obtener_cuenta_corriente(sesion: Session, familia_id: int) -> CuentaCorrient
             pagado=Decimal(fila.pagado).quantize(_CENTAVO),
             saldo=Decimal(fila.saldo).quantize(_CENTAVO),
             creado_en=fila.Cargo.creado_en,
-            pagos=pagos_por_cargo.get(fila.Cargo.id, []),
+            pagos=[PagoEnCuenta.model_validate(pago) for pago in fila.pagos or []],
         )
         for fila in filas
     ]
