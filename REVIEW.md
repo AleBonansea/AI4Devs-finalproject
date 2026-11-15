@@ -11,9 +11,14 @@ grave.
 
 1. **El dinero sale mal.** Un importe que se recalcula en vez de usar el
    que se guardo con el cargo. Un porcentaje acumulado. Un tramo
-   aplicado a un solo hijo. Un monto que llega del cuerpo de la
-   peticion. Hermanos contados sin separar por turno. Un redondeo
+   aplicado a un solo hijo. El precio de un cargo que llega del cuerpo
+   de la peticion. Hermanos contados sin separar por turno. Un redondeo
    distinto en dos lugares. Una comparacion de dinero con tolerancia.
+   El monto de un **pago** si viene del cuerpo: es lo que la familia
+   entrego y solo el Admin lo sabe. Es grave si la API no lo acota
+   (positivo, hasta dos decimales, nunca mas que el saldo del cargo),
+   no por venir del cliente (CLAUDE.md, «El precio nunca viene del
+   cliente»).
 
 2. **Alguien ve lo que no le toca.** Un listado que trae todo y filtra
    en memoria. Un endpoint sin dependencia de rol. Un Profesor que llega
