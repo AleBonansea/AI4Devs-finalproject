@@ -127,7 +127,7 @@ GROUP BY c.familia_id, c.temporada_id;
 ### Esquemas
 
 - `PagoEntrada` (`extra="forbid"`): `monto: str` y `fecha_pago: date`.
-  - `monto` se valida con `^\d{1,10}(\.\d{1,2})?$` y se convierte a `Decimal` cuantizado a centavos; un número JSON no es un `str` y cae en el mismo error. Se pide texto, igual que lo que devuelve la API, para que un centavo nunca pase por un `float` en ningún lado del contrato. Con el patrón cumplido, `0`/`0.00` → `Tiene que ser mayor que cero.`; si no, `Tiene que ser un monto con hasta dos decimales.` Los dos como `PydanticCustomError("regla_de_negocio", …)`.
+  - `monto` se valida con `^\d{1,10}(\.\d{1,2})?$` y queda como `str` normalizado a dos decimales (`"4462.5"` → `"4462.50"`), para que el contrato OpenAPI diga «texto»; el servicio lo convierte a `Decimal` con `Decimal(entrada.monto)`. Un número JSON no es un `str` y cae en el mismo error. Se pide texto, igual que lo que devuelve la API, para que un centavo nunca pase por un `float` en ningún lado del contrato. Con el patrón cumplido, `0`/`0.00` → `Tiene que ser mayor que cero.`; si no, `Tiene que ser un monto con hasta dos decimales.` Los dos como `PydanticCustomError("regla_de_negocio", …)`.
   - `fecha_pago > date.today()` → `La fecha del pago no puede ser posterior a hoy.`, igual.
   - Diez cifras enteras es lo que cabe en `numeric(12,2)`; más que eso nunca pasaría el saldo, pero así no llega a Postgres.
 - `PagoRegistrado`: `id`, `cargo_id`, `monto`, `fecha_pago`, `registrado_por`, `registrado_en`, `saldo_cargo`, `saldo_pendiente`.
