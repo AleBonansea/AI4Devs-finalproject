@@ -56,7 +56,7 @@
 
 ## 6. Comprobación de punta a punta
 
-- [ ] 6.1 Con la base de desarrollo migrada y la semilla cargada, la API y el frontend levantados, comprobar a mano en el navegador:
+- [x] 6.1 Con la base de desarrollo migrada y la semilla cargada, la API y el frontend levantados, comprobar a mano en el navegador:
   - como `lrodriguez` (coordinador) y como `jperez` (profesor), el inicio no muestra `Cuenta corriente` y `/cuenta-corriente` vuelve a `/`;
   - como `mgarcia` (admin), registrar en `/cargos/nuevo` un «Abono» del Mes de Juan, «Mes 1» (con la semilla, $ 67.500) y una «Preinscripción» de Ana ($ 20.000);
   - en `/cuenta-corriente`, «Pérez – Ana» muestra los dos cargos y `Saldo pendiente` `$ 87.500`;
@@ -68,6 +68,19 @@
   - **la carrera**: con un script de Python en el scratchpad (no en el repo), dos `POST` simultáneos de `"20000.00"` sobre la Preinscripción de Ana (saldo $ 20.000) contra la API de desarrollo: uno 201 y otro 409 o 422, y un solo pago y un solo ingreso en la base;
   - la pantalla y el formulario a 360 px de ancho, sin scroll horizontal, y recorribles con el teclado.
   - **Se verifica con** cada punto anotado como hecho en el informe de la tarea, con lo que haya fallado.
+  - **Informe (14/11/2026)**, contra la base de desarrollo migrada a `crear_pago_y_tesoreria`, con API en `:8000` y Vite en `:5173`. Como en los changes anteriores, la pantalla se manejó con JavaScript en la página.
+    - Hecho, con un ajuste: la base de desarrollo ya tenía, de la recorrida de `cobro`, el «Abono» del Mes de Juan («Mes 1», $ 67.500) y la «Preinscripción» de Ana ($ 20.000). Registrarlos de nuevo habría chocado con el rechazo de repetidos, así que se usaron esos.
+    - Hecho: `lrodriguez` y `jperez` no ven `Cuenta corriente`; `/cuenta-corriente` vuelve a `/` sin ningún pedido a `/familias`.
+    - Hecho: como `mgarcia`, «Pérez – Ana» muestra los dos cargos y `Saldo pendiente` `$ 87.500`.
+    - Hecho: pagar `30.000` del Abono (formulario con `67.500` y `2026-11-14` propuestos): `Pago registrado por $ 30.000. Saldo pendiente de la familia: $ 57.500.`; el renglón queda `Pagado $ 30.000`, `Saldo $ 37.500`, con `14/11/2026 · $ 30.000` listado.
+    - Hecho: `37.500,01` muestra `El monto supera el saldo del cargo.` junto a `Monto`, el formulario sigue abierto con lo escrito y no se guarda nada.
+    - Hecho: pagar `37.500` deja el Abono `Saldado`, sin `Registrar pago`.
+    - Hecho: en `/cargos/nuevo`, el «Abono» del «Mes 2» de Juan ($ 67.500) da `Saldo pendiente de la familia: $ 87.500.` (cargos 155.000 − pagos 67.500).
+    - Hecho: en la base, los pagos con `fecha_pago` 2026-11-14 y `mgarcia` como autor, cada uno con su `ingreso` de origen `pago`, mismo monto, fecha y temporada.
+    - Hecho, la carrera: dos `POST` simultáneos de `"20000.00"` sobre la Preinscripción de Ana (script en el scratchpad): uno 201 y otro 409 `El cargo ya está saldado.`; un solo pago y un solo ingreso.
+    - Hecho: en un iframe de 360 px, la pantalla y el formulario sin scroll horizontal y ningún elemento fuera del cuadro. Orden de tabulación: `Volver al inicio`, `Familia`, `Registrar pago`; en el diálogo, `Monto`, `Fecha del pago`, `Cancelar`, `Registrar pago`. Al abrir, el foco queda dentro del modal; `Escape` lo cierra.
+    - **Falla encontrada y corregida:** la categoría se veía dos veces (`BuscadorFamilia` ya la muestra y la página la repetía). Se sacó la de la página con `ui-implementer`, contra los tests congelados (huella intacta, 148 en verde), y se comprobó en el navegador.
+    - Observación, no falla: como asistencia y cobro, la pantalla trae un `Volver al inicio` que la spec no nombra.
 - [ ] 6.2 `python tasks.py test`, `lint`, `typecheck`, `openapi-check`, `front-test` y `front-lint` en verde. **Se verifica con** la salida de cada uno anotada en el informe.
 
 ## 7. Revisión adversarial

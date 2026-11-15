@@ -28,7 +28,6 @@ import {
   type PagoRegistrado,
 } from "../lib/api";
 import { formatearMonto } from "../lib/montos";
-import { NOMBRE_DE_LA_CATEGORIA } from "../lib/nombres";
 import { colores } from "../tema";
 
 export default function CuentaCorriente() {
@@ -108,9 +107,6 @@ export default function CuentaCorriente() {
 
             {cuenta ? (
               <Stack spacing={2}>
-                <Typography color="text.secondary">
-                  {`Categoría: ${NOMBRE_DE_LA_CATEGORIA[cuenta.categoria]}`}
-                </Typography>
                 <Stack direction="row" spacing={1} alignItems="baseline">
                   <Typography variant="h6" component="p">
                     Saldo pendiente
