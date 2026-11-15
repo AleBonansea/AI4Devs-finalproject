@@ -1,4 +1,21 @@
+# Fin de línea: LF en todo el repo, también en la copia de trabajo de Windows.
+#
+# El repositorio ya está todo en LF, y Prettier y ruff escriben LF por defecto.
+# Con core.autocrlf=true en Windows, Git espera CRLF en la copia de trabajo: cada
+# archivo que el formateador reescribe en LF aparece como modificado sin tener un
+# solo cambio. Fijar eol=lf acá vuelve a git status independiente de la
+# configuración de cada máquina.
+* text=auto eol=lf
+
 # El contrato se genera y se compara byte a byte en el CI (openapi-check).
 # Sin esto depende de core.autocrlf de cada quien: con CRLF en el repositorio,
-# la comprobacion falla siempre en Linux.
+# la comprobacion falla siempre en Linux. La regla general ya lo cubre; queda
+# explícito porque es el único archivo que el CI compara byte a byte.
 docs/api/openapi.json text eol=lf
+
+# Binarios: nunca se tocan sus bytes.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.pdf binary
+*.ico binary
