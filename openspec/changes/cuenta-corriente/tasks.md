@@ -36,7 +36,7 @@
 
 ## 5. Pantalla «Cuenta corriente»
 
-- [ ] 5.1 Con la skill `frontend-feature`, sumar `leerMonto` y `montoParaEditar` a `src/lib/montos.ts`, según design, «Frontend».
+- [x] 5.1 Con la skill `frontend-feature`, sumar `leerMonto` y `montoParaEditar` a `src/lib/montos.ts`, según design, «Frontend».
   - Casos en `frontend/tests/lib/montos.test.ts`, con los de la lista del design; los casos existentes de `formatearMonto` y `formatearPorcentaje` no se tocan.
   - **Se verifica con** los casos nuevos en rojo por el motivo correcto (no existen las funciones) y después en verde, la huella de `frontend/tests/` intacta, y `python tasks.py front-test` y `cd frontend && npm run lint && npm run build` en verde.
 - [ ] 5.2 Con la skill `frontend-feature`, el acceso solo para el Admin: la ruta `/cuenta-corriente` en `App.tsx` dentro de `RutaSoloAdmin` (con una página mínima que la 5.3 completa) y el botón en `Inicio.tsx`, según los Scenarios de `auth` «Ir a la cuenta corriente», «El Coordinador no ve el acceso a cobrar» y «El Profesor no ve el acceso a cobrar» (los dos modificados), y el de `cuenta-corriente` «Coordinador abre la pantalla»: 4 Scenarios.
