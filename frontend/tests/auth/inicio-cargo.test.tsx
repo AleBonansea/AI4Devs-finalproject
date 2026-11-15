@@ -6,6 +6,10 @@
  * el acceso a cobrar» y «El Profesor no ve el acceso a cobrar». Los otros
  * Scenarios del Requirement estan en zona-protegida.test.tsx,
  * inicio-registrar.test.tsx e inicio-asistencia.test.tsx.
+ *
+ * Change cuenta-corriente (openspec/changes/cuenta-corriente/specs/auth/spec.md):
+ * Scenario nuevo «Ir a la cuenta corriente», y los dos de "no ve el acceso a
+ * cobrar" modificados para que tampoco se vea `Cuenta corriente`.
  */
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -51,7 +55,21 @@ describe("Inicio de la zona protegida", () => {
     await waitFor(() => expect(direccion()).toBe("/cargos/nuevo"));
   });
 
-  it("el Coordinador ve Registrar alumno y Tomar asistencia y no ve Registrar cargo", async () => {
+  it("al pulsar Cuenta corriente desde el inicio la dirección pasa a /cuenta-corriente", async () => {
+    sesionDe("admin", "Juana", "Pérez");
+    const usuario = userEvent.setup();
+
+    abrir("/");
+    await screen.findByText(/Juana Pérez/);
+    const acceso =
+      screen.queryByRole("link", { name: "Cuenta corriente" }) ??
+      screen.getByRole("button", { name: "Cuenta corriente" });
+    await usuario.click(acceso);
+
+    await waitFor(() => expect(direccion()).toBe("/cuenta-corriente"));
+  });
+
+  it("el Coordinador ve Registrar alumno y Tomar asistencia y no ve Registrar cargo ni Cuenta corriente", async () => {
     sesionDe("coordinador", "Lucía", "Rodríguez");
 
     abrir("/");
@@ -61,9 +79,11 @@ describe("Inicio de la zona protegida", () => {
     expect(accesoONada("Tomar asistencia")).not.toBeNull();
     expect(accesoONada("Registrar cargo")).toBeNull();
     expect(screen.queryByText("Registrar cargo")).toBeNull();
+    expect(accesoONada("Cuenta corriente")).toBeNull();
+    expect(screen.queryByText("Cuenta corriente")).toBeNull();
   });
 
-  it("el Profesor no ve Registrar cargo", async () => {
+  it("el Profesor no ve Registrar cargo ni Cuenta corriente", async () => {
     sesionDe("profesor", "Carlos", "Gómez");
 
     abrir("/");
@@ -73,5 +93,7 @@ describe("Inicio de la zona protegida", () => {
     expect(accesoONada("Registrar alumno")).not.toBeNull();
     expect(accesoONada("Registrar cargo")).toBeNull();
     expect(screen.queryByText("Registrar cargo")).toBeNull();
+    expect(accesoONada("Cuenta corriente")).toBeNull();
+    expect(screen.queryByText("Cuenta corriente")).toBeNull();
   });
 });

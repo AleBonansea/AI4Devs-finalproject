@@ -38,10 +38,15 @@ export default function Inicio() {
             <Button component={Link} to="/asistencia">
               Tomar asistencia
             </Button>
-            {/* Cobrar es solo del Admin: al resto ni se le ofrece. */}
+            {/* Cobrar y ver la cuenta corriente son solo del Admin: al resto ni se le ofrece. */}
             {usuario.rol === "admin" && (
               <Button component={Link} to="/cargos/nuevo">
                 Registrar cargo
+              </Button>
+            )}
+            {usuario.rol === "admin" && (
+              <Button component={Link} to="/cuenta-corriente">
+                Cuenta corriente
               </Button>
             )}
             <Button variant="outlined" onClick={alSalir}>

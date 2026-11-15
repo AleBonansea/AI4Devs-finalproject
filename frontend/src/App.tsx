@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { ProveedorSesion } from "./lib/sesion";
+import CuentaCorriente from "./pages/CuentaCorriente";
 import Ingreso from "./pages/Ingreso";
 import Inicio from "./pages/Inicio";
 import RegistrarAlumno from "./pages/RegistrarAlumno";
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/asistencia" element={<TomarAsistencia />} />
           <Route element={<RutaSoloAdmin />}>
             <Route path="/cargos/nuevo" element={<RegistrarCargo />} />
+            <Route path="/cuenta-corriente" element={<CuentaCorriente />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
