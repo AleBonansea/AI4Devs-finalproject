@@ -81,7 +81,8 @@
     - Hecho: en un iframe de 360 px, la pantalla y el formulario sin scroll horizontal y ningún elemento fuera del cuadro. Orden de tabulación: `Volver al inicio`, `Familia`, `Registrar pago`; en el diálogo, `Monto`, `Fecha del pago`, `Cancelar`, `Registrar pago`. Al abrir, el foco queda dentro del modal; `Escape` lo cierra.
     - **Falla encontrada y corregida:** la categoría se veía dos veces (`BuscadorFamilia` ya la muestra y la página la repetía). Se sacó la de la página con `ui-implementer`, contra los tests congelados (huella intacta, 148 en verde), y se comprobó en el navegador.
     - Observación, no falla: como asistencia y cobro, la pantalla trae un `Volver al inicio` que la spec no nombra.
-- [ ] 6.2 `python tasks.py test`, `lint`, `typecheck`, `openapi-check`, `front-test` y `front-lint` en verde. **Se verifica con** la salida de cada uno anotada en el informe.
+- [x] 6.2 `python tasks.py test`, `lint`, `typecheck`, `openapi-check`, `front-test` y `front-lint` en verde. **Se verifica con** la salida de cada uno anotada en el informe.
+  - **Estado (14/11/2026):** todos con salida 0. Backend 456 tests, `lint` (ruff check y format, 141 archivos), `typecheck` (mypy, 58 archivos) y `openapi-check` en verde; frontend 148 tests en 20 archivos y `front-lint` (eslint, prettier y build) en verde.
 
 ## 7. Revisión adversarial
 
