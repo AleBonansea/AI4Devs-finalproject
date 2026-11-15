@@ -98,6 +98,12 @@ La suma de los pagos no anulados de un cargo MUST NOT superar su total: no hay s
 - **WHEN** un Admin registra un pago de `"85000.00"`
 - **THEN** la respuesta es 201 con `saldo_cargo` `"0.00"`
 
+#### Scenario: Dos pagos simultáneos del mismo cargo
+- **GIVEN** una «Preinscripción» de 20000.00 sin pagos
+- **WHEN** dos Admin registran a la vez sobre ese cargo un pago de `"20000.00"` cada uno
+- **THEN** uno responde 201 y el otro 409 con `El cargo ya está saldado.`
+- **AND** el cargo tiene un solo pago y la tesorería un solo ingreso
+
 ### Requirement: El monto y la fecha del pago
 `monto` SHALL ser un texto con hasta diez cifras enteras y hasta dos decimales, mayor que cero; si no, 422 en `monto` con `Tiene que ser un monto con hasta dos decimales.` o `Tiene que ser mayor que cero.` `fecha_pago` es obligatoria y MUST NOT ser posterior a hoy: 422 con `La fecha del pago no puede ser posterior a hoy.` Fecha del pago escrita por el Admin: [SUPUESTO] (`aclaraciones-cliente.md`, «Fecha del pago»).
 

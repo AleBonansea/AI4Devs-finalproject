@@ -86,7 +86,18 @@
 
 ## 7. Revisión adversarial
 
-- [ ] 7.1 Un pase del subagente `adversarial-reviewer` sobre el change terminado, antes del pull request. Rige `REVIEW.md`, «Cuándo se deja de revisar». **Se verifica con** sus hallazgos resueltos o justificados por escrito en esta tarea.
+- [x] 7.1 Un pase del subagente `adversarial-reviewer` sobre el change terminado, antes del pull request. Rige `REVIEW.md`, «Cuándo se deja de revisar». **Se verifica con** sus hallazgos resueltos o justificados por escrito en esta tarea.
+  - **Primer pase (14/11/2026):** ningún grave; dos sugerencias y dos preguntas. Según `REVIEW.md`, sin graves no se pide un segundo pase.
+    - Sugerencia: nada protege el `FOR UPDATE` de `registrar_pago` (`app/services/pagos.py`): sin él los 456 tests siguen verdes y dos pagos simultáneos podrían cobrar más que el cargo. → 7.3, con el bloqueo como punto de prueba declarado (decisión del usuario).
+    - Sugerencia: la cuenta corriente sale de tres sentencias en READ COMMITTED; un pago que se commitea en el medio deja una respuesta que se contradice (renglón con saldo viejo y el pago nuevo listado). → 7.4. El usuario eligió primero leer en REPEATABLE READ; no se puede, porque en los tests la API corre en un savepoint de una transacción ya empezada y Postgres solo deja fijar el nivel al empezar. Decidido con el usuario: una sola sentencia.
+    - Pregunta: `REVIEW.md` sigue declarando grave sin excepción «un monto que llega del cuerpo de la petición», y el revisor automático del PR lo va a marcar en `PagoEntrada.monto`. Decidido por el usuario: se aclara en este PR. → 7.5.
+    - Pregunta: qué tests fallaron en la corrida de `front-test` con 2 fallos. No quedó guardada la salida, así que no se sabe; fue la primera corrida después de la 5.3, que coincidió con otra en paralelo, y las cinco siguientes pasaron. Queda anotado; si vuelve a pasar, se guarda la salida.
+    - Observación del revisor, no hallazgo: `Empleado`/`Socio` en los tests de la pantalla los pinta `BuscadorFamilia` con la categoría de la búsqueda, y `cuenta.categoria` no se usa. Cumple la spec.
+  - **Resolución:** en 7.2 a 7.5.
+- [x] 7.2 Incorporar al delta de `pagos` y al design lo decidido sobre el primer pase. **Se verifica con** el Scenario nuevo «Dos pagos simultáneos del mismo cargo» en «Un pago no supera el saldo del cargo»; en el design, el bloqueo del cargo como punto de prueba declarado, la cuenta corriente en una sola sentencia y el riesgo del REPEATABLE READ descartado; y `openspec validate cuenta-corriente --strict` en verde.
+- [ ] 7.3 Con la skill `backend-feature`, según el Scenario «Dos pagos simultáneos del mismo cargo» (1). El test se apoya en el punto de prueba declarado en design, «El servicio de pagos»: durante un `POST` válido, el `SELECT` del cargo lleva `FOR UPDATE`. **Se verifica con** el test en verde y en rojo a propósito con `.with_for_update()` quitado del servicio (y revertido); la huella intacta; `python tasks.py test`, `lint`, `typecheck` y `openapi-check` en verde.
+- [ ] 7.4 Con la skill `backend-feature`, la cuenta corriente en una sola sentencia (design, «El servicio de la cuenta corriente»). No cambia ningún comportamiento observable, así que no hay tests nuevos: los 16 de `backend/tests/functional/cuenta_corriente/` y los de `pagos` son el control y se congelan antes. **Se verifica con** la huella intacta, esos tests en verde, una sola consulta a la base por pedido de la cuenta corriente (contada con un listener en una corrida a mano, no en un test), y `python tasks.py test`, `lint`, `typecheck` y `openapi-check` en verde.
+- [ ] 7.5 Aclarar en `REVIEW.md`, «Que es grave», que lo grave es el precio de un cargo que llega del cliente, y que el monto de un pago sí viene del cuerpo y la API lo acota por el saldo (la misma aclaración que CLAUDE.md, tarea 1.2). **Se verifica con** el punto reescrito y coherente con CLAUDE.md.
 
 ## Workflow follow-up
 
