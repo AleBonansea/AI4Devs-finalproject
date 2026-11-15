@@ -453,8 +453,112 @@ entre ellos, estimación, y las referencias concretas a la historia, a las tabla
 
 ### 7. Pull Requests
 
-**Prompt 1:**
+> Prompts de las sesiones de Claude Code (CLI) sobre el repo, durante la construcción del lote 1. Se transcriben tal cual se escribieron.
+>
+> El lote se construyó en ocho *changes* de OpenSpec, uno por rama y por pull request. Cada uno siguió el mismo ciclo: `openspec-propose` → revisión humana de la propuesta y la spec → `openspec-apply-change` → `openspec-verify` → `openspec-archive`. Dentro del *apply*, dos subagentes con permisos distintos: **`test-writer`**, que escribe los tests desde la spec y tiene prohibido leer la implementación, y **`implementer`**, que escribe el código hasta ponerlos en verde y tiene prohibido tocar los tests. Entre uno y otro, los tests se congelan por hash (`git ls-files -s`) y al final se comprueba que el hash no cambió. Antes de cerrar cada change corre un **`adversarial-reviewer`** que busca lo que está mal, no lo que está bien.
+>
+> Sobre eso, dos capas automáticas en cada pull request: el *workflow* de integración continua (`ruff`, `mypy`, `pytest`, tests y build del frontend, y el ida y vuelta de las migraciones) y una revisión con `claude-code-action` configurada en `.github/workflows/revisor.yml`.
+>
+> Los tres prompts que siguen son los que más cambiaron el resultado: uno arregla el ciclo, otro arregla cómo se verifican los tests, y el tercero corrige a la IA sobre las reglas del negocio.
 
-**Prompt 2:**
+**Prompt 1: Arreglar la contradicción del arnés y reordenar el ciclo de tests**
 
-**Prompt 3:**
+*Contexto:* en el change de familias y alumnos, el agente avisó que dos archivos del repo decían lo contrario sobre lo mismo —la skill `backend-feature` pedía aprobar el plan de cada tarea y la guía de `apply` decía que no parara— y preguntó cuál valía. La pregunta importaba más que la respuesta: una contradicción que esta vez se consultó, la próxima se resuelve sola y sin avisar.
+
+```
+Con este plan alcanza. Seguí de largo y pará solo si falla un gate o la
+spec es ambigua.
+
+Pero antes arreglá la contradicción, porque backend-feature y la guía de
+apply del config.yaml dicen lo contrario sobre lo mismo y la próxima vez
+vas a resolverlo solo sin preguntar.
+
+En .claude/skills/backend-feature/SKILL.md:
+
+- Saca el STOP del paso 2. El plan de cada tarea no se aprueba. La única
+  revisión humana obligatoria es el proposal.md y la spec, antes de
+  apply-change.
+- Reordena el ciclo para que el test-writer escriba TODOS los tests del
+  change de una sola vez, no por tarea. Después: verificar el RED una vez
+  sobre el set completo, hacer el paso 4 («lee los tests, no solo el
+  rojo») una vez, congelar una vez. Recién ahí el implementer avanza
+  tarea por tarea sin parar.
+- Dejá explícito en el paso 4 que esa sí es una parada obligatoria y por
+  qué: es el paso que encontró el conftest con sesión compartida, donde
+  la suite quedaba verde mientras el contador de bloqueo no persistía.
+
+Y agregá una línea a la guía de apply del config.yaml que apunte a
+backend-feature como la fuente para el ciclo de tests, así no vuelven a
+divergir.
+
+Commiteá eso aparte del change, con su propio commit.
+```
+
+*Respuesta clave:* la skill pasó de ocho paradas por change a una sola, y el ciclo quedó en: todos los tests del change de una vez → verificar el rojo → leerlos → congelar → implementar tarea por tarea sin interrupciones.
+
+*Ajuste humano / impacto:* la decisión de fondo fue **dónde conviene que un humano mire**. Aprobar el plan de cada tarea no compra nada, porque el código no se ve igual; lo que sí hay que mirar es la spec antes de empezar y los tests antes de congelarlos. El paso que se preservó —«lee los tests, no solo el rojo»— es el que había encontrado el peor defecto del proyecto: un `conftest.py` que le daba a la API la misma sesión que al test, con lo cual un servicio que confirmaba la transacción y uno que no eran indistinguibles. La suite quedaba verde mientras el contador de intentos fallidos nunca iba a persistir en producción.
+
+---
+
+**Prompt 2: Un test en rojo que no podía fallar**
+
+*Contexto:* el `adversarial-reviewer` del change de asistencia encontró que la función que calcula «hoy» en el navegador estaba bien escrita, pero que ningún test la protegía: los tests fijaban la hora a las 10:00, cuando la fecha local y la UTC coinciden. Si alguien cambiaba `hoyLocal()` por `toISOString()`, todo seguía en verde. En producción, un profesor abriendo la pantalla a las 21:30 habría guardado la asistencia en el día siguiente, sin aviso.
+
+```
+1) HUSO HORARIO
+Fijá TZ=America/Argentina/Buenos_Aires para los tests del frontend, en
+vite.config.ts, en tasks.py y en el workflow del CI: si queda en un solo
+lugar, local y CI se separan. Pasá fijarHoy a las 21:30.
+
+Pero antes de darlo por bueno, vas a verlo fallar a propósito: cambiá
+hoyLocal() por toISOString(), corré los tests, confirmá que se ponen en
+rojo, y revertí. Si siguen en verde, TZ no quedó puesto donde hace falta
+y hay que buscar otro lugar. Pegame la salida del rojo.
+```
+
+*Respuesta clave:* la zona horaria quedó fijada en los tres lugares, la hora de prueba pasó a las 21:30 —cuando en Argentina es el día 5 y en UTC ya es el 6— y el agente devolvió la salida en rojo de la rotura deliberada antes de revertirla.
+
+*Ajuste humano / impacto:* **un guardarraíl que nunca se vio frenar nada no está probado.** No alcanzaba con poner la variable: había que romper el código a propósito y comprobar que el test lo notaba. En este mismo proyecto ya había pasado lo contrario tres veces —un hook de formato que llamaba a un ejecutable inexistente y nunca corrió, una integración continua que no habría pasado nunca y todavía no había corrido, y un revisor automático que se salteaba en silencio—, y las tres se descubrieron usándolas, no leyéndolas. El mismo criterio dejó dos reglas más en el repo: el rojo se verifica leyendo *el motivo* de cada fallo, porque un `TypeError` dentro del test no es rojo sino un test roto; y los plazos de los tests llevan anotado el número medido y la fecha, para que un valor mágico no quede sin explicación.
+
+---
+
+**Prompt 3: Corregir a la IA sobre las reglas del negocio y la privacidad**
+
+*Contexto:* al proponer el change de familias y alumnos, el agente hizo tres preguntas de alcance con su recomendación para cada una. Las tres recomendaciones eran razonables y las tres se aceptaron, pero una citaba mal la fuente: decía que una aclaración del cliente ya autorizaba al Profesor a buscar entre todas las familias, y lo que esa aclaración dice está acotado a una familia que ya tiene un hijo en su grupo.
+
+```
+Las tres: opción 1. Con estos ajustes.
+
+HU-AF-03: correcto acotarlo al alta, pero no hay ninguna historia para
+agregar o desvincular personas autorizadas de una familia ya creada. Creala
+en docs/product/historias-backlog.md, módulo «Alumnos y familias», como
+Should-have, con una nota de que antes de producción tiene que existir:
+hoy, si una familia quiere sumar a alguien en enero, no hay forma.
+Actualizá la tabla Resumen.
+
+Búsqueda por DNI: agregá un Scenario que afirme que la respuesta trae solo
+nombre y apellido, y en particular NO a qué otras familias está vinculada
+esa persona. Decir "también está autorizada en la familia Gómez" filtra
+una relación entre dos familias a alguien ajeno a las dos. Dejá escrito
+que quien no tenga DNI cargado se duplica cada vez, y que se acepta.
+
+Búsqueda de familia: el sustento está mal. No es Acl. 9 sino Acl. 11, y lo
+que dice es que el Profesor ve los datos de familia «de los hijos de la
+misma familia que estén en otros grupos», o sea de una familia que YA tiene
+un hijo en su grupo. Buscar entre todas va más allá: marcalo [SUPUESTO] y
+registralo como pregunta abierta, no como permitido.
+
+Se hace igual, porque si el Profesor no encuentra la familia del hermano
+crea una duplicada, y los hermanos se cuentan por familia para el tramo del
+descuento: una familia partida en dos cobra mal. Pero con dos guardas:
+mínimo de 3 caracteres y tope de 20 resultados, y la categoría NO va en la
+lista, solo al seleccionar la familia.
+```
+
+*Respuesta clave:* el delta incorporó los *Scenarios* de la fuga por DNI, el mínimo de caracteres y el tope de resultados; la categoría salió de la respuesta de búsqueda; la búsqueda ampliada quedó marcada `[SUPUESTO]` con su pregunta abierta en `aclaraciones-cliente.md`; y se creó la historia que faltaba.
+
+*Ajuste humano / impacto:* tres cosas que la IA no iba a resolver sola.
+
+- **Una recomendación correcta puede apoyarse en una fuente mal leída.** Que la conclusión coincida no valida la cita. Como el permiso no estaba escrito, se registró como supuesto en vez de darlo por autorizado.
+- **Lo que no se devuelve también es una decisión.** Contestar a una búsqueda por DNI con las otras familias de esa persona filtra una relación entre dos familias a alguien ajeno a las dos; la categoría en una lista de resultados difunde la banda de precio de cada una. En un sistema con fichas médicas y documentos de menores, eso se decide explícitamente y se prueba con un *Scenario*.
+- **Un «queda para otro change» sin historia que lo reciba se pierde.** Era el segundo caso igual en el proyecto: antes había pasado con la mitigación del bloqueo de cuentas, que tampoco tenía dueño hasta que se reescribió HU-UT-08.
