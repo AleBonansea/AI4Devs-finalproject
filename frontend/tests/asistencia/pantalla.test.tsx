@@ -2,7 +2,7 @@
  * Tests de la pantalla «Tomar asistencia» (`/asistencia`): los grupos, la
  * fecha de hoy, abrir la asistencia y mostrar la lista.
  *
- * Spec: openspec/changes/asistencia/specs/asistencia/spec.md,
+ * Spec: openspec/changes/menu-lateral-y-edad-de-grupos/specs/asistencia/spec.md,
  * Requirement «Pantalla «Tomar asistencia»». Un `it` por Scenario.
  */
 import { screen, waitFor } from "@testing-library/react";
@@ -14,6 +14,9 @@ import {
   DELFINES_MANANA,
   DELFINES_TARDE,
   HOY,
+  TEXTO_CABALLITOS_TARDE,
+  TEXTO_DELFINES_MANANA,
+  TEXTO_DELFINES_TARDE,
   abrirAsistencia,
   asistencia,
   campoFecha,
@@ -37,7 +40,7 @@ afterEach(() => {
 });
 
 describe("Pantalla «Tomar asistencia»", () => {
-  it("un Profesor ve como únicas opciones de Grupo Delfines · Mañana y Delfines · Tarde, sin elegir", async () => {
+  it("un Profesor ve como únicas opciones de Grupo Delfines · Mañana · 5 a 6 años y Delfines · Tarde · 5 a 6 años, sin elegir", async () => {
     fijarHoy(HOY);
     fingirApi({ usuario: profesor(), grupos: [DELFINES_MANANA, DELFINES_TARDE] });
     const usuario = userEvent.setup();
@@ -46,14 +49,14 @@ describe("Pantalla «Tomar asistencia»", () => {
 
     await waitFor(async () => {
       expect(await opcionesDe(usuario, campoGrupo())).toEqual([
-        "Delfines · Mañana",
-        "Delfines · Tarde",
+        TEXTO_DELFINES_MANANA,
+        TEXTO_DELFINES_TARDE,
       ]);
     });
     expect(textoElegido(campoGrupo())).toBe("");
   });
 
-  it("con un solo grupo, Grupo queda en Delfines · Mañana, Fecha en 2027-01-05 y se ven los tres alumnos en orden sin elegir", async () => {
+  it("con un solo grupo, Grupo queda en Delfines · Mañana · 5 a 6 años, Fecha en 2027-01-05 y se ven los tres alumnos en orden sin elegir", async () => {
     fijarHoy("2027-01-05");
     // Guarda: en el huso de Argentina a las 21:30 del 05, en UTC ya es el 06.
     // Si alguien cambia la hora o el huso, este test deja de distinguir fecha
@@ -69,7 +72,7 @@ describe("Pantalla «Tomar asistencia»", () => {
 
     await abrirAsistencia();
 
-    await waitFor(() => expect(textoElegido(campoGrupo())).toBe("Delfines · Mañana"));
+    await waitFor(() => expect(textoElegido(campoGrupo())).toBe(TEXTO_DELFINES_MANANA));
     expect(campoFecha()).toHaveValue("2027-01-05");
 
     // Abrio la asistencia de hoy de ese grupo.
@@ -130,7 +133,7 @@ describe("Pantalla «Tomar asistencia»", () => {
     expect(opcion("Martín Gómez", "Presente")).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("al elegir Caballitos · Tarde sin inscriptos se ve el aviso y no está el botón Guardar", async () => {
+  it("al elegir Caballitos · Tarde · 3 a 4 años sin inscriptos se ve el aviso y no está el botón Guardar", async () => {
     fijarHoy("2027-01-05");
     const api = fingirApi({
       grupos: [DELFINES_MANANA, CABALLITOS_TARDE],
@@ -143,10 +146,10 @@ describe("Pantalla «Tomar asistencia»", () => {
 
     await abrirAsistencia();
     await waitFor(async () => {
-      expect(await opcionesDe(usuario, campoGrupo())).toContain("Caballitos · Tarde");
+      expect(await opcionesDe(usuario, campoGrupo())).toContain(TEXTO_CABALLITOS_TARDE);
     });
 
-    await elegir(usuario, campoGrupo(), "Caballitos · Tarde");
+    await elegir(usuario, campoGrupo(), TEXTO_CABALLITOS_TARDE);
 
     await waitFor(() =>
       expect(llamadasAAsistencia(api, "GET", CABALLITOS_TARDE.id, "2027-01-05")).toHaveLength(1),

@@ -27,7 +27,7 @@
 
 ## 3. Edad en los selectores de grupo
 
-- [ ] 3.1 Con la skill `frontend-feature`, escribir la edad en los dos selectores, según el Requirement modificado de `alumnos` «Grupos en la pantalla» (7 Scenarios) y el de `asistencia` «Pantalla «Tomar asistencia»» (4 Scenarios).
+- [x] 3.1 Con la skill `frontend-feature`, escribir la edad en los dos selectores, según el Requirement modificado de `alumnos` «Grupos en la pantalla» (7 Scenarios) y el de `asistencia` «Pantalla «Tomar asistencia»» (4 Scenarios).
   - `textoDelGrupo` en `src/lib/nombres.ts` (design, decisión 4).
   - Los dos campos en el tipo `GrupoParaInscribir` de `src/lib/api.ts`.
   - `SelectorGrupo` y `SelectorGrupoDeAsistencia` usan la función.
@@ -39,7 +39,7 @@
 
 ## 4. Menú lateral
 
-- [ ] 4.1 Con la skill `frontend-feature`, construir el marco de la zona protegida, según los 5 Requirements de `navegacion` (12 Scenarios) y el Requirement modificado de `auth` «Inicio de la zona protegida» (8 Scenarios).
+- [x] 4.1 Con la skill `frontend-feature`, construir el marco de la zona protegida, según los 5 Requirements de `navegacion` (12 Scenarios) y el Requirement modificado de `auth` «Inicio de la zona protegida» (8 Scenarios).
   - `MarcoZonaProtegida` y `MenuLateral` en `src/components/`, con la lista de opciones declarativa.
   - La ruta de diseño en `App.tsx`, dentro de `RutaProtegida`.
   - El inicio queda con `Hola, <nombre>`.

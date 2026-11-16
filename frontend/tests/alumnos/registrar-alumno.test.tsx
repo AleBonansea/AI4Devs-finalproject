@@ -3,7 +3,9 @@
  * los grupos y su sugerencia, la familia nueva o existente, las personas
  * autorizadas a retirar, la validacion antes de enviar y el envio del alta.
  *
- * Spec: openspec/changes/familias-y-alumnos/specs/alumnos/spec.md
+ * Spec: openspec/changes/familias-y-alumnos/specs/alumnos/spec.md; el
+ * Requirement «Grupos en la pantalla», contra el delta de
+ * openspec/changes/menu-lateral-y-edad-de-grupos/specs/alumnos/spec.md.
  * Un `describe` por Requirement y un `it` por Scenario.
  */
 import { screen, waitFor } from "@testing-library/react";
@@ -17,7 +19,14 @@ import {
   OBLIGATORIO,
   PERSONA_MARIA,
   SIN_TUTOR,
+  PULPOS_MANANA,
+  TEXTO_DELFINES_MANANA,
+  TEXTO_DELFINES_TARDE,
+  TEXTO_PULPOS_MANANA,
+  TEXTO_TIBURONES_MANANA,
+  TEXTO_TIBURONES_TARDE,
   TIBURONES_MANANA,
+  TIBURONES_TARDE,
   abrirRegistrar,
   alertasCon,
   altasEnviadas,
@@ -34,6 +43,7 @@ import {
   completarAltaJuan,
   completarAlumnoJuan,
   contiene,
+  coordinador,
   elegir,
   elegirFamiliaExistente,
   escribirFecha,
@@ -41,6 +51,7 @@ import {
   fingirApi,
   llamadasA,
   opcionesDe,
+  parametro,
   porTexto,
   profesor,
   sugeridos,
@@ -83,18 +94,48 @@ describe("Pantalla «Registrar alumno»", () => {
 });
 
 describe("Grupos en la pantalla", () => {
-  it("un Profesor ve como única opción de Grupo Delfines · Mañana", async () => {
+  it("un Profesor ve como única opción de Grupo Delfines · Mañana · 5 a 6 años", async () => {
     fingirApi({ usuario: profesor(), grupos: () => [DELFINES_MANANA] });
     const usuario = userEvent.setup();
 
     await abrirRegistrar();
 
     await waitFor(async () => {
-      expect(await opcionesDe(usuario, campoGrupo())).toEqual(["Delfines · Mañana"]);
+      expect(await opcionesDe(usuario, campoGrupo())).toEqual([TEXTO_DELFINES_MANANA]);
     });
   });
 
-  it("al escribir la fecha sin haber elegido grupo, Grupo queda en Delfines · Mañana (sugerido)", async () => {
+  it("con los grupos de la semilla las opciones son Delfines · Mañana · 5 a 6 años, Tiburones · Mañana · 7 a 9 años, Delfines · Tarde · 5 a 6 años y Tiburones · Tarde · 7 a 9 años, en ese orden", async () => {
+    fingirApi({
+      usuario: coordinador(),
+      grupos: () => [DELFINES_MANANA, TIBURONES_MANANA, DELFINES_TARDE, TIBURONES_TARDE],
+    });
+    const usuario = userEvent.setup();
+
+    await abrirRegistrar();
+
+    await waitFor(async () => {
+      expect(await opcionesDe(usuario, campoGrupo())).toEqual([
+        TEXTO_DELFINES_MANANA,
+        TEXTO_TIBURONES_MANANA,
+        TEXTO_DELFINES_TARDE,
+        TEXTO_TIBURONES_TARDE,
+      ]);
+    });
+  });
+
+  it("un grupo con edad_desde y edad_hasta iguales se ofrece como Pulpos · Mañana · 7 años", async () => {
+    fingirApi({ grupos: () => [PULPOS_MANANA] });
+    const usuario = userEvent.setup();
+
+    await abrirRegistrar();
+
+    await waitFor(async () => {
+      expect(await opcionesDe(usuario, campoGrupo())).toEqual([TEXTO_PULPOS_MANANA]);
+    });
+  });
+
+  it("al escribir la fecha sin haber elegido grupo, Grupo queda en Delfines · Mañana · 5 a 6 años (sugerido)", async () => {
     const api = fingirApi({
       grupos: (fecha) => (fecha === "2020-03-10" ? sugeridos(TODOS, [DELFINES_MANANA.id]) : TODOS),
     });
@@ -106,16 +147,16 @@ describe("Grupos en la pantalla", () => {
     await waitFor(() =>
       expect(
         llamadasA(api, "GET", "/api/v1/grupos").some(
-          (llamada) =>
-            new URL(llamada.url, "http://localhost").searchParams.get("fecha_nacimiento") ===
-            "2020-03-10",
+          (llamada) => parametro(llamada.url, "fecha_nacimiento") === "2020-03-10",
         ),
       ).toBe(true),
     );
-    await waitFor(() => expect(textoElegido(campoGrupo())).toBe("Delfines · Mañana (sugerido)"));
+    await waitFor(() =>
+      expect(textoElegido(campoGrupo())).toBe(`${TEXTO_DELFINES_MANANA} (sugerido)`),
+    );
   });
 
-  it("con dos grupos sugeridos Grupo sigue sin elegir y al desplegarlo se ven los dos con (sugerido)", async () => {
+  it("con dos grupos sugeridos Grupo sigue sin elegir y al desplegarlo se ven Delfines · Mañana · 5 a 6 años (sugerido) y Delfines · Tarde · 5 a 6 años (sugerido)", async () => {
     fingirApi({
       grupos: (fecha) =>
         fecha === "2020-03-10" ? sugeridos(TODOS, [DELFINES_MANANA.id, DELFINES_TARDE.id]) : TODOS,
@@ -128,13 +169,13 @@ describe("Grupos en la pantalla", () => {
     let opciones: string[] = [];
     await waitFor(async () => {
       opciones = await opcionesDe(usuario, campoGrupo());
-      expect(opciones).toContain("Delfines · Mañana (sugerido)");
+      expect(opciones).toContain(`${TEXTO_DELFINES_MANANA} (sugerido)`);
     });
-    expect(opciones).toContain("Delfines · Tarde (sugerido)");
+    expect(opciones).toContain(`${TEXTO_DELFINES_TARDE} (sugerido)`);
     expect(textoElegido(campoGrupo())).toBe("");
   });
 
-  it("la sugerencia no pisa una elección: Grupo sigue en Tiburones · Mañana", async () => {
+  it("la sugerencia no pisa una elección: Grupo sigue en Tiburones · Mañana · 7 a 9 años", async () => {
     fingirApi({
       grupos: (fecha) => (fecha === "2020-03-10" ? sugeridos(TODOS, [DELFINES_MANANA.id]) : TODOS),
     });
@@ -142,18 +183,20 @@ describe("Grupos en la pantalla", () => {
 
     await abrirRegistrar();
     await waitFor(async () => {
-      expect(await opcionesDe(usuario, campoGrupo())).toContain("Tiburones · Mañana");
+      expect(await opcionesDe(usuario, campoGrupo())).toContain(TEXTO_TIBURONES_MANANA);
     });
-    await elegir(usuario, campoGrupo(), "Tiburones · Mañana");
-    await waitFor(() => expect(textoElegido(campoGrupo())).toBe("Tiburones · Mañana"));
+    await elegir(usuario, campoGrupo(), TEXTO_TIBURONES_MANANA);
+    await waitFor(() => expect(textoElegido(campoGrupo())).toBe(TEXTO_TIBURONES_MANANA));
     await escribirFecha(usuario, "2020-03-10");
 
     // La respuesta con la sugerencia ya llego a la pantalla...
     await waitFor(async () => {
-      expect(await opcionesDe(usuario, campoGrupo())).toContain("Delfines · Mañana (sugerido)");
+      expect(await opcionesDe(usuario, campoGrupo())).toContain(
+        `${TEXTO_DELFINES_MANANA} (sugerido)`,
+      );
     });
     // ...y la eleccion se mantiene.
-    expect(textoElegido(campoGrupo())).toBe("Tiburones · Mañana");
+    expect(textoElegido(campoGrupo())).toBe(TEXTO_TIBURONES_MANANA);
   });
 });
 
@@ -386,7 +429,7 @@ describe("Envío del alta desde la pantalla", () => {
     expect(campoAlumno("Nombre")).toHaveValue("Juan");
     expect(campoAlumno("Apellido")).toHaveValue("Pérez");
     expect(campoAlumno("Fecha de nacimiento")).toHaveValue("2020-03-10");
-    expect(textoElegido(campoGrupo())).toBe("Delfines · Mañana");
+    expect(textoElegido(campoGrupo())).toBe(TEXTO_DELFINES_MANANA);
     expect(maria.nombre).toHaveValue("María");
     expect(maria.tutor).toBeChecked();
     await waitFor(() => expect(botonRegistrar()).toBeEnabled());

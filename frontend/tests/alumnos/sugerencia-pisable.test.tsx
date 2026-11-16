@@ -2,7 +2,7 @@
  * Test del Scenario «Corregir la fecha cambia el grupo elegido por la
  * sugerencia» del Requirement «Grupos en la pantalla».
  *
- * Spec: openspec/changes/familias-y-alumnos/specs/alumnos/spec.md
+ * Spec: openspec/changes/menu-lateral-y-edad-de-grupos/specs/alumnos/spec.md
  * Mientras el usuario no haya elegido el grupo a mano, la sugerencia manda:
  * si la fecha se corrige, el grupo elegido por la sugerencia anterior se
  * reemplaza por el nuevo sugerido.
@@ -13,6 +13,8 @@ import { describe, expect, it } from "vitest";
 import {
   DELFINES_MANANA,
   DELFINES_TARDE,
+  TEXTO_DELFINES_MANANA,
+  TEXTO_TIBURONES_MANANA,
   TIBURONES_MANANA,
   abrirRegistrar,
   campoGrupo,
@@ -28,7 +30,7 @@ import {
 const TODOS = [DELFINES_MANANA, DELFINES_TARDE, TIBURONES_MANANA];
 
 describe("Grupos en la pantalla", () => {
-  it("al corregir la fecha a 2018-05-05, Grupo queda en Tiburones · Mañana (sugerido)", async () => {
+  it("al corregir la fecha a 2018-05-05, Grupo queda en Tiburones · Mañana · 7 a 9 años (sugerido)", async () => {
     const api = fingirApi({
       grupos: (fecha) => {
         if (fecha === "2020-03-10") return sugeridos(TODOS, [DELFINES_MANANA.id]);
@@ -42,7 +44,9 @@ describe("Grupos en la pantalla", () => {
 
     // GIVEN: con 2020-03-10, la sugerencia eligio Delfines manana sin tocar Grupo.
     await escribirFecha(usuario, "2020-03-10");
-    await waitFor(() => expect(textoElegido(campoGrupo())).toBe("Delfines · Mañana (sugerido)"));
+    await waitFor(() =>
+      expect(textoElegido(campoGrupo())).toBe(`${TEXTO_DELFINES_MANANA} (sugerido)`),
+    );
 
     // WHEN: se corrige la fecha.
     await escribirFecha(usuario, "2018-05-05");
@@ -58,11 +62,13 @@ describe("Grupos en la pantalla", () => {
     // ...y la respuesta ya llego a la pantalla: Tiburones es el sugerido.
     await waitFor(async () => {
       const opciones = await opcionesDe(usuario, campoGrupo());
-      expect(opciones).toContain("Tiburones · Mañana (sugerido)");
-      expect(opciones).not.toContain("Delfines · Mañana (sugerido)");
+      expect(opciones).toContain(`${TEXTO_TIBURONES_MANANA} (sugerido)`);
+      expect(opciones).not.toContain(`${TEXTO_DELFINES_MANANA} (sugerido)`);
     });
 
     // THEN
-    await waitFor(() => expect(textoElegido(campoGrupo())).toBe("Tiburones · Mañana (sugerido)"));
+    await waitFor(() =>
+      expect(textoElegido(campoGrupo())).toBe(`${TEXTO_TIBURONES_MANANA} (sugerido)`),
+    );
   });
 });

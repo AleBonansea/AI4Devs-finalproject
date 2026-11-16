@@ -135,25 +135,8 @@ describe("Sesión rechazada por la API", () => {
   });
 });
 
-describe("Inicio de la zona protegida", () => {
-  it("el inicio de un Profesor muestra Carlos Gómez, Profesor y el botón Salir", async () => {
-    localStorage.setItem(CLAVE_TOKEN, "tok-profesor");
-    apiConUsuario(
-      usuarioYo({
-        nombre: "Carlos",
-        apellido: "Gómez",
-        rol: "profesor",
-        debe_cambiar_password: false,
-      }),
-    );
-
-    abrir("/");
-
-    expect(await screen.findByText(/Carlos Gómez/)).toBeInTheDocument();
-    expect(screen.getAllByText(/\bProfesor\b/).length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: "Salir" })).toBeInTheDocument();
-  });
-});
+// «Inicio de la zona protegida» esta en inicio.test.tsx, contra el delta de
+// openspec/changes/menu-lateral-y-edad-de-grupos/specs/auth/spec.md.
 
 describe("Aviso de cambio de contraseña pendiente", () => {
   it("al recargar con el cambio pendiente se ve el aviso y no se ve el inicio", async () => {
