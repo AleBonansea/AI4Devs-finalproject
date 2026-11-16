@@ -35,6 +35,9 @@ export interface Grupo {
   nacimiento_desde: string;
   nacimiento_hasta: string;
   sugerido: boolean;
+  /** Edad del grupo, en anios, tal como la manda la API. */
+  edad_desde: number;
+  edad_hasta: number;
 }
 
 export const DELFINES_MANANA: Grupo = {
@@ -44,6 +47,8 @@ export const DELFINES_MANANA: Grupo = {
   nacimiento_desde: "2020-01-01",
   nacimiento_hasta: "2021-12-31",
   sugerido: false,
+  edad_desde: 5,
+  edad_hasta: 6,
 };
 
 export const DELFINES_TARDE: Grupo = {
@@ -53,6 +58,8 @@ export const DELFINES_TARDE: Grupo = {
   nacimiento_desde: "2020-01-01",
   nacimiento_hasta: "2021-12-31",
   sugerido: false,
+  edad_desde: 5,
+  edad_hasta: 6,
 };
 
 export const TIBURONES_MANANA: Grupo = {
@@ -62,7 +69,39 @@ export const TIBURONES_MANANA: Grupo = {
   nacimiento_desde: "2017-01-01",
   nacimiento_hasta: "2019-12-31",
   sugerido: false,
+  edad_desde: 7,
+  edad_hasta: 9,
 };
+
+export const TIBURONES_TARDE: Grupo = {
+  id: 5,
+  nombre: "Tiburones",
+  turno: "tarde",
+  nacimiento_desde: "2017-01-01",
+  nacimiento_hasta: "2019-12-31",
+  sugerido: false,
+  edad_desde: 7,
+  edad_hasta: 9,
+};
+
+/** Un grupo de una sola edad: `edad_desde` y `edad_hasta` iguales. */
+export const PULPOS_MANANA: Grupo = {
+  id: 6,
+  nombre: "Pulpos",
+  turno: "manana",
+  nacimiento_desde: "2019-01-01",
+  nacimiento_hasta: "2019-12-31",
+  sugerido: false,
+  edad_desde: 7,
+  edad_hasta: 7,
+};
+
+/** Los textos de las opciones de `Grupo`: nombre · turno · edad. */
+export const TEXTO_DELFINES_MANANA = "Delfines · Mañana · 5 a 6 años";
+export const TEXTO_DELFINES_TARDE = "Delfines · Tarde · 5 a 6 años";
+export const TEXTO_TIBURONES_MANANA = "Tiburones · Mañana · 7 a 9 años";
+export const TEXTO_TIBURONES_TARDE = "Tiburones · Tarde · 7 a 9 años";
+export const TEXTO_PULPOS_MANANA = "Pulpos · Mañana · 7 años";
 
 export const FAMILIA_PEREZ_JUAN = {
   id: 10,
@@ -486,9 +525,9 @@ export async function completarAlumnoJuan(usuario: Usuario) {
  */
 async function elegirGrupoDelfinesManana(usuario: Usuario) {
   const grupo = campoGrupo();
-  if (textoElegido(grupo).startsWith("Delfines · Mañana")) return;
-  await elegir(usuario, grupo, "Delfines · Mañana");
-  await waitFor(() => expect(textoElegido(campoGrupo())).toBe("Delfines · Mañana"));
+  if (textoElegido(grupo).startsWith(TEXTO_DELFINES_MANANA)) return;
+  await elegir(usuario, grupo, TEXTO_DELFINES_MANANA);
+  await waitFor(() => expect(textoElegido(campoGrupo())).toBe(TEXTO_DELFINES_MANANA));
 }
 
 /**

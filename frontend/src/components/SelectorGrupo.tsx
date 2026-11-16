@@ -13,7 +13,7 @@ import TextField from "@mui/material/TextField";
 import { memo, useEffect, useRef, useState } from "react";
 
 import { ErrorDeApi, listarGrupos, type GrupoParaInscribir } from "../lib/api";
-import { NOMBRE_DEL_TURNO } from "../lib/nombres";
+import { textoDelGrupo as textoBase } from "../lib/nombres";
 
 const MENSAJE_INESPERADO = "No se pudieron cargar los grupos.";
 
@@ -29,7 +29,7 @@ interface Props {
 }
 
 function textoDelGrupo(grupo: GrupoParaInscribir): string {
-  const base = `${grupo.nombre} · ${NOMBRE_DEL_TURNO[grupo.turno]}`;
+  const base = textoBase(grupo);
   return grupo.sugerido ? `${base} (sugerido)` : base;
 }
 

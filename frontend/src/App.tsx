@@ -7,6 +7,7 @@ import Inicio from "./pages/Inicio";
 import RegistrarAlumno from "./pages/RegistrarAlumno";
 import RegistrarCargo from "./pages/RegistrarCargo";
 import TomarAsistencia from "./pages/TomarAsistencia";
+import MarcoZonaProtegida from "./components/MarcoZonaProtegida";
 import RutaProtegida from "./routes/RutaProtegida";
 import RutaSoloAdmin from "./routes/RutaSoloAdmin";
 
@@ -20,14 +21,17 @@ export default function App() {
       <Routes>
         <Route path="/ingresar" element={<Ingreso />} />
         <Route element={<RutaProtegida />}>
-          <Route path="/" element={<Inicio />} />
-          <Route path="/alumnos/nuevo" element={<RegistrarAlumno />} />
-          <Route path="/asistencia" element={<TomarAsistencia />} />
-          <Route element={<RutaSoloAdmin />}>
-            <Route path="/cargos/nuevo" element={<RegistrarCargo />} />
-            <Route path="/cuenta-corriente" element={<CuentaCorriente />} />
+          {/* El marco (encabezado y menu) envuelve solo lo que ya paso RutaProtegida. */}
+          <Route element={<MarcoZonaProtegida />}>
+            <Route path="/" element={<Inicio />} />
+            <Route path="/alumnos/nuevo" element={<RegistrarAlumno />} />
+            <Route path="/asistencia" element={<TomarAsistencia />} />
+            <Route element={<RutaSoloAdmin />}>
+              <Route path="/cargos/nuevo" element={<RegistrarCargo />} />
+              <Route path="/cuenta-corriente" element={<CuentaCorriente />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </ProveedorSesion>

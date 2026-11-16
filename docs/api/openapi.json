@@ -1948,6 +1948,14 @@
           "sugerido": {
             "type": "boolean",
             "title": "Sugerido"
+          },
+          "edad_desde": {
+            "type": "integer",
+            "title": "Edad Desde"
+          },
+          "edad_hasta": {
+            "type": "integer",
+            "title": "Edad Hasta"
           }
         },
         "type": "object",
@@ -1957,7 +1965,9 @@
           "turno",
           "nacimiento_desde",
           "nacimiento_hasta",
-          "sugerido"
+          "sugerido",
+          "edad_desde",
+          "edad_hasta"
         ],
         "title": "GrupoParaInscribir",
         "description": "Un grupo donde se puede inscribir a un alumno, con la marca de\nsugerido segun la fecha de nacimiento consultada."

@@ -1,6 +1,6 @@
 # 5. Historias de Usuario
 
-> **Recorte de MVP.** Estas 3 historias son el recorte de MVP de un backlog completo de **49 historias**. Son las que se documentan con criterios de aceptación; el resto del primer lote de desarrollo (11 historias en total, todas construidas en la Entrega 2) y el backlog completo, con prioridades y sustento, están en [`docs/product/historias-backlog.md`](docs/product/historias-backlog.md).
+> **Recorte de MVP.** Estas 3 historias son el recorte de MVP de un backlog completo de **52 historias**. Son las que se documentan con criterios de aceptación; el resto del primer lote de desarrollo (11 historias en total, todas construidas en la Entrega 2) y el backlog completo, con prioridades y sustento, están en [`docs/product/historias-backlog.md`](docs/product/historias-backlog.md).
 
 > **Convenciones.** "Staff" significa Admin, Coordinador o Profesor; el Profesor siempre actúa solo sobre sus grupos asignados. En el campo *Sustento*, "PRD" remite a [`docs/prd/prd-escuelita-de-verano.md`](docs/prd/prd-escuelita-de-verano.md) y "Acl." a [`docs/prd/aclaraciones-cliente.md`](docs/prd/aclaraciones-cliente.md), que prevalece sobre el PRD. Las precondiciones que dependen de otras historias del lote van en el "Dado".
 
@@ -8,19 +8,19 @@
 
 **HU-AF-01 — Registrar un alumno con familia, grupo y turno** · `Lote 1`
 
-Como staff, quiero registrar un alumno con sus datos mínimos (incluido al menos un tutor) y asignarlo a un grupo y turno, para tenerlo inscripto desde el primer contacto y completar la documentación más adelante.
-*Sustento:* PRD «Alumnos, tutores y documentación» (ficha progresiva; la inscripción la hace el staff); PRD «Roles y permisos»; Acl. 3, 4, 8.
+Como staff, quiero registrar un alumno con sus datos mínimos (nombre, apellido, DNI, fecha de nacimiento y al menos un tutor) y asignarlo a un grupo y turno, para tenerlo inscripto desde el primer contacto y completar la documentación más adelante.
+*Sustento:* PRD «Alumnos, tutores y documentación» (ficha progresiva; la inscripción la hace el staff); PRD «Roles y permisos»; Acl. 3, 4, 8. El DNI del alumno es [SUPUESTO], ver «DNI del alumno» en las preguntas abiertas de [`aclaraciones-cliente.md`](docs/prd/aclaraciones-cliente.md).
 
-> **Versión vigente:** HU-AF-01 ya está construida (change `familias-y-alumnos`, archivado el 13/11/2026). Los criterios que siguen son los que se entregaron en la Entrega 1 y se conservan como documento de esa entrega. El comportamiento vigente, con un Scenario por caso y los que se sumaron al construirla, está en [`openspec/specs/alumnos/spec.md`](openspec/specs/alumnos/spec.md), y la familia y las personas en [`openspec/specs/familias/spec.md`](openspec/specs/familias/spec.md). Si difieren, mandan las specs.
+> **Versión vigente:** HU-AF-01 ya está construida (change `familias-y-alumnos`, archivado el 13/11/2026). Los criterios que siguen son los que se entregaron en la Entrega 1 y se conservan como documento de esa entrega, con una excepción: el **DNI** del alumno se sumó el 16/11/2026, en la revisión de la Entrega 2, y todavía no está construido; llega con HU-AF-11 (lote 3). El comportamiento vigente, con un Scenario por caso y los que se sumaron al construirla, está en [`openspec/specs/alumnos/spec.md`](openspec/specs/alumnos/spec.md), y la familia y las personas en [`openspec/specs/familias/spec.md`](openspec/specs/familias/spec.md). Si difieren, mandan las specs.
 
 *Criterios de aceptación* (incluyen la creación o elección de familia, la categoría y el tutor obligatorio, que se apoyan en HU-AF-02, HU-AF-03 y HU-AF-04):
 
-Datos mínimos del alta (Acl. 3): nombre, apellido y fecha de nacimiento del alumno; familia (nueva, con su categoría, o existente); al menos un tutor; y grupo y turno. La documentación no forma parte del mínimo.
+Datos mínimos del alta (Acl. 3): nombre, apellido, DNI ([SUPUESTO]) y fecha de nacimiento del alumno; familia (nueva, con su categoría, o existente); al menos un tutor; y grupo y turno. La documentación no forma parte del mínimo.
 
 **Escenario 1 — Primer hijo: se crea la familia** (camino feliz)
 - **Dado** que existe el grupo «Delfines», turno mañana, para nacidos entre el 01/01/2018 y el 31/12/2019 en la temporada vigente
 - **Y** que un Coordinador inició sesión
-- **Cuando** registra a Juan Pérez, nacido el 10/03/2018, elige "crear familia nueva" con categoría empleado, carga como tutora a María Pérez y lo inscribe en «Delfines», turno mañana
+- **Cuando** registra a Juan Pérez, DNI 55.123.456, nacido el 10/03/2018, elige "crear familia nueva" con categoría empleado, carga como tutora a María Pérez y lo inscribe en «Delfines», turno mañana
 - **Entonces** Juan queda inscripto en «Delfines», turno mañana, en la temporada vigente
 - **Y** se crea la familia «Pérez – Juan», con categoría empleado y una cuenta corriente única
 - **Y** María Pérez queda como tutora de la familia y autorizada a retirar a Juan
@@ -29,7 +29,7 @@ Datos mínimos del alta (Acl. 3): nombre, apellido y fecha de nacimiento del alu
 **Escenario 2 — Segundo hijo: se elige la familia existente** (camino feliz)
 - **Dado** que existe la familia «Pérez – Juan», categoría empleado, con Juan nacido el 10/03/2018 y María Pérez como tutora
 - **Y** que existe el grupo «Tiburones», turno mañana, para nacidos entre el 01/01/2015 y el 31/12/2017
-- **Cuando** un Admin registra a Ana Pérez, nacida el 05/07/2016, elige la familia «Pérez – Juan» y la inscribe en «Tiburones», turno mañana
+- **Cuando** un Admin registra a Ana Pérez, DNI 53.987.654, nacida el 05/07/2016, elige la familia «Pérez – Juan» y la inscribe en «Tiburones», turno mañana
 - **Entonces** Ana queda en la misma familia y comparte su cuenta corriente
 - **Y** no se le pide categoría: la familia sigue siendo empleado
 - **Y** Ana queda cubierta por la tutora de la familia, María Pérez
@@ -60,9 +60,15 @@ Datos mínimos del alta (Acl. 3): nombre, apellido y fecha de nacimiento del alu
 
 **Escenario 7 — Faltan datos mínimos** (error)
 - **Dado** que un Coordinador está registrando un alumno
-- **Cuando** intenta guardar sin fecha de nacimiento, sin grupo y turno, sin familia, sin categoría (si la familia es nueva) o sin ningún tutor
+- **Cuando** intenta guardar sin DNI, sin fecha de nacimiento, sin grupo y turno, sin familia, sin categoría (si la familia es nueva) o sin ningún tutor
 - **Entonces** el alumno no se registra
 - **Y** el sistema indica qué dato falta
+
+**Escenario 8 — DNI ya registrado** (error)
+- **Dado** que Juan Pérez, DNI 55.123.456, ya tiene ficha en el sistema
+- **Cuando** un Coordinador intenta dar de alta otro alumno con el DNI 55.123.456
+- **Entonces** el alumno no se registra y no se crea ninguna familia
+- **Y** el sistema indica que ya existe un alumno con ese DNI: dos fichas con el mismo DNI serían el mismo chico cargado dos veces. Reinscribir al que vuelve es HU-AF-11
 
 ---
 
