@@ -80,6 +80,12 @@ El encabezado de la zona protegida y el menú MUST NOT mostrarse en la pantalla 
 - **WHEN** se abre `/ingresar`
 - **THEN** no se ven `Inicio`, `Registrar alumno` ni `Tomar asistencia`
 
+#### Scenario: Mientras se comprueba la sesión no hay menú
+- **GIVEN** hay un token guardado y `GET /api/v1/auth/yo` todavía no respondió
+- **WHEN** se abre `/asistencia`
+- **THEN** se ve el indicador de carga `Comprobando la sesión`
+- **AND** no se ven `Inicio`, `Registrar alumno` ni `Tomar asistencia`
+
 #### Scenario: El cambio de contraseña pendiente no tiene menú
 - **GIVEN** hay un token guardado y `GET /api/v1/auth/yo` responde 200 con `debe_cambiar_password` en true
 - **WHEN** se abre `/asistencia`

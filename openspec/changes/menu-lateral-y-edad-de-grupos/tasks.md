@@ -55,7 +55,7 @@
 ## 5. Cierre
 
 - [x] 5.1 Comprobación completa: `python tasks.py test`, `lint`, `typecheck`, `openapi-check`, `front-test`, y `cd frontend && npm run lint && npm run build`, todo en verde.
-- [ ] 5.2 Pase del subagente `adversarial-reviewer` sobre el change completo, una sola vez, antes del pull request. **Se verifica con** su informe y cada hallazgo resuelto o descartado con motivo.
+- [x] 5.2 Pase del subagente `adversarial-reviewer` sobre el change completo, una sola vez, antes del pull request. **Se verifica con** su informe y cada hallazgo resuelto o descartado con motivo.
 
 ## Workflow follow-up
 

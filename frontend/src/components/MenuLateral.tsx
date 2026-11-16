@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListSubheader from "@mui/material/ListSubheader";
@@ -50,8 +51,8 @@ interface Props {
 export default function MenuLateral({ rol }: Props) {
   return (
     <nav aria-label="Menú principal">
-      <List
-        disablePadding
+      {/* El contenedor hace la fila (debajo de md) o la columna; cada seccion es una lista. */}
+      <Box
         sx={{
           display: "flex",
           flexDirection: { xs: "row", md: "column" },
@@ -61,9 +62,20 @@ export default function MenuLateral({ rol }: Props) {
         }}
       >
         {SECCIONES.filter((seccion) => !seccion.soloAdmin || rol === "admin").map((seccion) => (
-          <li key={seccion.titulo} style={{ display: "contents" }}>
+          <List
+            key={seccion.titulo}
+            disablePadding
+            aria-labelledby={`menu-seccion-${seccion.titulo}`}
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "row", md: "column" },
+              alignItems: { xs: "center", md: "stretch" },
+              flexShrink: 0,
+            }}
+          >
             <ListSubheader
               component="div"
+              id={`menu-seccion-${seccion.titulo}`}
               sx={{
                 bgcolor: "transparent",
                 color: "text.secondary",
@@ -85,19 +97,22 @@ export default function MenuLateral({ rol }: Props) {
                   borderRadius: 1,
                   flexShrink: 0,
                   whiteSpace: "nowrap",
+                  // Texto oscuro para el contraste; la marca de color va en el borde.
                   "&.active": {
                     bgcolor: colores.accionSuave,
-                    color: colores.accion,
+                    color: colores.texto,
                     fontWeight: 700,
+                    borderLeft: { md: `3px solid ${colores.accion}` },
+                    borderBottom: { xs: `3px solid ${colores.accion}`, md: 0 },
                   },
                 }}
               >
                 {opcion.texto}
               </ListItemButton>
             ))}
-          </li>
+          </List>
         ))}
-      </List>
+      </Box>
     </nav>
   );
 }

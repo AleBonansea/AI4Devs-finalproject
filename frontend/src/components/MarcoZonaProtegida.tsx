@@ -31,20 +31,28 @@ export default function MarcoZonaProtegida() {
   return (
     <>
       <AppBar position="static" color="inherit" elevation={0} sx={{ bgcolor: "background.paper" }}>
-        <Toolbar sx={{ gap: 2, borderBottom: 1, borderColor: "divider" }}>
-          <LogoConAro tamano="chico" />
-          <Typography variant="h6" component="p" sx={{ flexGrow: 1 }}>
+        <Toolbar sx={{ gap: 2, borderBottom: 1, borderColor: "divider", minWidth: 0 }}>
+          <Box sx={{ flexShrink: 0, display: "flex" }}>
+            <LogoConAro tamano="chico" />
+          </Box>
+          <Typography
+            variant="h6"
+            component="p"
+            noWrap
+            sx={{ flexGrow: 1, minWidth: 0, display: { xs: "none", sm: "block" } }}
+          >
             Escuela de Verano
           </Typography>
-          <Stack alignItems="flex-end">
-            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+          {/* En el telefono el titulo se oculta y el usuario ocupa el espacio libre. */}
+          <Stack alignItems="flex-end" sx={{ minWidth: 0, flexGrow: { xs: 1, sm: 0 } }}>
+            <Typography variant="body2" noWrap sx={{ fontWeight: 700, maxWidth: "100%" }}>
               {`${usuario.nombre} ${usuario.apellido}`}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" noWrap color="text.secondary" sx={{ maxWidth: "100%" }}>
               {NOMBRE_DEL_ROL[usuario.rol]}
             </Typography>
           </Stack>
-          <Button variant="outlined" onClick={alSalir}>
+          <Button variant="outlined" onClick={alSalir} sx={{ flexShrink: 0 }}>
             Salir
           </Button>
         </Toolbar>

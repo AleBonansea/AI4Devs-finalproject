@@ -7,7 +7,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { CLAVE_TOKEN, fingirFetch, respuestaJson } from "../auth/montar";
+import { CLAVE_TOKEN, fingirFetch, llamadasAYo, respuestaJson, sinRespuesta } from "../auth/montar";
 import {
   OPCIONES_ADMIN,
   OPCIONES_ESCUELA,
@@ -196,6 +196,25 @@ describe("Sin menú fuera de la zona habilitada", () => {
     abrir("/ingresar");
 
     expect(await screen.findByLabelText("Usuario")).toBeInTheDocument();
+    expectSinOpcionesDeEscuela();
+  });
+
+  it("Mientras se comprueba la sesión no hay menú", async () => {
+    localStorage.setItem(CLAVE_TOKEN, "tok-profesor");
+    // `GET /api/v1/auth/yo` no responde durante el test; el resto, 404.
+    const falso = fingirFetch(async (url) =>
+      url.includes("/api/v1/auth/yo")
+        ? sinRespuesta()
+        : respuestaJson(404, { detail: "No encontrado." }),
+    );
+
+    abrir("/asistencia");
+
+    expect(
+      await screen.findByRole("progressbar", { name: "Comprobando la sesión" }),
+    ).toBeInTheDocument();
+    // La comprobacion esta en curso: se pidio `yo` y no hubo respuesta.
+    await waitFor(() => expect(llamadasAYo(falso).length).toBeGreaterThan(0));
     expectSinOpcionesDeEscuela();
   });
 
