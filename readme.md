@@ -21,7 +21,9 @@ Proyecto Final del máster **AI4Devs (LIDR)**, desarrollado con **Spec-Driven De
 - [PRD transcripto a Markdown](docs/prd/prd-escuelita-de-verano.md): transcripción fiel del PDF, que no se modifica.
 - [Aclaraciones del cliente](docs/prd/aclaraciones-cliente.md): decisiones de negocio posteriores al PRD. Prevalecen sobre el PRD cuando se contradicen.
 - [Documento técnico](docs/architecture/documento-tecnico.md): stack, despliegue en Render, seguridad y pendientes técnicos.
-- [Backlog de historias de usuario](docs/product/historias-backlog.md): todas las historias, con prioridad y sustento, y el alcance del lote de la Entrega 1.
+- [Backlog de historias de usuario](docs/product/historias-backlog.md): todas las historias, con prioridad y sustento, los lotes y el plan de changes.
+- [Especificaciones vigentes](openspec/specs/): el comportamiento del sistema, un Scenario por caso, cada uno con su test.
+- [Contrato de la API](docs/api/openapi.json): generado desde el código y comprobado en cada pull request.
 - [Registro de uso de IA (prompts.md)](prompts.md)
 
 ## Estado
@@ -36,7 +38,8 @@ Las historias que faltan para poner el sistema en producción están en el [back
 |---|---|
 | Tests del backend | 457 |
 | Tests del frontend | 148 |
-| Pull requests | 9, todas revisadas |
+| Specs vigentes | 12 |
+| Pull requests | 12, con CI y, desde la #3, revisión automática |
 
 ## Cómo levantarlo en local
 

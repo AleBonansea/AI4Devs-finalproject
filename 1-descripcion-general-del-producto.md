@@ -40,7 +40,7 @@
 - Cupos máximos por grupo y lista de espera.
 - Alias manual para distinguir familias con igual etiqueta (a futuro).
 
-**Entrega.** Se construye el sistema completo. El backlog y el recorte de MVP de esta entrega están en [`docs/product/historias-backlog.md`](docs/product/historias-backlog.md). Las 3 historias documentadas con criterios de aceptación están en [`5-historias-de-usuario.md`](5-historias-de-usuario.md).
+**Entregas.** El sistema completo se construye por lotes. El **lote 1** (11 historias, la «espina del dinero») está construido en la Entrega 2: ingresar, dar de alta un alumno con su familia, tomar asistencia, registrar un cargo con su cálculo, pagarlo en cuotas y ver el saldo. El **lote 2** es la configuración y la administración que hoy carga la semilla. El backlog completo y los lotes están en [`docs/product/historias-backlog.md`](docs/product/historias-backlog.md); las 3 historias documentadas con criterios de aceptación, en [`5-historias-de-usuario.md`](5-historias-de-usuario.md).
 
 ### **1.2. Características y funcionalidades principales:**
 
@@ -61,7 +61,7 @@
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-Las imágenes corresponden a un **prototipo navegable** construido a partir del PRD, antes de escribir código, para validar los flujos con el cliente. Los datos son de ejemplo y los montos son ficticios. La paleta sale del logo real de la escuelita: el verde de las letras y el naranja del salvavidas.
+Las imágenes corresponden a un **prototipo navegable** construido a partir del PRD, antes de escribir código, para validar los flujos con el cliente. Muestran la intención visual del sistema completo, no lo construido: en la Entrega 2 existen las pantallas de ingreso, inicio, registrar alumno, tomar asistencia, registrar cargo y cuenta corriente de la familia, con la paleta del prototipo. El prototipo es anterior al modelo de datos y tiene diferencias conocidas con él (por ejemplo, un campo de medio de pago que el modelo no tiene), así que no es especificación: el comportamiento está en [`openspec/specs/`](openspec/specs/). Los datos son de ejemplo y los montos son ficticios. La paleta sale del logo real de la escuelita: el verde de las letras y el naranja del salvavidas.
 
 El sistema se usa desde la computadora y desde el celular, porque la asistencia se toma en el patio.
 
@@ -109,13 +109,13 @@ El sistema se usa desde la computadora y desde el celular, porque la asistencia 
 
 ### **1.4. Instrucciones de instalación:**
 
-> **Pasos planificados.** Todavía no hay código en el repositorio (la Entrega 1 es solo documentación). Estos son los pasos previstos según el stack de [`docs/architecture/documento-tecnico.md`](docs/architecture/documento-tecnico.md) y la estructura de [`2-arquitectura-del-sistema.md`](2-arquitectura-del-sistema.md), sección 2.3. **Se confirman en la Entrega 2**, cuando exista el código: ahí se fijan las versiones exactas y los nombres definitivos de las variables de entorno.
+Son los mismos pasos que el [`readme.md`](readme.md). Todos los comandos se corren desde la raíz con `python tasks.py <tarea>`, que funciona igual en Windows, Linux y macOS; `python tasks.py` sin argumentos lista las tareas.
 
 **Requisitos previos:**
 - Git;
-- Python 3, con `venv` y `pip`;
-- Node.js, con `npm`;
-- PostgreSQL corriendo en local, con una base vacía para el proyecto.
+- [Docker](https://www.docker.com/products/docker-desktop/), para PostgreSQL 16;
+- Python 3.12 o superior;
+- Node 20 o superior, con `npm`.
 
 **1. Clonar el repositorio**
 
@@ -124,60 +124,54 @@ git clone https://github.com/AleBonansea/AI4Devs-finalproject.git
 cd AI4Devs-finalproject
 ```
 
-**2. Backend: entorno virtual y dependencias**
+**2. Variables de entorno**
 
 ```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate      # en Windows: .venv\Scripts\activate
-pip install -e .               # instala las dependencias de pyproject.toml
+cp backend/.env.example backend/.env
 ```
 
-**3. Variables de entorno**
-
-Crear `backend/.env` a partir de un `backend/.env.example` que se va a versionar. Las variables previstas (los nombres son tentativos) son:
+Abrir `backend/.env` y reemplazar `SECRET_KEY` por una cadena larga y aleatoria: es la clave que firma los tokens de sesión. El archivo `.env` no se versiona.
 
 | Variable | Para qué |
 |---|---|
-| `DATABASE_URL` | Conexión a PostgreSQL. Por ejemplo, `postgresql+psycopg://usuario:clave@localhost:5432/escuelita`. |
-| `JWT_SECRET` | Clave para firmar los tokens de acceso y de renovación. |
-| `DOCUMENTOS_DIR` | Carpeta local donde se guardan los documentos subidos, fuera de cualquier carpeta pública. En producción es el disco persistente de Render. |
-| `FRONTEND_ORIGIN` | Origen del frontend permitido por CORS. En local, `http://localhost:5173`. |
+| `DATABASE_URL` | Conexión a la base de desarrollo. El ejemplo ya apunta al PostgreSQL del `docker-compose.yml`. |
+| `TEST_DATABASE_URL` | Conexión a la base de pruebas. Tiene que ser distinta de la de desarrollo: los tests se niegan a correr contra ella. |
+| `SECRET_KEY` | Clave para firmar los tokens. Obligatoria: sin ella la API no arranca. |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Vida del token de acceso. Opcional, 480 (8 horas) por defecto. |
+| `CORS_ORIGINS` | Orígenes del frontend permitidos, separados por coma. Opcional, `http://localhost:5173` por defecto. |
 
-El archivo `.env` no se versiona.
+`frontend/.env` no hace falta en desarrollo: Vite reenvía `/api` al backend.
 
-**4. Migraciones de la base**
-
-```bash
-alembic upgrade head
-```
-
-Crea todas las tablas, constraints y vistas de [`3-modelo-de-datos.md`](3-modelo-de-datos.md). En producción, el mismo comando corre en el pre-deploy de Render (documento técnico).
-
-**5. Puesta en marcha y arranque de la API**
-
-- **No hay datos semilla**, por decisión del proyecto: todo se carga desde la aplicación.
-- Lo único que se crea al instalar es el **primer Admin** y la **primera temporada vigente** (Acl. 9, 10). El comando para hacerlo se define en la Entrega 2.
-- Después se levanta la API con `uvicorn app.main:app --reload`, que queda en `http://localhost:8000`, con la documentación OpenAPI en `/docs`.
-
-**6. Frontend**
-
-En otra terminal, desde la raíz del repositorio:
+**3. Dependencias, base y datos de ejemplo**
 
 ```bash
-cd frontend
-npm install
-npm run dev
+python tasks.py install   # entorno virtual del backend y npm del frontend
+python tasks.py up        # PostgreSQL en Docker, con la base de desarrollo y la de pruebas
+python tasks.py migrate   # alembic upgrade head
+python tasks.py seed      # temporada, tarifario, grupos, usuarios y tres familias de ejemplo
 ```
 
-Vite levanta la aplicación en `http://localhost:5173`. La URL de la API se configura en `frontend/.env` con una variable tentativa `VITE_API_URL=http://localhost:8000`.
+`seed` se niega a correr sobre una base que ya tiene datos.
 
-**7. Tests**
-
-Con el entorno virtual del backend activado:
+**4. Levantar la aplicación**, en dos terminales:
 
 ```bash
-pytest
+python tasks.py api        # API en http://localhost:8000, con la documentación OpenAPI en /docs
+python tasks.py front-dev  # aplicación en http://localhost:5173
 ```
 
-Los tests corren contra PostgreSQL, no contra SQLite, y necesitan una base de pruebas (ver [`2-arquitectura-del-sistema.md`](2-arquitectura-del-sistema.md), sección 2.6).
+Entrar a `http://localhost:5173` con `mgarcia` (Admin), `lrodriguez` (Coordinador) o `jperez` (Profesor), todos con la contraseña `Verano2026`.
+
+**5. Tests y comprobaciones**
+
+```bash
+python tasks.py test        # tests del backend, contra la base de pruebas
+python tasks.py front-test  # tests del frontend
+python tasks.py lint        # ruff check y ruff format
+python tasks.py typecheck   # mypy
+python tasks.py front-lint  # eslint, prettier y build
+```
+
+Los tests del backend corren contra PostgreSQL, no contra SQLite (ver [`2-arquitectura-del-sistema.md`](2-arquitectura-del-sistema.md), sección 2.6).
+
+**Puesta en marcha real.** En producción no se corre la semilla: lo único que se crea al instalar es el **primer Admin** y la **primera temporada vigente** (Acl. 9, 10). El comando que lo hace llega con el lote 2, junto con el alta de usuarios desde la aplicación.
