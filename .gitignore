@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+
+# Entorno y credenciales — nunca entran en un commit
+.env
+.env.*
+!.env.example
+
+# Archivos adjuntos de las fichas: son DNI y fichas medicas de menores
+uploads/
+
+# Trabajo del agente
+.claude/tmp/

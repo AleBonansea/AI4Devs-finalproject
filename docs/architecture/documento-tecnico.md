@@ -8,17 +8,19 @@ Cómo se construye y despliega el sistema. Qué tiene que hacer y por qué está
 
 Backend en Python con FastAPI, frontend en React y base PostgreSQL. Se eligió FastAPI sobre Django a sabiendas de que autenticación, permisos y pantallas de configuración se programan a mano.
 
+**Librería de UI, resuelta en la Entrega 2:** MUI sobre Mantine. Las dos cubrían lo necesario; MUI tiene mucho más material de entrenamiento, así que un asistente de código genera MUI correcto con bastante más fiabilidad.
+
 | Capa | Tecnología | Para qué |
 |---|---|---|
 | API | FastAPI + Pydantic | Endpoints REST y validación de datos de entrada |
-| Acceso a datos | SQLAlchemy 2 (o SQLModel) | Modelos y consultas a la base |
+| Acceso a datos | SQLAlchemy 2 | Modelos y consultas a la base |
 | Migraciones | Alembic | Cambios de esquema versionados |
 | Base de datos | PostgreSQL | Datos de la aplicación |
 | Contraseñas | pwdlib con argon2 | Hash de contraseñas |
-| Sesión | JWT | Token de acceso y de renovación |
-| Tests | pytest | Pruebas, en especial del cálculo de cargos y descuentos |
+| Sesión | JWT (PyJWT) | Token de acceso; el de renovación llega con el dominio propio |
+| Tests | pytest; Vitest en el frontend | Pruebas, en especial del cálculo de cargos y descuentos |
 | Frontend | React + Vite | Aplicación web, publicada como sitio estático |
-| Componentes de UI | MUI o Mantine (a elegir) | Pantallas responsive, usables desde el celular |
+| Componentes de UI | MUI 6 | Pantallas responsive, usables desde el celular |
 
 ## Despliegue en Render
 
@@ -41,6 +43,7 @@ Todo control de acceso se hace en la API; el frontend solo oculta lo que el usua
 
 - Hash con argon2 (pwdlib); nunca se guardan ni se registran en texto.
 - El login devuelve un token de acceso de vida corta y un token de renovación en una cookie httpOnly. Mientras hay actividad la sesión se renueva; sin actividad vence (30 minutos en computadora, más en el celular del profesor, a ajustar).
+  - **Estado (Entrega 2):** está construido el token de acceso, con 8 horas de vida y guardado en `localStorage` por el frontend. La API relee el usuario en cada petición, así que desactivarlo o bloquearlo corta la sesión al instante. La renovación, la cookie y el vencimiento por inactividad esperan al dominio propio (ver el punto siguiente); el riesgo de mientras tanto está en el design del change `pantalla-de-ingreso`.
 - **Dominio y cookie:** el sitio estático y la API son dos servicios distintos de Render, así que con los dominios que Render asigna por defecto la cookie de renovación sería de terceros. La solución es registrar un dominio propio y publicar la API en un subdominio (por ejemplo, `app.<dominio>` y `api.<dominio>`), de modo que la cookie quede same-site. Queda atado al pendiente de registrar el dominio.
 - El usuario tiene un indicador `debe_cambiar_password`. Se activa al crearlo y al blanquearlo; mientras esté activo, la API rechaza todo salvo el cambio de contraseña.
 - Validación de la nueva contraseña: mínimo 8 caracteres, al menos una letra y un número, distinta del nombre de usuario y de la anterior (se guarda el hash de la anterior para comparar).
@@ -74,7 +77,7 @@ De marzo a noviembre el sistema no se usa. El cliente elige una de estas tres op
 
 ## Gestión del trabajo
 
-No se usa ningún gestor de tickets. Para la entrega del curso, las unidades de trabajo son el archivo `6-tickets-de-trabajo.md` del repo; el template oficial no pide Jira, Azure DevOps ni ningún otro sistema, solo el fork de GitHub.
+No se usa ningún gestor de tickets. Desde la Entrega 2, la unidad de trabajo es el **change de OpenSpec**: cada uno tiene su propuesta, su spec, su design y su lista de tareas en `openspec/changes/`, su rama y su pull request, y el orden está en el «Plan de changes» de `docs/product/historias-backlog.md`. En la Entrega 1 lo eran los tickets de `6-tickets-de-trabajo.md`; el template oficial no pide Jira, Azure DevOps ni ningún otro sistema, solo el fork de GitHub.
 
 **Render no gestiona tickets**: es solo hosting (builds, deploys, base de datos, sitio estático). El gestor de tickets y la plataforma de despliegue son independientes y no se comunican entre sí, así que usar cualquier gestor no condiciona el despliegue en Render. Lo único que Render observa es el repositorio de GitHub, de donde dispara el deploy en cada push a la rama principal.
 
@@ -87,5 +90,20 @@ No se usa ningún gestor de tickets. Para la entrega del curso, las unidades de 
 - [ ] **Plan del workspace de Render**: Hobby o Pro (define si la recuperación de la base cubre 3 o 7 días).
 - [ ] **Región de Render**: elegir la más cercana disponible.
 - [ ] **Dominio**: registrar el nombre.
-- [ ] **Librería de UI**: MUI o Mantine.
+- [ ] **Límite del tamaño del cuerpo de la petición**: configurarlo en Render o en el proxy que tenga delante. FastAPI lee el cuerpo entero antes de validar, así que los topes de los esquemas (por ejemplo, los 128 caracteres de la contraseña del login) no protegen al servidor de un cuerpo enorme. Ver el design del change `auth-ingreso`.
+- [ ] **Que la semilla no pueda escribir en la base de producción**: resolver antes de crear esa base. Hoy la semilla decide si una base es segura leyendo el texto de la URL.
+  - **Qué mira hoy:** el host principal, más `host` y `hostaddr` de la query.
+  - **Por qué es una red y no un candado:** psycopg puede terminar conectado a otra base sin que la URL lo muestre:
+    - con `service=` y un `pg_service.conf`;
+    - con `PGHOST` o `PGDATABASE` en el entorno;
+    - con otros parámetros de conexión.
+
+    Tapar `service=` deja abiertos los demás.
+  - **El arreglo que cierra la clase entera:** no inspeccionar la URL, sino abrir la conexión y preguntarle dónde terminó, con `conn.info.host`, `conn.info.port` y `conn.info.dbname`. Eso da la base real, sin importar cómo se escribió la URL.
+  - **El candado de verdad** es que las credenciales de producción no vivan en la máquina de desarrollo. Lo de `conn.info` queda como red, por si algún día alguien se las lleva igual.
+  - **Cuándo importa:** una sola vez, el día que se cree la base de producción. Ese día hay una base que importa y que está vacía, y fallan juntas las dos defensas actuales:
+    - la de base local, porque se esquiva por los caminos de arriba;
+    - la de base vacía, porque la base recién creada todavía está vacía.
+  - **Origen:** queda diferido desde el change `tarifario-y-semilla`. Ver su design, archivado en `openspec/changes/archive/2026-11-13-tarifario-y-semilla/`.
+- [x] **Librería de UI**: MUI (Entrega 2).
 - [ ] **Gestor de issues para el proyecto real**: adoptar GitHub Issues o seguir sin gestor. No afecta a la entrega del curso.

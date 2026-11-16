@@ -1,0 +1,2520 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Escuelita de Verano",
+    "description": "API de administracion de la escuelita de verano del club sede.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Usuario o contraseña incorrectos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Usuario o contraseña incorrectos."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Usuario bloqueado. Pedile a un Admin que blanquee tu contraseña.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Usuario bloqueado. Pedile a un Admin que blanquee tu contraseña."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/yo": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Yo",
+        "operationId": "yo_api_v1_auth_yo_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioActual"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/grupos": {
+      "get": {
+        "tags": [
+          "grupos"
+        ],
+        "summary": "Listar Grupos",
+        "operationId": "listar_grupos_api_v1_grupos_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "fecha_nacimiento",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fecha Nacimiento"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GrupoParaInscribir"
+                  },
+                  "title": "Response Listar Grupos Api V1 Grupos Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/familias": {
+      "get": {
+        "tags": [
+          "familias"
+        ],
+        "summary": "Buscar Familias",
+        "operationId": "buscar_familias_api_v1_familias_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "apellido",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "title": "Apellido"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FamiliaEncontrada"
+                  },
+                  "title": "Response Buscar Familias Api V1 Familias Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/familias/{familia_id}/inscripciones": {
+      "get": {
+        "tags": [
+          "familias"
+        ],
+        "summary": "Inscripciones De Familia",
+        "description": "Inscripciones de los hijos de la familia en la temporada vigente. Solo\nel Admin: el 403 llega antes de buscar la familia.",
+        "operationId": "inscripciones_de_familia_api_v1_familias__familia_id__inscripciones_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "familia_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Familia Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InscripcionDeFamilia"
+                  },
+                  "title": "Response Inscripciones De Familia Api V1 Familias  Familia Id  Inscripciones Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La familia no existe.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "La familia no existe."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/familias/{familia_id}/cuenta-corriente": {
+      "get": {
+        "tags": [
+          "familias"
+        ],
+        "summary": "Cuenta Corriente De Familia",
+        "description": "Cargos, pagos y saldos de la familia en la temporada vigente. Solo el\nAdmin: el 403 llega antes de buscar la familia.",
+        "operationId": "cuenta_corriente_de_familia_api_v1_familias__familia_id__cuenta_corriente_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "familia_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Familia Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CuentaCorriente"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La familia no existe.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "La familia no existe."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/personas": {
+      "get": {
+        "tags": [
+          "personas"
+        ],
+        "summary": "Buscar Persona",
+        "operationId": "buscar_persona_api_v1_personas_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "dni",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dni"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonaEncontrada"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No hay ninguna persona con ese DNI.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "No hay ninguna persona con ese DNI."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/alumnos": {
+      "post": {
+        "tags": [
+          "alumnos"
+        ],
+        "summary": "Registrar",
+        "operationId": "registrar_api_v1_alumnos_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AltaAlumnoEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlumnoRegistrado"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo podés inscribir alumnos en tus grupos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Solo podés inscribir alumnos en tus grupos."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Datos invalidos o una regla del alta incumplida (grupo, familia, personas). Cada error trae su campo en `loc`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErroresDeCampo"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/grupos/{grupo_id}/asistencias/{fecha}": {
+      "get": {
+        "tags": [
+          "asistencias"
+        ],
+        "summary": "Abrir",
+        "operationId": "abrir_api_v1_grupos__grupo_id__asistencias__fecha__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "grupo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Grupo Id"
+            }
+          },
+          {
+            "name": "fecha",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Fecha"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AsistenciaDelGrupo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo podés tomar asistencia de tus grupos.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Solo podés tomar asistencia de tus grupos."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El grupo no existe.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "El grupo no existe."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "La fecha está fuera de la temporada del grupo, del 04/01/2027 al 26/02/2027.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "La fecha está fuera de la temporada del grupo, del 04/01/2027 al 26/02/2027."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "asistencias"
+        ],
+        "summary": "Guardar",
+        "operationId": "guardar_api_v1_grupos__grupo_id__asistencias__fecha__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "grupo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Grupo Id"
+            }
+          },
+          {
+            "name": "fecha",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Fecha"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AsistenciaEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AsistenciaDelGrupo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo podés tomar asistencia de tus grupos.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Solo podés tomar asistencia de tus grupos."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El grupo no existe.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "El grupo no existe."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El grupo no está activo.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "El grupo no está activo."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "La fecha está fuera de la temporada del grupo, del 04/01/2027 al 26/02/2027.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "La fecha está fuera de la temporada del grupo, del 04/01/2027 al 26/02/2027."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cargos": {
+      "post": {
+        "tags": [
+          "cargos"
+        ],
+        "summary": "Registrar",
+        "operationId": "registrar_api_v1_cargos_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CargoEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CargoRegistrado"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El alumno ya tiene un cargo «Abono» de «Mes 1» en el turno mañana.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "El alumno ya tiene un cargo «Abono» de «Mes 1» en el turno mañana."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Datos inválidos o una regla del cargo incumplida. Cada error trae su campo en `loc`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErroresDeCampo"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cargos/opciones": {
+      "get": {
+        "tags": [
+          "cargos"
+        ],
+        "summary": "Opciones",
+        "description": "Tipos de cargo y períodos de la temporada vigente.",
+        "operationId": "opciones_api_v1_cargos_opciones_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpcionesDeCargo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cargos/simulacion": {
+      "post": {
+        "tags": [
+          "cargos"
+        ],
+        "summary": "Simular",
+        "operationId": "simular_api_v1_cargos_simulacion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CargoEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CargoSimulado"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El alumno ya tiene un cargo «Abono» de «Mes 1» en el turno mañana.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                },
+                "example": {
+                  "detail": "El alumno ya tiene un cargo «Abono» de «Mes 1» en el turno mañana."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Datos inválidos o una regla del cargo incumplida. Cada error trae su campo en `loc`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErroresDeCampo"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cargos/{cargo_id}/pagos": {
+      "post": {
+        "tags": [
+          "cargos"
+        ],
+        "summary": "Pagar",
+        "description": "Registra un pago del cargo y su ingreso en tesorería. Solo el Admin.",
+        "operationId": "pagar_api_v1_cargos__cargo_id__pagos_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cargo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Cargo Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PagoEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagoRegistrado"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión inválida o vencida.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "Sesión inválida o vencida."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No tenés permiso para esta operación.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "No tenés permiso para esta operación."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El cargo no existe.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "El cargo no existe."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El cargo ya está saldado.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "El cargo ya está saldado."
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Monto o fecha inválidos, o monto mayor que el saldo del cargo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErroresDeCampo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/salud": {
+      "get": {
+        "tags": [
+          "infraestructura"
+        ],
+        "summary": "Salud",
+        "operationId": "salud_salud_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Salud Salud Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AltaAlumnoEntrada": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Nombre"
+          },
+          "apellido": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Apellido"
+          },
+          "fecha_nacimiento": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Nacimiento"
+          },
+          "grupo_id": {
+            "type": "integer",
+            "title": "Grupo Id"
+          },
+          "familia_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Familia Id"
+          },
+          "categoria": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoriaFamilia"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "personas": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/PersonaReutilizada"
+                },
+                {
+                  "$ref": "#/components/schemas/PersonaNueva"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Personas",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "nombre",
+          "apellido",
+          "fecha_nacimiento",
+          "grupo_id"
+        ],
+        "title": "AltaAlumnoEntrada",
+        "description": "El alta: datos del alumno, grupo, familia (existente o nueva) y\npersonas autorizadas a retirar."
+      },
+      "AlumnoEnAsistencia": {
+        "properties": {
+          "inscripcion_id": {
+            "type": "integer",
+            "title": "Inscripcion Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "apellido": {
+            "type": "string",
+            "title": "Apellido"
+          },
+          "presente": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Presente"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inscripcion_id",
+          "nombre",
+          "apellido",
+          "presente"
+        ],
+        "title": "AlumnoEnAsistencia"
+      },
+      "AlumnoRegistrado": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "apellido": {
+            "type": "string",
+            "title": "Apellido"
+          },
+          "fecha_nacimiento": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Nacimiento"
+          },
+          "familia": {
+            "$ref": "#/components/schemas/FamiliaDelAlumno"
+          },
+          "inscripcion": {
+            "$ref": "#/components/schemas/InscripcionDelAlumno"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "apellido",
+          "fecha_nacimiento",
+          "familia",
+          "inscripcion"
+        ],
+        "title": "AlumnoRegistrado",
+        "description": "El alumno recien dado de alta, con su familia y su inscripcion."
+      },
+      "AsistenciaDelGrupo": {
+        "properties": {
+          "grupo_id": {
+            "type": "integer",
+            "title": "Grupo Id"
+          },
+          "grupo": {
+            "type": "string",
+            "title": "Grupo"
+          },
+          "turno": {
+            "$ref": "#/components/schemas/Turno"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha"
+          },
+          "alumnos": {
+            "items": {
+              "$ref": "#/components/schemas/AlumnoEnAsistencia"
+            },
+            "type": "array",
+            "title": "Alumnos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "grupo_id",
+          "grupo",
+          "turno",
+          "fecha",
+          "alumnos"
+        ],
+        "title": "AsistenciaDelGrupo"
+      },
+      "AsistenciaEntrada": {
+        "properties": {
+          "asistencias": {
+            "items": {
+              "$ref": "#/components/schemas/AsistenciaMarcada"
+            },
+            "type": "array",
+            "title": "Asistencias"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asistencias"
+        ],
+        "title": "AsistenciaEntrada",
+        "description": "Lo que se guarda: solo quien y si estuvo. Fecha y grupo vienen del path\ny el autor de la sesion; nada de eso se acepta del cuerpo.\n\nSin tope de largo: el limite natural es el tamano del grupo, y los ids de\notro grupo ya se rechazan por elemento."
+      },
+      "AsistenciaMarcada": {
+        "properties": {
+          "inscripcion_id": {
+            "type": "integer",
+            "title": "Inscripcion Id"
+          },
+          "presente": {
+            "type": "boolean",
+            "title": "Presente"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inscripcion_id",
+          "presente"
+        ],
+        "title": "AsistenciaMarcada"
+      },
+      "CalculoCargo": {
+        "type": "string",
+        "enum": [
+          "monto_fijo",
+          "tarifario"
+        ],
+        "title": "CalculoCargo"
+      },
+      "CargoEnCuenta": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "alumno_id": {
+            "type": "integer",
+            "title": "Alumno Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "apellido": {
+            "type": "string",
+            "title": "Apellido"
+          },
+          "tipo_cargo": {
+            "type": "string",
+            "title": "Tipo Cargo"
+          },
+          "modalidad": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Modalidad"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "turno": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Turno"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "periodo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PeriodoDeCargo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fecha_dia": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Dia"
+          },
+          "monto_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto Total"
+          },
+          "pagado": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Pagado"
+          },
+          "saldo": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Saldo"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          },
+          "pagos": {
+            "items": {
+              "$ref": "#/components/schemas/PagoEnCuenta"
+            },
+            "type": "array",
+            "title": "Pagos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "alumno_id",
+          "nombre",
+          "apellido",
+          "tipo_cargo",
+          "modalidad",
+          "turno",
+          "periodo",
+          "fecha_dia",
+          "monto_total",
+          "pagado",
+          "saldo",
+          "creado_en",
+          "pagos"
+        ],
+        "title": "CargoEnCuenta",
+        "description": "Un cargo de la familia: exactamente estos catorce campos."
+      },
+      "CargoEntrada": {
+        "properties": {
+          "alumno_id": {
+            "type": "integer",
+            "title": "Alumno Id"
+          },
+          "tipo_cargo_id": {
+            "type": "integer",
+            "title": "Tipo Cargo Id"
+          },
+          "inscripcion_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inscripcion Id"
+          },
+          "modalidad": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Modalidad"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "periodo_cobro_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Periodo Cobro Id"
+          },
+          "fecha_dia": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Dia"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "alumno_id",
+          "tipo_cargo_id"
+        ],
+        "title": "CargoEntrada"
+      },
+      "CargoRegistrado": {
+        "properties": {
+          "familia_id": {
+            "type": "integer",
+            "title": "Familia Id"
+          },
+          "categoria_aplicada": {
+            "$ref": "#/components/schemas/CategoriaFamilia"
+          },
+          "cantidad_hijos_aplicada": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cantidad Hijos Aplicada"
+          },
+          "monto_base": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto Base"
+          },
+          "porcentaje_aplicado": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Porcentaje Aplicado"
+          },
+          "monto_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto Total"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "temporada_id": {
+            "type": "integer",
+            "title": "Temporada Id"
+          },
+          "alumno_id": {
+            "type": "integer",
+            "title": "Alumno Id"
+          },
+          "tipo_cargo_id": {
+            "type": "integer",
+            "title": "Tipo Cargo Id"
+          },
+          "inscripcion_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inscripcion Id"
+          },
+          "modalidad": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Modalidad"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "periodo_cobro_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Periodo Cobro Id"
+          },
+          "fecha_dia": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Dia"
+          },
+          "creado_por": {
+            "type": "integer",
+            "title": "Creado Por"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          },
+          "saldo_pendiente": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Saldo Pendiente"
+          }
+        },
+        "type": "object",
+        "required": [
+          "familia_id",
+          "categoria_aplicada",
+          "cantidad_hijos_aplicada",
+          "monto_base",
+          "porcentaje_aplicado",
+          "monto_total",
+          "id",
+          "temporada_id",
+          "alumno_id",
+          "tipo_cargo_id",
+          "inscripcion_id",
+          "modalidad",
+          "periodo_cobro_id",
+          "fecha_dia",
+          "creado_por",
+          "creado_en",
+          "saldo_pendiente"
+        ],
+        "title": "CargoRegistrado"
+      },
+      "CargoSimulado": {
+        "properties": {
+          "familia_id": {
+            "type": "integer",
+            "title": "Familia Id"
+          },
+          "categoria_aplicada": {
+            "$ref": "#/components/schemas/CategoriaFamilia"
+          },
+          "cantidad_hijos_aplicada": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cantidad Hijos Aplicada"
+          },
+          "monto_base": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto Base"
+          },
+          "porcentaje_aplicado": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Porcentaje Aplicado"
+          },
+          "monto_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "familia_id",
+          "categoria_aplicada",
+          "cantidad_hijos_aplicada",
+          "monto_base",
+          "porcentaje_aplicado",
+          "monto_total"
+        ],
+        "title": "CargoSimulado",
+        "description": "El desglose que el registro guardaría, sin guardar nada."
+      },
+      "CategoriaFamilia": {
+        "type": "string",
+        "enum": [
+          "socio",
+          "empleado",
+          "no_socio"
+        ],
+        "title": "CategoriaFamilia"
+      },
+      "CuentaCorriente": {
+        "properties": {
+          "familia_id": {
+            "type": "integer",
+            "title": "Familia Id"
+          },
+          "etiqueta": {
+            "type": "string",
+            "title": "Etiqueta"
+          },
+          "categoria": {
+            "$ref": "#/components/schemas/CategoriaFamilia"
+          },
+          "total_cargos": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Cargos"
+          },
+          "total_pagado": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Pagado"
+          },
+          "saldo_pendiente": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Saldo Pendiente"
+          },
+          "cargos": {
+            "items": {
+              "$ref": "#/components/schemas/CargoEnCuenta"
+            },
+            "type": "array",
+            "title": "Cargos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "familia_id",
+          "etiqueta",
+          "categoria",
+          "total_cargos",
+          "total_pagado",
+          "saldo_pendiente",
+          "cargos"
+        ],
+        "title": "CuentaCorriente"
+      },
+      "ErrorDeCampo": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Loc"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Msg"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ErrorDeCampo",
+        "description": "Un error atado a un campo del pedido, de validacion o de una regla del\nnegocio (`type` `regla_de_negocio`)."
+      },
+      "ErroresDeCampo": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ErrorDeCampo"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ErroresDeCampo",
+        "description": "El 422: la lista de errores, cada uno con su campo en `loc`."
+      },
+      "FamiliaDelAlumno": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "etiqueta": {
+            "type": "string",
+            "title": "Etiqueta"
+          },
+          "categoria": {
+            "$ref": "#/components/schemas/CategoriaFamilia"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "etiqueta",
+          "categoria"
+        ],
+        "title": "FamiliaDelAlumno"
+      },
+      "FamiliaEncontrada": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "etiqueta": {
+            "type": "string",
+            "title": "Etiqueta"
+          },
+          "categoria": {
+            "$ref": "#/components/schemas/CategoriaFamilia"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "etiqueta",
+          "categoria"
+        ],
+        "title": "FamiliaEncontrada",
+        "description": "Una familia de la busqueda por apellido. Solo id, etiqueta y categoria:\nla busqueda no filtra por grupo para el Profesor, asi que lo que se limita\nes lo que trae (ni alumnos, ni fechas, ni grupos, ni personas)."
+      },
+      "GrupoParaInscribir": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "turno": {
+            "$ref": "#/components/schemas/Turno"
+          },
+          "nacimiento_desde": {
+            "type": "string",
+            "format": "date",
+            "title": "Nacimiento Desde"
+          },
+          "nacimiento_hasta": {
+            "type": "string",
+            "format": "date",
+            "title": "Nacimiento Hasta"
+          },
+          "sugerido": {
+            "type": "boolean",
+            "title": "Sugerido"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "turno",
+          "nacimiento_desde",
+          "nacimiento_hasta",
+          "sugerido"
+        ],
+        "title": "GrupoParaInscribir",
+        "description": "Un grupo donde se puede inscribir a un alumno, con la marca de\nsugerido segun la fecha de nacimiento consultada."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InscripcionDeFamilia": {
+        "properties": {
+          "inscripcion_id": {
+            "type": "integer",
+            "title": "Inscripcion Id"
+          },
+          "alumno_id": {
+            "type": "integer",
+            "title": "Alumno Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "apellido": {
+            "type": "string",
+            "title": "Apellido"
+          },
+          "turno": {
+            "$ref": "#/components/schemas/Turno"
+          },
+          "grupo": {
+            "type": "string",
+            "title": "Grupo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inscripcion_id",
+          "alumno_id",
+          "nombre",
+          "apellido",
+          "turno",
+          "grupo"
+        ],
+        "title": "InscripcionDeFamilia",
+        "description": "Una inscripción de un hijo de la familia en la temporada vigente. Solo\nestos seis campos: ningún dato médico ni de personas."
+      },
+      "InscripcionDelAlumno": {
+        "properties": {
+          "grupo_id": {
+            "type": "integer",
+            "title": "Grupo Id"
+          },
+          "grupo_nombre": {
+            "type": "string",
+            "title": "Grupo Nombre"
+          },
+          "turno": {
+            "$ref": "#/components/schemas/Turno"
+          },
+          "temporada_id": {
+            "type": "integer",
+            "title": "Temporada Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "grupo_id",
+          "grupo_nombre",
+          "turno",
+          "temporada_id"
+        ],
+        "title": "InscripcionDelAlumno"
+      },
+      "LoginEntrada": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LoginEntrada"
+      },
+      "LoginRespuesta": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "const": "bearer",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "usuario": {
+            "$ref": "#/components/schemas/UsuarioActual"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "usuario"
+        ],
+        "title": "LoginRespuesta"
+      },
+      "MensajeError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "MensajeError",
+        "description": "Un rechazo con `detail` en castellano, que src/lib/api.ts muestra tal\ncual."
+      },
+      "Modalidad": {
+        "type": "string",
+        "enum": [
+          "mes",
+          "quincena",
+          "semana",
+          "dia"
+        ],
+        "title": "Modalidad"
+      },
+      "OpcionesDeCargo": {
+        "properties": {
+          "tipos_cargo": {
+            "items": {
+              "$ref": "#/components/schemas/TipoDeCargoOpcion"
+            },
+            "type": "array",
+            "title": "Tipos Cargo"
+          },
+          "periodos": {
+            "items": {
+              "$ref": "#/components/schemas/PeriodoOpcion"
+            },
+            "type": "array",
+            "title": "Periodos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tipos_cargo",
+          "periodos"
+        ],
+        "title": "OpcionesDeCargo",
+        "description": "Lo que la pantalla necesita para armar un cargo: los tipos y los\nperíodos de la temporada vigente."
+      },
+      "PagoEnCuenta": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "monto": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto"
+          },
+          "fecha_pago": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Pago"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "monto",
+          "fecha_pago"
+        ],
+        "title": "PagoEnCuenta",
+        "description": "Un pago no anulado: exactamente estos tres campos."
+      },
+      "PagoEntrada": {
+        "properties": {
+          "monto": {
+            "type": "string",
+            "title": "Monto"
+          },
+          "fecha_pago": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Pago"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "monto",
+          "fecha_pago"
+        ],
+        "title": "PagoEntrada"
+      },
+      "PagoRegistrado": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "cargo_id": {
+            "type": "integer",
+            "title": "Cargo Id"
+          },
+          "monto": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto"
+          },
+          "fecha_pago": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Pago"
+          },
+          "registrado_por": {
+            "type": "integer",
+            "title": "Registrado Por"
+          },
+          "registrado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Registrado En"
+          },
+          "saldo_cargo": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Saldo Cargo"
+          },
+          "saldo_pendiente": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Saldo Pendiente"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "cargo_id",
+          "monto",
+          "fecha_pago",
+          "registrado_por",
+          "registrado_en",
+          "saldo_cargo",
+          "saldo_pendiente"
+        ],
+        "title": "PagoRegistrado"
+      },
+      "PeriodoDeCargo": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "fecha_desde": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Desde"
+          },
+          "fecha_hasta": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Hasta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "fecha_desde",
+          "fecha_hasta"
+        ],
+        "title": "PeriodoDeCargo"
+      },
+      "PeriodoOpcion": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "modalidad": {
+            "$ref": "#/components/schemas/Modalidad"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "fecha_desde": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Desde"
+          },
+          "fecha_hasta": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Hasta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "modalidad",
+          "nombre",
+          "fecha_desde",
+          "fecha_hasta"
+        ],
+        "title": "PeriodoOpcion",
+        "description": "Un período de cobro (Mes, Quincena o Semana) de la temporada vigente."
+      },
+      "PersonaEncontrada": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "apellido": {
+            "type": "string",
+            "title": "Apellido"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "apellido"
+        ],
+        "title": "PersonaEncontrada",
+        "description": "La persona de la busqueda por DNI. Solo id, nombre y apellido: ni\ntelefono, ni DNI, ni familias."
+      },
+      "PersonaNueva": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Nombre"
+          },
+          "apellido": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Apellido"
+          },
+          "telefono": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 1,
+            "title": "Telefono"
+          },
+          "dni": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 15
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dni"
+          },
+          "es_tutor": {
+            "type": "boolean",
+            "title": "Es Tutor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "nombre",
+          "apellido",
+          "telefono",
+          "es_tutor"
+        ],
+        "title": "PersonaNueva",
+        "description": "Una persona que se carga en el alta."
+      },
+      "PersonaReutilizada": {
+        "properties": {
+          "persona_id": {
+            "type": "integer",
+            "title": "Persona Id"
+          },
+          "es_tutor": {
+            "type": "boolean",
+            "title": "Es Tutor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "persona_id",
+          "es_tutor"
+        ],
+        "title": "PersonaReutilizada",
+        "description": "Una persona ya cargada, elegida por su id (de la busqueda por DNI)."
+      },
+      "RolUsuario": {
+        "type": "string",
+        "enum": [
+          "admin",
+          "coordinador",
+          "profesor"
+        ],
+        "title": "RolUsuario"
+      },
+      "TipoDeCargoOpcion": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "calculo": {
+            "$ref": "#/components/schemas/CalculoCargo"
+          },
+          "monto_fijo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monto Fijo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "calculo",
+          "monto_fijo"
+        ],
+        "title": "TipoDeCargoOpcion",
+        "description": "Un tipo de cargo de la temporada vigente."
+      },
+      "Turno": {
+        "type": "string",
+        "enum": [
+          "manana",
+          "tarde"
+        ],
+        "title": "Turno"
+      },
+      "UsuarioActual": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "apellido": {
+            "type": "string",
+            "title": "Apellido"
+          },
+          "rol": {
+            "$ref": "#/components/schemas/RolUsuario"
+          },
+          "debe_cambiar_password": {
+            "type": "boolean",
+            "title": "Debe Cambiar Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "nombre",
+          "apellido",
+          "rol",
+          "debe_cambiar_password"
+        ],
+        "title": "UsuarioActual",
+        "description": "El usuario que acaba de ingresar, tal como lo ve el mismo. Sin hash\nni contador de intentos."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

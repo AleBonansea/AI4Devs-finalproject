@@ -8,7 +8,16 @@
 > - endpoint: [`4-especificaciones-de-la-api.md`](4-especificaciones-de-la-api.md);
 > - stack: [`docs/architecture/documento-tecnico.md`](docs/architecture/documento-tecnico.md).
 >
-> Como no se usa gestor de tickets, estos tickets son las unidades de trabajo (documento técnico, «Gestión del trabajo»).
+> Como no se usa gestor de tickets, estos tickets fueron las unidades de trabajo de la Entrega 1 (documento técnico, «Gestión del trabajo»).
+>
+> **Estado (Entrega 2):** los tres tickets están construidos, en los changes `tarifario-y-semilla` (las tablas del tarifario), `cobro` (el cargo, el motor de cálculo y la pantalla; [PR #8](https://github.com/AleBonansea/AI4Devs-finalproject/pull/8)) y `cuenta-corriente` (`pago` y `v_cuenta_corriente`; [PR #9](https://github.com/AleBonansea/AI4Devs-finalproject/pull/9)). Se conservan como se entregaron en la Entrega 1. Al construirlos cambiaron tres cosas, justificadas en el design del change `cobro`:
+> - la simulación es `POST /api/v1/cargos/simulacion` y no `?simular=true` (ver `4-especificaciones-de-la-api.md`, «Qué cambió respecto de la Entrega 1»);
+> - las referencias inexistentes y la temporada cerrada son `422` en su campo, no `404` ni `409`;
+> - la pantalla tiene tests automatizados con Vitest, además de la recorrida manual que preveía TK-03.
+>
+> Además, los esquemas que nombran los tickets (`CargoCreate`, `CargoCalculo`, `Cargo`) se llaman en el código `CargoEntrada`, `CargoSimulado` y `CargoRegistrado`.
+>
+> El comportamiento vigente está en [`openspec/specs/cargos/spec.md`](openspec/specs/cargos/spec.md).
 
 ## Orden y dependencias
 
@@ -117,7 +126,7 @@ Un test adicional comprueba que `v_cuenta_corriente` devuelve 85000.00 para una 
 Implementar `POST /api/v1/cargos` tal como está especificado en `4-especificaciones-de-la-api.md`, incluido `simular=true`. El cliente solo dice **qué** se cobra. La API resuelve la familia, la categoría, la cantidad de hijos, la tarifa y el porcentaje, calcula el monto y lo guarda congelado en el cargo.
 
 **Estructura:**
-- **Router** en `app/api/v1/cargos.py`. Declara el rol con una dependencia de FastAPI (`require_rol("admin")`), como pide el documento técnico.
+- **Router** en `app/api/v1/cargos.py`. Declara el rol con una dependencia de FastAPI (`exigir_rol("admin")`), como pide el documento técnico.
 - **Esquemas Pydantic:** `CargoCreate`, `CargoCalculo`, `Cargo` y `CargoRegistrado`, con los mismos nombres y campos que la especificación.
 - **Motor de cálculo** en `app/services/calculo_cargo.py`. Es una **función pura**: recibe los datos ya resueltos (tipo de cargo, tarifa base, categoría, modalidad, cantidad de hijos y porcentajes) y devuelve `monto_base`, `porcentaje_aplicado` y `monto_total`. No toca la base, y por eso se puede testear con tablas de casos.
 - **Servicio** en `app/services/cargos.py`. Resuelve los datos desde la base, llama al motor e inserta el cargo. Con `simular=true` no inserta nada.
@@ -233,7 +242,7 @@ Antes de confirmar, la pantalla muestra el **desglose del cálculo** con `POST /
 - [ ] `422`: si `loc` apunta a un campo, el error se muestra junto a ese campo; si no, arriba del formulario.
 
 **Diseño**
-- [ ] Usable en celular y PC (Acl. 12), con la librería de componentes que se elija (MUI o Mantine, pendiente en el documento técnico).
+- [ ] Usable en celular y PC (Acl. 12), con la librería de componentes que se elija (MUI o Mantine, pendiente en el documento técnico; se eligió MUI en la Entrega 2).
 - [ ] No se muestra la asistencia (Acl. 5).
 
 **Verificación**
@@ -242,6 +251,6 @@ Antes de confirmar, la pantalla muestra el **desglose del cálculo** con `POST /
 ### Referencias
 
 - **Historia:** HU-CC-01, escenario 1 (desglose y saldo), escenarios 9 y 10 (errores 409) y escenario 11 (solo Admin), en `5-historias-de-usuario.md`.
-- **Endpoint:** `POST /api/v1/cargos` y `POST /api/v1/cargos?simular=true` en `4-especificaciones-de-la-api.md` (ver «Concesiones por el límite de 3 endpoints»).
+- **Endpoint:** `POST /api/v1/cargos` y `POST /api/v1/cargos?simular=true` en `4-especificaciones-de-la-api.md` (en la Entrega 1, «Concesiones por el límite de 3 endpoints»; hoy, «Qué cambió respecto de la Entrega 1»).
 - **Tablas:** solo a través de la API. Los campos mostrados son los de `cargo` y `v_cuenta_corriente.saldo_pendiente` en `3-modelo-de-datos.md`.
-- **Stack:** documento técnico, «Stack» (React + Vite, MUI o Mantine).
+- **Stack:** documento técnico, «Stack» (React + Vite y MUI).

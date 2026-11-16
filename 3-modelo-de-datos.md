@@ -7,7 +7,9 @@
 >
 > Los tipos son de PostgreSQL, según [`docs/architecture/documento-tecnico.md`](docs/architecture/documento-tecnico.md). En la columna *Sustento*, "Acl." remite a las aclaraciones.
 >
-> El modelo cubre **todo el sistema**. Cada tabla indica si entra en el lote de la **Entrega 1** (las historias MVP-Entrega1 del backlog) o si queda para **después**.
+> El modelo cubre **todo el sistema**. Cada tabla indica si entra en el **lote 1** del backlog o si queda para **después**.
+>
+> **Estado (Entrega 2):** las 18 tablas del lote 1 y las vistas `v_familia_etiqueta` y `v_cuenta_corriente` están construidas, en siete migraciones de [`backend/alembic/versions/`](backend/alembic/versions/), revisadas a mano y probadas en los dos sentidos. El esquema construido sigue este documento con una diferencia de criterio, explicada en «Qué tablas entran en el lote 1»: las columnas marcadas *(después)* no se crearon todavía. Las reglas que la base hace cumplir están, con un Scenario por caso, en las specs de [`openspec/specs/`](openspec/specs/).
 
 ### **3.1. Diagrama del modelo de datos:**
 
@@ -265,9 +267,9 @@ erDiagram
     usuario ||--o{ cierre_canon : "abona"
 ```
 
-#### Qué tablas entran en la Entrega 1
+#### Qué tablas entran en el lote 1
 
-| Bloque | Tablas en la Entrega 1 | Después |
+| Bloque | Tablas en el lote 1 | Después |
 |---|---|---|
 | Usuarios y temporadas | `usuario`, `temporada` | — |
 | Grupos y asistencia | `grupo`, `grupo_profesor`, `inscripcion`, `asistencia` | — |
@@ -277,10 +279,10 @@ erDiagram
 | Documentación | — | `tipo_documento`, `temporada_documento_obligatorio`, `documento`, `documento_evento` |
 | Tesorería y canon | `tesoreria_movimiento` (el dato, sin pantalla) | `cierre_canon`, `cierre_canon_pago` |
 
-Son 18 tablas en la Entrega 1 y 6 para después.
+Son 18 tablas en el lote 1 y 6 para después.
 
-- **Columnas que se usan después.** Algunas tablas de la Entrega 1 las tienen: se crean desde el principio como opcionales (nullable) para no tener que migrar. Cada entidad las marca con *(después)*.
-- **El dato no es lo mismo que la pantalla.** `tesoreria_movimiento` se crea en la Entrega 1 y cada pago escribe su ingreso desde el primer día, aunque la pantalla de tesorería quede para después. Escribir la fila cuesta dos líneas; generar esos ingresos más adelante con una migración sería más riesgoso.
+- **Columnas que se usan después.** Algunas tablas del lote 1 las tienen, y cada entidad las marca con *(después)*. El plan de la Entrega 1 era crearlas desde el principio como opcionales, para no tener que migrar. **Al construir se decidió lo contrario:** cada columna llega con la historia que la escribe (por ejemplo, las médicas y el consentimiento de `alumno` con HU-AF-06/07, y `inscripcion.modalidad_sugerida` con HU-CC-05). Una columna sin quien la escriba es una columna que nadie prueba, y con Alembic agregar una columna opcional es una migración chica.
+- **El dato no es lo mismo que la pantalla.** `tesoreria_movimiento` se crea en el lote 1 y cada pago escribe su ingreso desde el primer día, aunque la pantalla de tesorería quede para después. Escribir la fila cuesta dos líneas; generar esos ingresos más adelante con una migración sería más riesgoso.
 
 ### **3.2. Descripción de entidades principales:**
 
@@ -310,7 +312,7 @@ Son 18 tablas en la Entrega 1 y 6 para después.
 
 #### Usuarios y temporadas
 
-##### `usuario` · Entrega 1
+##### `usuario` · Lote 1
 
 **Para qué existe.** Cada persona del staff que ingresa al sistema. El Profesor es un usuario con rol `profesor`: no hay una tabla de profesores aparte.
 
@@ -336,7 +338,7 @@ Son 18 tablas en la Entrega 1 y 6 para después.
   - Un ingreso correcto pone el contador en 0.
   - El blanqueo (lo hace un Admin) pone el contador en 0 y activa `debe_cambiar_password`.
 
-##### `temporada` · Entrega 1
+##### `temporada` · Lote 1
 
 **Para qué existe.** Es el eje del modelo. De la temporada cuelga toda la configuración del verano: tarifa base, tabla de descuentos, % de canon, tipos de cargo, fechas de cobro y documentos obligatorios. También todo lo que arranca de cero cada año: inscripciones, cargos, tesorería y cierres de canon.
 
@@ -358,7 +360,7 @@ Son 18 tablas en la Entrega 1 y 6 para después.
 
 #### Grupos y asistencia
 
-##### `grupo` · Entrega 1
+##### `grupo` · Lote 1
 
 **Para qué existe.** El grupo es donde se organiza a los chicos por edad y por turno.
 
@@ -378,7 +380,7 @@ Son 18 tablas en la Entrega 1 y 6 para después.
 - Un grupo inactivo no aparece para inscribir, pero conserva sus inscripciones y su asistencia.
 - Al abrir una temporada nueva se pueden **copiar los grupos de la anterior** (Acl. 4, HU-UT-04). La copia crea filas nuevas con el nuevo `temporada_id`, para que las inscripciones viejas sigan apuntando al grupo tal como era. No hace falta guardar de qué grupo salió cada copia.
 
-##### `grupo_profesor` · Entrega 1
+##### `grupo_profesor` · Lote 1
 
 **Para qué existe.** Asigna profesores a grupos. La relación es N:M: un grupo puede tener varios profesores y un profesor varios grupos, incluso uno a la mañana y otro a la tarde (PRD «Roles y permisos»).
 
@@ -391,7 +393,7 @@ Son 18 tablas en la Entrega 1 y 6 para después.
 - El usuario tiene que tener rol `profesor`. Se valida en la API, porque una FK no puede chequear el rol.
 - Esta tabla es la base del permiso por grupo. Toda consulta de un Profesor se filtra en la base con un `JOIN` a `grupo_profesor` (documento técnico, «Permisos»).
 
-##### `inscripcion` · Entrega 1
+##### `inscripcion` · Lote 1
 
 **Para qué existe.** Es el alumno anotado en un grupo y turno de una temporada. Cada turno es una inscripción independiente para asistencia y facturación (PRD).
 
@@ -408,7 +410,7 @@ Son 18 tablas en la Entrega 1 y 6 para después.
 - Un Profesor solo puede inscribir en grupos que tiene asignados.
 - Las inscripciones **se hacen de nuevo** en cada temporada (Acl. 10).
 
-##### `asistencia` · Entrega 1
+##### `asistencia` · Lote 1
 
 **Para qué existe.** Registra la presencia de un alumno en un día y turno. Es solo control: **no interviene en el cobro** (Acl. 5).
 
@@ -430,7 +432,7 @@ Son 18 tablas en la Entrega 1 y 6 para después.
 
 #### Familias y alumnos
 
-##### `familia` · Entrega 1
+##### `familia` · Lote 1
 
 **Para qué existe.** Es la unidad de facturación: agrupa a los hijos y tiene una única cuenta corriente (Acl. 1). **No es por temporada.**
 
@@ -445,7 +447,7 @@ Son 18 tablas en la Entrega 1 y 6 para después.
 - La categoría vigente se usa al calcular cada cargo, y queda copiada en el cargo (`cargo.categoria_aplicada`).
 - La familia se crea con el primer hijo, así que siempre tiene al menos un alumno.
 
-##### `alumno` · Entrega 1
+##### `alumno` · Lote 1
 
 **Para qué existe.** Es la ficha del chico. Se conserva de una temporada a otra (Acl. 10).
 
@@ -464,7 +466,7 @@ Son 18 tablas en la Entrega 1 y 6 para después.
 - No se pueden cargar `alergias` ni `condiciones_medicas` si `consentimiento_datos_medicos` es false: `CHECK (consentimiento_datos_medicos OR (alergias IS NULL AND condiciones_medicas IS NULL))`.
 - Un Profesor ve los datos médicos solo de los alumnos de sus grupos. De los hijos que estén en otros grupos no los ve (Acl. 11). Esto se filtra en la consulta.
 
-##### `persona` · Entrega 1
+##### `persona` · Lote 1
 
 **Para qué existe.** Es un adulto vinculado a una o más familias: tutor, persona autorizada a retirar o contacto de emergencia. Se guarda una sola vez y se reutiliza entre familias (Acl. 3).
 
@@ -479,7 +481,7 @@ Son 18 tablas en la Entrega 1 y 6 para después.
 - **`telefono` es NOT NULL.** La persona existe en el sistema para ser llamada: un contacto de emergencia sin teléfono no cumple su función, y a un tutor o persona autorizada hay que poder ubicarlo si pasa algo durante el día o en el retiro. Exigirlo en la base evita que una carga apurada deje a una familia sin forma de contacto.
 - **`dni` es NULL.** Ninguna fuente lo exige, y exigirlo frenaría el alta de un alumno (que requiere al menos un tutor) cuando la familia no tiene el dato a mano. Si se carga, el `UNIQUE` evita duplicar personas que comparten varias familias (Acl. 3). En PostgreSQL, el `UNIQUE` admite varios nulos.
 
-##### `familia_persona` · Entrega 1
+##### `familia_persona` · Lote 1
 
 **Para qué existe.** Vincula una persona con una familia y dice qué rol cumple en ella. Las personas autorizadas a retirar y los contactos de emergencia son **listas separadas** (Acl. 3). En el modelo se resuelven con marcas en una sola tabla, porque la misma persona puede estar en las dos listas.
 
@@ -561,7 +563,7 @@ Son 18 tablas en la Entrega 1 y 6 para después.
 
 Todas las tablas de esta sección cuelgan de `temporada`: cada verano tiene su propio tarifario (Acl. 5, 10).
 
-##### `tarifa_base` · Entrega 1
+##### `tarifa_base` · Lote 1
 
 **Para qué existe.** Es el precio sin descuento por turno y modalidad (Acl. 5).
 
@@ -574,7 +576,7 @@ Todas las tablas de esta sección cuelgan de `temporada`: cada verano tiene su p
 
 **Regla:** son 8 combinaciones por temporada (2 turnos × 4 modalidades). Si falta la que se necesita, el cargo no se puede calcular (escenario 9 de HU-CC-01).
 
-##### `descuento_modalidad` · Entrega 1
+##### `descuento_modalidad` · Lote 1
 
 **Para qué existe.** Es la **primera parte** de la tabla de descuentos: un % por categoría para Día, Semana y Quincena. **La cantidad de hijos no interviene** (Acl. 5).
 
@@ -585,7 +587,7 @@ Todas las tablas de esta sección cuelgan de `temporada`: cada verano tiene su p
 | `modalidad` | modalidad | PK, `CHECK (modalidad <> 'mes')` |
 | `porcentaje` | numeric(5,2) | NOT NULL, CHECK 0–100 |
 
-##### `descuento_mes` · Entrega 1
+##### `descuento_mes` · Lote 1
 
 **Para qué existe.** Es la **segunda parte** de la tabla de descuentos: un % por categoría y tramo de hijos, solo para el Mes (Acl. 5).
 
@@ -601,7 +603,7 @@ Todas las tablas de esta sección cuelgan de `temporada`: cada verano tiene su p
 - Se aplica **un único porcentaje**, nunca acumulado.
 - El % del tramo se aplica a **todos** los hijos, no solo al que supera el tramo.
 
-##### `periodo_cobro` · Entrega 1
+##### `periodo_cobro` · Lote 1
 
 **Para qué existe.** Son las fechas fijas de cada Mes (4 semanas), Quincena y Semana de la temporada, que definen los administradores (Acl. 5). El nombre evita la palabra "Período" sola, que quedó fuera de uso (Acl. 5).
 
@@ -617,7 +619,7 @@ Todas las tablas de esta sección cuelgan de `temporada`: cada verano tiene su p
 - `UNIQUE (temporada_id, modalidad, nombre)`.
 - `UNIQUE (id, modalidad)`. Es la clave a la que apunta la FK compuesta de `cargo`.
 
-##### `tipo_cargo` · Entrega 1
+##### `tipo_cargo` · Lote 1
 
 **Para qué existe.** Es el catálogo de tipos de cargo de la temporada. Hoy hay dos (Acl. 5): **Preinscripción**, con monto fijo y sin descuento, y **Abono**, que se calcula con el tarifario. El ABM libre del catálogo es HU-TAR-05 (Backlog); la tabla ya lo soporta.
 
@@ -627,7 +629,7 @@ Todas las tablas de esta sección cuelgan de `temporada`: cada verano tiene su p
 | `temporada_id` | bigint | FK → temporada, NOT NULL | |
 | `nombre` | varchar(60) | NOT NULL | |
 | `calculo` | calculo_cargo | NOT NULL | `monto_fijo` (Preinscripción) o `tarifario` (Abono). |
-| `monto_fijo` | numeric(12,2) | NULL | |
+| `monto_fijo` | numeric(12,2) | NULL, `CHECK (monto_fijo > 0)` | |
 
 **Reglas:**
 - `UNIQUE (temporada_id, nombre)`.
@@ -637,7 +639,7 @@ Todas las tablas de esta sección cuelgan de `temporada`: cada verano tiene su p
 
 #### Cuenta corriente familiar
 
-##### `cargo` · Entrega 1
+##### `cargo` · Lote 1
 
 **Para qué existe.** Es lo que una familia tiene que pagar por un alumno. **Guarda el resultado del cálculo** (base, % aplicado y total), no solo la referencia al tarifario. El tarifario puede cambiar después, y lo ya registrado no se recalcula (Acl. 5, "hijo que se suma a mitad de temporada").
 
@@ -670,11 +672,17 @@ Todas las tablas de esta sección cuelgan de `temporada`: cada verano tiene su p
 - **Cómo se calcula el Abono:**
   - El % sale de `descuento_mes` (categoría y `least(cantidad_hijos, 4)`) si la modalidad es Mes, o de `descuento_modalidad` en los demás casos.
   - La cantidad de hijos se cuenta **por turno**, "contando solo a los hermanos anotados en ese turno" (PRD).
+- **Un cargo no se repite** [SUPUESTO] (`aclaraciones-cliente.md`, «Preguntas abiertas», «Cargos repetidos»). Tres índices únicos parciales:
+  - `uq_cargo_inscripcion_periodo`: único `(inscripcion_id, periodo_cobro_id) WHERE periodo_cobro_id IS NOT NULL`.
+  - `uq_cargo_inscripcion_fecha`: único `(inscripcion_id, fecha_dia) WHERE fecha_dia IS NOT NULL`.
+  - `uq_cargo_alumno_tipo_monto_fijo`: único `(alumno_id, tipo_cargo_id) WHERE modalidad IS NULL`. El tipo es de una temporada, así que es uno por alumno, tipo y temporada.
+
+  Cuando llegue la anulación de cargos, los tres sumarán `AND anulado_en IS NULL` a su `WHERE`: un cargo anulado deja de contar como repetido.
 - Un cargo no se recalcula nunca. Si cambia el tarifario, la categoría o la cantidad de hijos, solo afecta a los cargos nuevos.
 - No se pueden registrar cargos en una temporada `cerrada`.
 - La ficha incompleta no impide registrar el cargo (Acl. 8).
 
-##### `pago` · Entrega 1
+##### `pago` · Lote 1
 
 **Para qué existe.** Es cada cobro registrado sobre un cargo. Puede haber varios pagos parciales hasta saldar el total (PRD; Acl. 6). En el PRD y en las aclaraciones, "cobro" es esto.
 
@@ -694,14 +702,14 @@ Todas las tablas de esta sección cuelgan de `temporada`: cada verano tiene su p
 - **Anulación** (Acl. 6): un cobro mal cargado no se borra, se anula con motivo, usuario y fecha. Se exige que las tres columnas estén completas o vacías a la vez: `CHECK ((anulado_en IS NULL) = (anulado_por IS NULL) AND (anulado_en IS NULL) = (motivo_anulacion IS NULL))`. Un pago anulado no se puede volver a modificar.
 - **No hay saldos a favor** (Acl. 6): la suma de los pagos no anulados de un cargo no puede superar su `monto_total`. Se valida en la API, bloqueando el cargo con `SELECT … FOR UPDATE` mientras se registra el pago.
 - No se registra el medio de pago ni se emiten recibos (Acl. 6).
-- Cada pago genera su ingreso en `tesoreria_movimiento` **en la misma transacción** que lo registra (Acl. 7). Esto rige desde la Entrega 1.
+- Cada pago genera su ingreso en `tesoreria_movimiento` **en la misma transacción** que lo registra (Acl. 7). Esto rige desde el lote 1.
 - Al anular un pago, en la misma transacción se agrega el egreso de anulación en `tesoreria_movimiento` (Acl. 7).
 
 ---
 
 #### Tesorería y canon
 
-##### `tesoreria_movimiento` · Entrega 1 (dato) · pantalla después
+##### `tesoreria_movimiento` · Lote 1 (dato) · pantalla después
 
 **Para qué existe.** Es la tesorería general de la temporada: ingresos (cobros) y egresos (sueldos, festejos, insumos, canon u otros), con un saldo disponible (PRD; Acl. 7).
 
@@ -728,10 +736,12 @@ Todas las tablas de esta sección cuelgan de `temporada`: cada verano tiene su p
   | `canon` | egreso | `cierre_canon_id` |
   | `manual` | egreso | `descripcion` |
 
+  El `CHECK` no admite `canon` hasta la migración que cree `cierre_canon`: esa migración agrega la columna `cierre_canon_id` y reemplaza el `CHECK` por el de cuatro ramas. El valor `canon` del enumerado `origen_movimiento` existe desde el principio, porque agregar un valor a un enumerado después no se puede revertir.
+
 - `UNIQUE (pago_id, origen)`: un pago genera un solo ingreso y, si se anula, un solo egreso de anulación.
 - **Anulación = contraasiento** (Acl. 7). Al anular un cobro, el ingreso original se conserva y se agrega un egreso `anulacion_pago` por el mismo monto. El neto queda en cero y la trazabilidad se conserva. Ningún movimiento se modifica ni se borra.
 - Saldo disponible = ingresos − egresos de la temporada. Se calcula con la vista `v_tesoreria_saldo`.
-- **En la Entrega 1:** la tabla se crea en la migración inicial y cada pago escribe su ingreso desde el primer día (HU-TES-01). Las pantallas para ver movimientos y saldo (HU-TES-03) y para cargar egresos manuales (HU-TES-02) quedan para después.
+- **En el lote 1:** la tabla se crea con la migración del pago y cada pago escribe su ingreso desde el primer día (HU-TES-01). Las pantallas para ver movimientos y saldo (HU-TES-03) y para cargar egresos manuales (HU-TES-02) quedan para después.
 
 ##### `cierre_canon` · Después
 

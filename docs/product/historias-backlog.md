@@ -12,7 +12,8 @@ Artefacto de trabajo derivado de las fuentes. **No** es parte del PRD.
 **Roles:** cuando varios roles hacen lo mismo, se nombran juntos en una sola historia. Los matices de permisos se definen en los criterios de aceptación. "Staff" significa Admin, Coordinador o Profesor; el Profesor siempre solo sobre sus grupos.
 
 **Prioridades:**
-- **MVP-Entrega1**: forma parte del primer lote de desarrollo (20 historias, ver «Alcance de la Entrega 1»). Tres de ellas, además, se documentan con criterios en `5-historias-de-usuario.md` para cumplir con la consigna del curso.
+- **Lote 1**: se construye en la Entrega 2 (11 historias, ver «Alcance de la implementación»). Tres de ellas, además, se documentan con criterios en `5-historias-de-usuario.md` para cumplir con la consigna del curso.
+- **Lote 2**: se construye después del lote 1 (10 historias). Son las que `python tasks.py seed` sustituye durante el lote 1 y que el sistema necesita antes de ser productivo, más la mitigación del bloqueo disparado desde afuera (HU-UT-08), que no hace falta para las entregas académicas pero sí para salir a producción.
 - **Should-have**: valiosa, pero no imprescindible para demostrar el sistema en esta entrega.
 - **Backlog**: necesaria para el sistema en producción, pero fuera de esta entrega académica.
 
@@ -20,70 +21,21 @@ Artefacto de trabajo derivado de las fuentes. **No** es parte del PRD.
 
 ## 1. Alumnos y familias
 
-**HU-AF-01** · `MVP-Entrega1`
+**HU-AF-01** · `Lote 1`
 Como staff, quiero registrar un alumno con sus datos mínimos (incluido al menos un tutor) y asignarlo a un grupo y turno, para tenerlo inscripto desde el primer contacto y completar la documentación más adelante.
 *Sustento:* PRD «Alumnos, tutores y documentación» (ficha progresiva; la inscripción la hace el staff); PRD «Roles y permisos»; Acl. 3, 4, 8.
 
-*Criterios de aceptación* (incluyen la creación o elección de familia, la categoría y el tutor obligatorio, que se apoyan en HU-AF-02, HU-AF-03 y HU-AF-04):
+*Criterios de aceptación:* están en [`5-historias-de-usuario.md`](../../5-historias-de-usuario.md), que es el documento que los entrega. **No se copian acá**: hasta el 11/11/2026 estaban en los dos archivos y ya habían empezado a divergir.
 
-Datos mínimos del alta (Acl. 3): nombre, apellido y fecha de nacimiento del alumno; familia (nueva, con su categoría, o existente); al menos un tutor; y grupo y turno. La documentación no forma parte del mínimo.
-
-**Escenario 1 — Primer hijo: se crea la familia** (camino feliz)
-- **Dado** que existe el grupo «Delfines», turno mañana, para nacidos entre el 01/01/2018 y el 31/12/2019 en la temporada vigente
-- **Y** que un Coordinador inició sesión
-- **Cuando** registra a Juan Pérez, nacido el 10/03/2018, elige "crear familia nueva" con categoría empleado, carga como tutora a María Pérez y lo inscribe en «Delfines», turno mañana
-- **Entonces** Juan queda inscripto en «Delfines», turno mañana, en la temporada vigente
-- **Y** se crea la familia «Pérez – Juan», con categoría empleado y una cuenta corriente única
-- **Y** María Pérez queda como tutora de la familia y autorizada a retirar a Juan
-- **Y** el alta no exige documentación: la ficha se completa después
-
-**Escenario 2 — Segundo hijo: se elige la familia existente** (camino feliz)
-- **Dado** que existe la familia «Pérez – Juan», categoría empleado, con Juan nacido el 10/03/2018 y María Pérez como tutora
-- **Y** que existe el grupo «Tiburones», turno mañana, para nacidos entre el 01/01/2015 y el 31/12/2017
-- **Cuando** un Admin registra a Ana Pérez, nacida el 05/07/2016, elige la familia «Pérez – Juan» y la inscribe en «Tiburones», turno mañana
-- **Entonces** Ana queda en la misma familia y comparte su cuenta corriente
-- **Y** no se le pide categoría: la familia sigue siendo empleado
-- **Y** Ana queda cubierta por la tutora de la familia, María Pérez
-- **Y** la etiqueta de la familia pasa a «Pérez – Ana», porque Ana es la hija mayor, sin que cambie el ID interno de la familia
-
-**Escenario 3 — Medio hermano con otro apellido** (caso límite)
-- **Dado** que existe la familia «Pérez – Ana»
-- **Cuando** se registra a Tomás Gómez, nacido el 20/11/2019, eligiendo esa familia
-- **Entonces** Tomás queda en la familia «Pérez – Ana»
-- **Y** la etiqueta no cambia, porque Tomás no es el hijo mayor
-
-**Escenario 4 — Grupo fuera del rango de nacimiento** (caso límite)
-- **Dado** que Lucía nació el 02/02/2018 y que el grupo «Tiburones» es para nacidos entre 2015 y 2017
-- **Cuando** un Coordinador la inscribe en «Tiburones», turno mañana
-- **Entonces** la inscripción se registra: el rango de nacimiento orienta la sugerencia de grupo, pero no impide elegir otro
-
-**Escenario 5 — Profesor fuera de sus grupos** (permisos)
-- **Dado** que un Profesor tiene asignado solo «Delfines», turno mañana
-- **Cuando** registra un alumno
-- **Entonces** solo puede elegir «Delfines», turno mañana
-- **Y** si la solicitud llega con otro grupo (por ejemplo, llamando a la API directamente), se rechaza y no se crean ni el alumno ni la familia
-
-**Escenario 6 — Profesor con una familia existente** (permisos)
-- **Dado** que un Profesor inició sesión y que la familia «Pérez – Ana» es categoría empleado
-- **Cuando** registra un nuevo hijo de esa familia en uno de sus grupos
-- **Entonces** el alumno se registra en la familia
-- **Y** el Profesor no puede cambiar la categoría de la familia, porque eso lo hace solo un Admin
-
-**Escenario 7 — Faltan datos mínimos** (error)
-- **Dado** que un Coordinador está registrando un alumno
-- **Cuando** intenta guardar sin fecha de nacimiento, sin grupo y turno, sin familia, sin categoría (si la familia es nueva) o sin ningún tutor
-- **Entonces** el alumno no se registra
-- **Y** el sistema indica qué dato falta
-
-**HU-AF-02** · `MVP-Entrega1`
+**HU-AF-02** · `Lote 1`
 Como staff, quiero que al cargar el primer hijo se cree su familia, y que al cargar los siguientes pueda elegir la familia existente (identificada como "Apellido – Hijo mayor"), para que todos los hijos compartan una sola cuenta corriente.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar»; Acl. 1.
 
-**HU-AF-03** · `MVP-Entrega1`
+**HU-AF-03** · `Lote 1`
 Como staff, quiero cargar las personas autorizadas a retirar al alumno (incluidos los tutores, de los que hace falta al menos uno), y reutilizar una persona ya cargada en otra familia, para saber quién puede llevarse a cada chico.
 *Sustento:* PRD «Alumnos, tutores y documentación» (Tutores); Acl. 3.
 
-**HU-AF-04** · `MVP-Entrega1`
+**HU-AF-04** · `Lote 1`
 Como staff, quiero asignar la categoría de la familia (socio, empleado o no socio) al cargar el primer hijo, cuando se crea la familia, siguiendo la prioridad socio > empleado > no socio, para que después se apliquen los descuentos que corresponden.
 *Sustento:* PRD «Alumnos, tutores y documentación» (Categoría); Acl. 2.
 
@@ -143,11 +95,11 @@ Como Admin, quiero definir por temporada qué documentos son obligatorios (por e
 
 ## 3. Grupos y asistencia
 
-**HU-GA-01** · `MVP-Entrega1`
+**HU-GA-01** · `Lote 2`
 Como Admin o Coordinador, quiero dar de alta, modificar y dar de baja grupos con nombre, turno y rango de fechas de nacimiento, para organizar a los chicos por edad y turno.
 *Sustento:* PRD «Grupos, turnos y asistencia»; PRD «Roles y permisos»; Acl. 4. La baja de grupos no está en las fuentes. Cómo funciona (desactivar, no borrar) es una propuesta pendiente de confirmar: ver «Baja de grupos — propuesta, pendiente de confirmar».
 
-**HU-GA-02** · `MVP-Entrega1`
+**HU-GA-02** · `Lote 2`
 Como Admin o Coordinador, quiero asignar uno o más profesores a cada grupo (y un profesor a más de un grupo), para que cada profesor trabaje solo sobre sus grupos.
 *Sustento:* PRD «Roles y permisos».
 
@@ -155,51 +107,11 @@ Como Admin o Coordinador, quiero asignar uno o más profesores a cada grupo (y u
 Como staff, quiero que al cargar un alumno el sistema me sugiera el grupo según su fecha de nacimiento, y poder elegir otro, para inscribirlo más rápido y sin errores.
 *Sustento:* Acl. 4.
 
-**HU-GA-04** · `MVP-Entrega1`
+**HU-GA-04** · `Lote 1`
 Como staff, quiero tomar asistencia por grupo, día y turno desde el celular o la PC, para registrar quién estuvo presente.
 *Sustento:* PRD «Grupos, turnos y asistencia»; Acl. 12.
 
-*Criterios de aceptación:*
-
-**Escenario 1 — Tomar asistencia desde el celular** (camino feliz)
-- **Dado** que un Profesor tiene asignado «Delfines», turno mañana
-- **Y** que Juan, Sofía y Martín están inscriptos en «Delfines», turno mañana, en la temporada vigente
-- **Cuando** desde el celular abre la asistencia de hoy de «Delfines», turno mañana, marca a Juan y a Sofía como presentes y a Martín como ausente, y guarda
-- **Entonces** queda registrada la asistencia de esa fecha y turno: Juan presente, Sofía presente, Martín ausente
-- **Y** la lista muestra solo a los alumnos inscriptos en ese grupo y turno
-
-**Escenario 2 — Corregir una asistencia ya tomada** (caso límite)
-- **Dado** que la asistencia de hoy de «Delfines», turno mañana, ya está registrada con Martín ausente
-- **Cuando** el Profesor la vuelve a abrir, marca a Martín como presente y guarda
-- **Entonces** Martín queda presente para esa fecha y turno
-- **Y** hay un solo registro por alumno, fecha y turno, sin duplicados
-
-**Escenario 3 — Alumno inscripto en los dos turnos** (caso límite)
-- **Dado** que Juan está inscripto en «Delfines», turno mañana, y en «Pulpos», turno tarde
-- **Cuando** se lo marca presente en el turno mañana
-- **Entonces** su asistencia del turno tarde no se modifica: se registra aparte, en la asistencia de «Pulpos»
-
-**Escenario 4 — Grupo sin alumnos inscriptos** (caso límite)
-- **Dado** que el grupo «Caballitos», turno tarde, no tiene alumnos inscriptos en la temporada vigente
-- **Cuando** se abre su asistencia del día
-- **Entonces** el sistema informa que no hay alumnos inscriptos y no hay nada para guardar
-
-**Escenario 5 — La asistencia no genera cobros ni avisos** (regla de negocio)
-- **Dado** que Martín está inscripto en «Delfines», turno mañana
-- **Cuando** se guarda la asistencia del día con Martín ausente
-- **Entonces** no se genera ni se modifica ningún cargo, y el saldo de su familia no cambia
-- **Y** no se envía ningún aviso a los padres
-
-**Escenario 6 — Profesor sobre un grupo ajeno** (permisos)
-- **Dado** que un Profesor tiene asignado solo «Delfines», turno mañana
-- **Cuando** busca tomar asistencia de «Pulpos», turno tarde
-- **Entonces** «Pulpos» no aparece entre sus grupos
-- **Y** si la solicitud llega igual (por ejemplo, por la API), se rechaza y no se registra nada
-
-**Escenario 7 — Coordinador o Admin en cualquier grupo** (permisos)
-- **Dado** que un Coordinador inició sesión y no tiene grupos asignados
-- **Cuando** toma asistencia de cualquier grupo y turno
-- **Entonces** la asistencia se registra
+*Criterios de aceptación:* están en [`5-historias-de-usuario.md`](../../5-historias-de-usuario.md), que es el documento que los entrega. **No se copian acá**: hasta el 11/11/2026 estaban en los dos archivos y ya habían empezado a divergir.
 
 **HU-GA-05** · `Should-have`
 Como staff, quiero consultar la asistencia registrada de un grupo o de un alumno, para controlar quién vino cada día.
@@ -207,19 +119,19 @@ Como staff, quiero consultar la asistencia registrada de un grupo o de un alumno
 
 ## 4. Tarifario
 
-**HU-TAR-01** · `MVP-Entrega1`
+**HU-TAR-01** · `Lote 2`
 Como Admin, quiero definir la tarifa base de la temporada por turno y modalidad (Mes, Quincena, Semana, Día), y los dos tipos de cargo de la temporada (Preinscripción, con monto fijo y sin descuento, y Abono, que se calcula con el tarifario), para que todos cobren con los mismos precios.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar» (Tarifario; Tipos de cargo); Acl. 5. El ABM libre de tipos de cargo es HU-TAR-05 (Backlog).
 
-**HU-TAR-02** · `MVP-Entrega1`
+**HU-TAR-02** · `Lote 2`
 Como Admin, quiero definir las fechas desde/hasta de cada Mes, Quincena y Semana de la temporada, para que cada cargo quede asociado a un período concreto.
 *Sustento:* Acl. 5.
 
-**HU-TAR-03** · `MVP-Entrega1`
+**HU-TAR-03** · `Lote 2`
 Como Admin, quiero configurar la tabla de descuentos de la temporada —un % por categoría para Día, Semana y Quincena, y un % por categoría y tramo de cantidad de hijos (1, 2, 3, 4 o más) para el Mes— para reflejar la política de descuentos sin tocar código.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar»; Acl. 2, 5.
 
-**HU-TAR-04** · `MVP-Entrega1`
+**HU-TAR-04** · `Lote 1`
 Como Admin, quiero que al cargar un cargo el sistema calcule el monto solo: tarifa base del turno y la modalidad, menos el único porcentaje que corresponda según la categoría de la familia (y, en el Mes, la cantidad de hijos anotados en ese turno), para no calcularlo a mano.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar» (facturación por turno); Acl. 5.
 
@@ -229,105 +141,17 @@ Como Admin, quiero administrar el catálogo de tipos de cargo de la temporada (p
 
 ## 5. Cuenta corriente familiar
 
-**HU-CC-01** · `MVP-Entrega1`
+**HU-CC-01** · `Lote 1`
 Como Admin, quiero registrar un cargo a una familia (tipo, alumno, turno, modalidad y período), para dejar asentado lo que tiene que pagar.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar»; Acl. 5, 6.
 
-*Criterios de aceptación* (incluyen el cálculo de HU-TAR-04):
+*Criterios de aceptación:* están en [`5-historias-de-usuario.md`](../../5-historias-de-usuario.md), que es el documento que los entrega. **No se copian acá**: hasta el 11/11/2026 estaban en los dos archivos y ya habían empezado a divergir.
 
-**Contexto común.** Son las precondiciones que dependen del bloque Tarifario (HU-TAR-01 a HU-TAR-03). Los montos y porcentajes son de ejemplo: los porcentajes del Mes siguen el ejemplo del PRD, y el resto se eligió para los escenarios.
-- **Dado** que la temporada vigente es 2026-27
-- **Y** que el Admin cargó esta tarifa base:
-
-  | Turno | Mes | Quincena | Semana | Día |
-  |---|---|---|---|---|
-  | Mañana | $ 100.000 | $ 55.000 | $ 30.000 | $ 8.000 |
-  | Tarde | $ 80.000 | $ 45.000 | $ 25.000 | $ 7.000 |
-
-- **Y** que cargó esta tabla de descuentos:
-
-  | Categoría | Día | Semana | Quincena | Mes · 1 hijo | Mes · 2 | Mes · 3 | Mes · 4 o más |
-  |---|---|---|---|---|---|---|---|
-  | Socio | 50 % | 50 % | 50 % | 50 % | 50 % | 50 % | 50 % |
-  | Empleado | 10 % | 10 % | 10 % | 10 % | 15 % | 20 % | 25 % |
-  | No socio | 0 % | 0 % | 0 % | 0 % | 10 % | 15 % | 20 % |
-
-- **Y** que definió los tipos de cargo Preinscripción (monto fijo de $ 20.000) y Abono
-- **Y** que definió las fechas del «Mes 1» (04/01/2027 al 29/01/2027), del «Mes 2» (01/02/2027 al 26/02/2027) y de la «Semana 1» (04/01/2027 al 08/01/2027)
-- **Y** que un Admin inició sesión
-
-Qué hijos cuentan para el tramo del Mes: lo define el PRD («Tarifario y cuenta corriente familiar»). Cada turno se factura por separado, "contando solo a los hermanos anotados en ese turno", y el porcentaje "se aplica a cada hermano sobre el valor base de su modalidad".
-
-**Escenario 1 — Abono · Mes con descuento por cantidad de hijos** (camino feliz)
-- **Dado** que la familia «Pérez – Ana» es categoría empleado y tiene 2 hijos inscriptos en el turno mañana: Ana y Juan
-- **Cuando** el Admin registra un cargo de tipo Abono para Juan, turno mañana, modalidad Mes, período «Mes 1»
-- **Entonces** el sistema muestra la tarifa base ($ 100.000), el porcentaje aplicado (15 %: empleado, 2 hijos) y el monto final ($ 85.000)
-- **Y** al confirmar, el cargo queda en la cuenta corriente de la familia con su tipo, alumno, turno, modalidad, período y monto
-- **Y** el saldo pendiente de la familia aumenta en $ 85.000
-
-**Escenario 2 — En Día, Semana y Quincena no cuenta la cantidad de hijos** (regla de negocio)
-- **Dado** que una familia es categoría empleado y tiene 3 hijos inscriptos en el turno mañana
-- **Cuando** el Admin registra un Abono para uno de ellos, turno mañana, modalidad Semana, período «Semana 1»
-- **Entonces** se aplica el 10 % de empleado para Semana, sin importar la cantidad de hijos
-- **Y** el monto es $ 27.000
-
-**Escenario 3 — Se aplica un único porcentaje, nunca acumulado** (caso límite)
-- **Dado** que una familia es categoría socio y tiene 4 hijos inscriptos en el turno mañana
-- **Cuando** el Admin registra un Abono · Mes, turno mañana, para uno de ellos
-- **Entonces** se aplica solo el 50 % de la celda «socio · Mes · 4 o más»
-- **Y** el monto es $ 50.000: no se suman porcentajes de otras celdas ni se aplican descuentos en cascada
-
-**Escenario 4 — El tramo alcanza a todos los hijos** (caso límite)
-- **Dado** que una familia es categoría no socio y tiene 4 hijos inscriptos en el turno mañana
-- **Cuando** el Admin registra un Abono · Mes, turno mañana, «Mes 1», para cada uno de los 4 hijos
-- **Entonces** los 4 cargos son de $ 80.000 (20 %), incluido el del primer hijo
-
-**Escenario 5 — Los hijos se cuentan por turno** (caso límite)
-- **Dado** que la familia «Pérez – Ana» es categoría empleado, que Ana está inscripta solo en el turno mañana y que Juan está inscripto en los turnos mañana y tarde
-- **Cuando** el Admin registra para Juan un Abono · Mes en el turno mañana y otro en el turno tarde, ambos del «Mes 1»
-- **Entonces** el de la mañana cuenta 2 hijos: 15 % sobre $ 100.000, es decir $ 85.000
-- **Y** el de la tarde cuenta 1 hijo: 10 % sobre $ 80.000, es decir $ 72.000
-
-**Escenario 6 — Hijo que se suma a mitad de temporada** (caso límite)
-- **Dado** que la familia «Pérez – Ana», categoría empleado, ya tiene registrado un Abono · Mes de Juan, turno mañana, «Mes 1», por $ 85.000 (2 hijos)
-- **Y** que después se inscribe a Tomás en el turno mañana, y la familia pasa a tener 3 hijos en ese turno
-- **Cuando** el Admin registra un Abono · Mes para Juan, turno mañana, «Mes 2»
-- **Entonces** el cargo nuevo usa el tramo de 3 hijos: 20 %, es decir $ 80.000
-- **Y** el cargo del «Mes 1», ya registrado, sigue siendo de $ 85.000: no se recalcula
-
-**Escenario 7 — Preinscripción: monto fijo, sin descuento** (regla de negocio)
-- **Dado** que una familia es categoría socio
-- **Cuando** el Admin registra un cargo de tipo Preinscripción para uno de sus hijos
-- **Entonces** el monto es $ 20.000, sin descuento y sin pasar por el tarifario
-- **Y** el monto sería el mismo si la familia fuera empleado o no socio
-
-**Escenario 8 — La ficha incompleta no impide registrar el cargo** (caso límite)
-- **Dado** que la ficha de Juan tiene documentación obligatoria pendiente
-- **Cuando** el Admin le registra un Abono · Mes
-- **Entonces** el cargo se registra igual
-
-**Escenario 9 — Falta la tarifa base** (error)
-- **Dado** que, a diferencia del contexto común, el Admin no cargó la tarifa base del turno tarde para la modalidad Quincena
-- **Cuando** intenta registrar un Abono · Quincena en el turno tarde
-- **Entonces** el sistema no calcula ni registra el cargo
-- **Y** indica que falta la tarifa base de esa combinación de turno y modalidad
-
-**Escenario 10 — Temporada anterior, solo consulta** (error)
-- **Dado** que la temporada 2025-26 ya cerró
-- **Cuando** el Admin intenta registrar un cargo en esa temporada
-- **Entonces** el sistema lo rechaza, porque la temporada anterior queda solo para consulta
-
-**Escenario 11 — Solo el Admin registra cargos** (permisos)
-- **Dado** que un Coordinador o un Profesor inició sesión
-- **Cuando** intenta registrar un cargo o ver la cuenta corriente de una familia
-- **Entonces** no tiene esa opción en pantalla
-- **Y** si la solicitud llega igual (por ejemplo, por la API), se rechaza y no se registra nada
-
-**HU-CC-02** · `MVP-Entrega1`
+**HU-CC-02** · `Lote 1`
 Como Admin, quiero registrar uno o varios pagos parciales sobre un cargo hasta saldarlo, para reflejar cómo paga cada familia (por ejemplo, una parte en la inscripción y el resto el primer día).
 *Sustento:* PRD «Tarifario y cuenta corriente familiar» (Pagos); Acl. 6, 9.
 
-**HU-CC-03** · `MVP-Entrega1`
+**HU-CC-03** · `Lote 1`
 Como Admin, quiero ver la cuenta corriente de una familia con sus cargos, pagos y saldo pendiente, para saber en todo momento cuánto debe.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar» (Pagos).
 
@@ -345,7 +169,7 @@ Como Admin, quiero anular un cobro mal cargado indicando el motivo, sin borrarlo
 
 ## 6. Tesorería general
 
-**HU-TES-01** · `MVP-Entrega1`
+**HU-TES-01** · `Lote 1`
 Como Admin, quiero que cada pago registrado genere automáticamente un ingreso en la tesorería, para no cargar los cobros dos veces.
 *Sustento:* PRD «Tesorería general»; Acl. 7. Entra en el lote como **dato**: desde la Entrega 1, registrar un pago escribe su ingreso en la tesorería, aunque no haya pantalla para verlo (eso es HU-TES-03).
 
@@ -381,15 +205,15 @@ Como Admin, quiero que, si se anula un cobro que ya estaba incluido en un cierre
 
 ## 8. Usuarios y temporadas
 
-**HU-UT-01** · `MVP-Entrega1`
+**HU-UT-01** · `Lote 1`
 Como staff, quiero ingresar con mi usuario y contraseña personales, para acceder solo a lo que permite mi rol.
 *Sustento:* PRD «Roles y permisos»; Acl. 9 (Acceso al sistema), 11 (Autenticación: usuarios individuales). Si el usuario tiene pendiente el cambio obligatorio de contraseña, el ingreso lo lleva directo a HU-UT-06, y la API rechaza cualquier otra operación hasta que la cambie.
 
-**HU-UT-02** · `MVP-Entrega1`
+**HU-UT-02** · `Lote 2`
 Como Admin (cualquier rol) o Coordinador (solo usuarios Profesor), quiero dar de alta usuarios y modificar sus datos, para que cada persona del staff tenga su propio acceso.
 *Sustento:* PRD «Roles y permisos» (Registrar profesores); Acl. 9.
 
-**HU-UT-03** · `MVP-Entrega1`
+**HU-UT-03** · `Lote 2`
 Como Admin, quiero desactivar usuarios, para que quien deja de trabajar en la escuelita no pueda ingresar y se conserve igual lo que registró.
 *Sustento:* Acl. 11 (Autenticación).
 
@@ -407,84 +231,138 @@ Como Admin, quiero abrir una nueva temporada con su fecha de inicio y de cierre 
 Como staff, quiero consultar los datos de una temporada anterior, según los permisos de mi rol y sin poder modificarlos, para revisar lo que pasó sin alterar el historial.
 *Sustento:* Acl. 10 (la temporada anterior queda solo para consulta).
 
-**HU-UT-06** · `MVP-Entrega1`
+**HU-UT-06** · `Lote 2`
 Como staff, quiero que el sistema me obligue a cambiar la contraseña en el primer ingreso y después de un blanqueo, para que solo yo conozca la contraseña con la que entro.
 *Sustento:* Acl. 9 (Acceso al sistema: cambio obligatorio). Las reglas de la contraseña nueva están en el documento técnico, «Contraseñas y sesión»: mínimo 8 caracteres, al menos una letra y un número, distinta del nombre de usuario y de la anterior.
 
-**HU-UT-07** · `MVP-Entrega1`
+**HU-UT-07** · `Lote 2`
 Como Admin, quiero blanquear la contraseña de un usuario, para que pueda volver a ingresar si la olvidó o si quedó bloqueado. Al blanquearla se activa el cambio obligatorio (HU-UT-06) y se desbloquea el usuario.
 *Sustento:* Acl. 9 (Acceso al sistema: blanqueo).
 
-**HU-UT-08** · `Should-have`
-Como Admin, quiero que un usuario quede bloqueado después de 5 intentos de ingreso fallidos seguidos, hasta que yo le blanquee la contraseña (HU-UT-07), para que nadie pueda adivinar una contraseña probando.
-*Sustento:* Acl. 9 (Acceso al sistema: bloqueo).
+**HU-UT-08** · `Lote 2`
+Como Admin, quiero que nadie pueda dejar al staff afuera bloqueando cuentas desde internet, para que el bloqueo por intentos fallidos proteja las contraseñas sin convertirse en una forma de sacar del sistema a quien sea. La mitigación es un límite de intentos por origen, un desbloqueo automático pasado un tiempo, o ambos, según lo que se responda en la pregunta abierta.
+*Sustento:* el riesgo «Bloqueo disparado desde afuera» del design del change `auth-ingreso`, y la pregunta abierta «Desbloqueo de una cuenta bloqueada» de `aclaraciones-cliente.md`. El bloqueo en sí (5 intentos fallidos seguidos, hasta el blanqueo de HU-UT-07) lo construye HU-UT-01, según Acl. 9; esta historia no lo vuelve a hacer.
+*No bloquea las entregas académicas, pero sí la puesta en producción: el sistema no sale con datos de familias reales sin esto.*
 
 ---
 
 ## Resumen
 
-| Módulo | Historias | MVP-Entrega1 | Should-have | Backlog |
-|---|---|---|---|---|
-| Alumnos y familias | 11 | 4 | 5 | 2 |
-| Documentación | 6 | 0 | 4 | 2 |
-| Grupos y asistencia | 5 | 3 | 2 | 0 |
-| Tarifario | 5 | 4 | 0 | 1 |
-| Cuenta corriente familiar | 6 | 3 | 2 | 1 |
-| Tesorería general | 3 | 1 | 2 | 0 |
-| Canon al club | 5 | 0 | 0 | 5 |
-| Usuarios y temporadas | 8 | 5 | 1 | 2 |
-| **Total** | **49** | **20** | **16** | **13** |
+| Módulo | Historias | Lote 1 | Lote 2 | Should-have | Backlog |
+|---|---|---|---|---|---|
+| Alumnos y familias | 11 | 4 | 0 | 5 | 2 |
+| Documentación | 6 | 0 | 0 | 4 | 2 |
+| Grupos y asistencia | 5 | 1 | 2 | 2 | 0 |
+| Tarifario | 5 | 1 | 3 | 0 | 1 |
+| Cuenta corriente familiar | 6 | 3 | 0 | 2 | 1 |
+| Tesorería general | 3 | 1 | 0 | 2 | 0 |
+| Canon al club | 5 | 0 | 0 | 0 | 5 |
+| Usuarios y temporadas | 8 | 1 | 5 | 0 | 2 |
+| **Total** | **49** | **11** | **10** | **15** | **13** |
 
-## Alcance de la Entrega 1 (decisión del 19/10/2026)
+## Alcance de la implementación (decisión del 11/11/2026)
 
-No se usan datos semilla: todo lo que hace falta para demostrar el sistema se carga desde la propia aplicación. Por eso el MVP se arma en cadena, y cada bloque habilita al siguiente:
+**Hay script de datos.** `python tasks.py seed` deja la temporada vigente, los usuarios de los tres roles, los grupos de los dos turnos con sus profesores y el tarifario completo. Eso cambia el tamaño del primer lote: la decisión anterior (19/10/2026) era no usar semilla, y por eso el lote tenía que armarse en cadena —sin ABM de usuarios no había con qué entrar, sin ABM de grupos no había dónde inscribir, sin ABM de tarifario no había con qué calcular—. Con semilla la cadena se corta y el primer lote puede ser la espina del producto en lugar de su andamiaje.
 
-1. **Usuarios y login:**
+El motivo del cambio es el feedback de la Entrega 1: el lote de 20 historias era demasiado para el plazo, y el ABM de usuarios, grupos y tarifario son formularios que no ejercitan ninguna regla de negocio.
+
+### Lote 1 — la espina del dinero (Entrega 2)
+
+Once historias. Es el flujo que se demuestra de punta a punta: entrar, cargar una familia con un hijo, inscribirlo, tomarle asistencia, cobrarle y ver el saldo.
+
+1. **Entrar:**
    - HU-UT-01: ingresar con usuario y contraseña.
-   - HU-UT-06: cambio obligatorio de contraseña en el primer ingreso y después de un blanqueo. Un login sin esto no está terminado.
-   - HU-UT-02: alta y modificación de usuarios.
-   - HU-UT-07: blanqueo de contraseña por un Admin.
-   - HU-UT-03: baja, es decir, desactivar un usuario.
-
-   El ABM de profesores es el ABM de usuarios con rol Profesor.
-2. **Grupos y profesores:**
-   - HU-GA-01: ABM de grupos.
-   - HU-GA-02: asignar profesores a grupos.
-3. **Alta de alumno:**
-   - HU-AF-01: registrar alumno con grupo y turno.
+2. **Alta de alumno:**
    - HU-AF-02: crear o elegir familia.
-   - HU-AF-03: personas autorizadas, con al menos un tutor.
    - HU-AF-04: categoría, que se carga junto con el primer hijo.
-4. **Asistencia:**
+   - HU-AF-03: personas autorizadas, con al menos un tutor.
+   - HU-AF-01: registrar alumno con grupo y turno.
+3. **Asistencia:**
    - HU-GA-04: tomar asistencia por grupo, día y turno.
-5. **Tarifario:**
-   - HU-TAR-01: tarifa base por turno y modalidad, y los tipos de cargo Preinscripción y Abono.
-   - HU-TAR-02: fechas desde/hasta de cada Mes, Quincena y Semana.
-   - HU-TAR-03: tabla de descuentos por categoría (y por tramo de hijos en el Mes).
+4. **Cobro:**
    - HU-TAR-04: cálculo automático del monto del cargo.
-6. **Cobro:**
-   - HU-CC-01: registrar un cargo (tipo, alumno, turno, modalidad y período), con el cálculo de tarifa base y descuento.
+   - HU-CC-01: registrar un cargo (tipo, alumno, turno, modalidad y período), con tarifa base y descuento.
    - HU-CC-02: registrar pagos parciales sobre un cargo hasta saldarlo.
    - HU-CC-03: ver la cuenta corriente de la familia con cargos, pagos y saldo.
    - HU-TES-01: cada pago escribe su ingreso en la tesorería.
 
-**El dato no es lo mismo que la pantalla.** La tabla de tesorería se crea en la Entrega 1 y cada pago registra su ingreso desde el primer día (HU-TES-01). Lo que queda afuera son las pantallas: ver movimientos y saldo (HU-TES-03) y cargar egresos manuales (HU-TES-02). Escribir el ingreso al registrar el pago cuesta dos líneas; generar esos ingresos después con una migración sería más riesgoso.
+**Por qué asistencia entra en una espina que es del dinero.** No toca dinero y es la historia más barata del lote. Entra por otra razón: las tres historias documentadas con criterios Dado / Cuando / Entonces en [`5-historias-de-usuario.md`](../../5-historias-de-usuario.md) son HU-AF-01, HU-GA-04 y HU-CC-01, y con asistencia dentro el lote 1 implementa exactamente las tres que la Entrega 1 documentó. Sin ella, una de las tres queda documentada y sin construir.
 
-**Puesta en marcha.** El lote arranca con el primer Admin y la primera temporada vigente, que se crean al instalar el sistema (Acl. 9, 10). Configurar esa temporada (tarifa base, descuentos, tipos de cargo y fechas) ya está en el lote con el bloque Tarifario. Abrir una temporada **nueva**, con la copia de grupos y los reseteos, sigue en Backlog (HU-UT-04).
+**Dónde está el riesgo.** De las once, dos concentran casi todo: HU-TAR-04, el cálculo, y HU-CC-01, el cargo. Ahí viven el porcentaje único no acumulado, el tramo que alcanza a todos los hijos, el conteo de hermanos por turno y la persistencia del cálculo en el cargo. El resto son altas y consultas. El tiempo de revisión se reparte en consecuencia.
+
+### Plan de changes del lote 1
+
+Las historias dicen **qué** hay que construir; esta tabla dice **en qué orden y agrupadas cómo**. Cada fila es un change de OpenSpec: se propone con `/openspec-propose`, se construye con `/openspec-apply-change` y se cierra con `verify` y `archive`.
+
+| # | Change | Historias | Qué queda funcionando al cerrarlo |
+|---|---|---|---|
+| 1 | `auth-ingreso` | HU-UT-01 (backend) | Entrar por la API, saber quién llama y declarar qué rol usa cada endpoint |
+| 2 | `tarifario-y-semilla` | — (infraestructura) | Las tablas de grupos y tarifario, y `python tasks.py seed` cargando una temporada completa |
+| 3 | `pantalla-de-ingreso` | HU-UT-01 (frontend) | Entrar desde el navegador |
+| 4 | `familias-y-alumnos` | HU-AF-02, HU-AF-04, HU-AF-03, HU-AF-01 | Cargar una familia con su categoría, su tutor y un hijo inscripto en un grupo |
+| — | `paleta-y-encuadre` | — (visual) | La paleta del prototipo y el encuadre de las pantallas sin sesión. Se sumó entre el 4 y el 5, fuera del plan original |
+| 5 | `asistencia` | HU-GA-04 | Tomar asistencia por grupo, día y turno |
+| 6 | `cobro` | HU-TAR-04, HU-CC-01 | Registrar un cargo con su cálculo de tarifa y descuento |
+| 7 | `cuenta-corriente` | HU-CC-02, HU-CC-03, HU-TES-01 | Pagar en cuotas, ver el saldo de la familia y el ingreso en tesorería |
+
+**Del 4 en adelante, cada change incluye su pantalla.** Un change es una tajada vertical —modelo, API y pantalla— y no una capa. Así cada uno se puede demostrar solo, que es lo que pide la Entrega 2: «el flujo principal operativo».
+
+#### Por qué este orden
+
+Las tres razones que lo determinan, por si hay que replanificar:
+
+1. **Primero lo que desbloquea al resto.** El change 2 no tiene historias: son las tablas que la semilla llena y el script que las llena. Sin eso no hay con qué entrar, dónde inscribir ni con qué calcular, y los changes 4 a 7 no se pueden demostrar. Un change técnico sin historia es legítimo cuando desbloquea a otros; lo que no es legítimo es que agregue comportamiento que nadie pidió.
+2. **Las dependencias de datos mandan.** Un pago necesita un cargo (7 después de 6); un cargo necesita un alumno inscripto y un tarifario (6 después de 4 y de 2); una pantalla de ingreso necesita usuarios (3 después de 2).
+3. **Lo riesgoso, ni primero ni último.** El cálculo del cargo (change 6) concentra casi todo el riesgo del sistema. Va cuando el arnés ya está rodado y todavía queda tiempo para arreglar lo que aparezca. Por la misma razón el change 3 es chico: es el estreno de `frontend-feature`, que nunca corrió, y conviene estrenarla en una pantalla sin reglas de negocio.
+
+#### Cómo arrancar el que sigue
+
+Cuando un change está archivado, el siguiente arranca así:
+
+```
+/openspec-propose <nombre del change de la tabla>: <las historias que cubre>
+```
+
+El `config.yaml` de OpenSpec ya aporta el contexto: las fuentes de verdad, las reglas que ningún change puede contradecir y lo que cada artefacto tiene que incluir.
+
+### Lote 2 — el ABM que la semilla sustituye
+
+Diez historias. Nueve son las que `python tasks.py seed` cubre durante el lote 1 y que el sistema necesita antes de ser productivo, porque en producción no hay semilla: alguien tiene que poder crear un usuario y configurar la temporada desde la aplicación. La décima, HU-UT-08, no la sustituye la semilla: es endurecimiento que tiene que estar antes de producción.
+
+- HU-UT-02: alta y modificación de usuarios. El ABM de profesores es este mismo, con rol Profesor.
+- HU-UT-03: baja, es decir, desactivar un usuario.
+- HU-UT-06: cambio obligatorio de contraseña en el primer ingreso y después de un blanqueo.
+- HU-UT-07: blanqueo de contraseña por un Admin.
+- HU-UT-08: que nadie pueda dejar al staff afuera bloqueando cuentas desde internet. No bloquea las entregas académicas, pero sí la puesta en producción.
+- HU-GA-01: ABM de grupos.
+- HU-GA-02: asignar profesores a grupos.
+- HU-TAR-01: tarifa base por turno y modalidad, y los tipos de cargo Preinscripción y Abono.
+- HU-TAR-02: fechas desde/hasta de cada Mes, Quincena y Semana.
+- HU-TAR-03: tabla de descuentos por categoría y por tramo de hijos.
+
+**Las contraseñas bajaron de lote por indicación del revisor de la Entrega 1.** HU-UT-06 y HU-UT-07 estaban en el lote original; el revisor pidió sacarlas, y el motivo se sostiene: con un usuario de semilla ya logueable, el cambio obligatorio y el blanqueo no hacen falta para demostrar nada. Pero **no son opcionales para producción**: un sistema con datos de menores donde el Admin no puede blanquear una contraseña no se pone en marcha. Van en el lote 2, no en el Backlog.
+
+**El dato no es lo mismo que la pantalla.** La tabla de tesorería se crea en el lote 1 y cada pago registra su ingreso desde el primer día (HU-TES-01). Lo que queda afuera son las pantallas: ver movimientos y saldo (HU-TES-03) y cargar egresos manuales (HU-TES-02). Escribir el ingreso al registrar el pago cuesta dos líneas; generar esos ingresos después con una migración sería más riesgoso.
+
+**Puesta en marcha.** El primer Admin y la primera temporada vigente se crean al instalar el sistema (Acl. 9, 10) y no son historias de usuario. Abrir una temporada **nueva**, con la copia de grupos y los reseteos, sigue en Backlog (HU-UT-04).
+
+**Qué es y qué no es la semilla.** `python tasks.py seed` es una herramienta de desarrollo y de demostración. Carga datos inventados, nunca datos reales de familias ni de alumnos, y no se ejecuta en producción. La puesta en marcha real de la temporada es el lote 2.
 
 ### Lote de desarrollo vs. historias documentadas
 
 Son dos cosas distintas y no tienen por qué coincidir:
 
-- **Lote de desarrollo (20 historias, los 6 bloques de arriba):** es lo que se construye primero, en cadena. Sin usuarios, grupos y alta de alumno no hay nada que demostrar de punta a punta.
-- **Historias documentadas con criterios en [`5-historias-de-usuario.md`](../../5-historias-de-usuario.md) (3):** es lo que pide la consigna del curso. Se documentan en profundidad, con criterios Dado / Cuando / Entonces, las tres que mejor muestran el sistema. Los criterios son los mismos que figuran en este archivo, debajo de cada historia:
+- **Lote de desarrollo (11 historias en el lote 1):** es lo que se construye primero.
+- **Historias documentadas con criterios (3):** es lo que pide la consigna del curso. Se documentan en profundidad, con criterios Dado / Cuando / Entonces, las tres que mejor muestran el sistema:
   1. **HU-AF-01** — registrar un alumno con familia, grupo y turno.
   2. **HU-GA-04** — tomar asistencia por grupo, día y turno.
-  3. **HU-CC-01** — registrar un cargo con cálculo de tarifa y descuento (es la que concentra las reglas de negocio). Sus dependencias del bloque Tarifario (tarifa base, tipos de cargo, fechas del período y tabla de descuentos) van como precondiciones en el "Dado" de los escenarios. Las historias HU-TAR no se documentan aparte.
+  3. **HU-CC-01** — registrar un cargo con cálculo de tarifa y descuento (es la que concentra las reglas de negocio). Sus dependencias del bloque Tarifario (tarifa base, tipos de cargo, fechas del período y tabla de descuentos) van como precondiciones en el "Dado" de los escenarios, y en el lote 1 las aporta la semilla. Las historias HU-TAR no se documentan aparte.
 
-Las otras 17 del lote se construyen igual, pero quedan listadas acá sin criterios. Esto resuelve el "4 bloques contra 3 historias" sin recortar el sistema real ni inflar la entrega.
+Las otras ocho del lote 1 se construyen igual, pero quedan listadas acá sin criterios.
 
 **Cambios respecto de las versiones anteriores:**
+- **12/11/2026.** HU-UT-08 se reescribe y pasa de Should-have a Lote 2. Antes pedía el bloqueo tras 5 intentos, que ahora construye HU-UT-01 al hacer cumplir Acl. 9. Al diseñar HU-UT-01 apareció que el bloqueo se puede disparar desde internet (usuarios predecibles, solo el Admin desbloquea), y la mitigación no tenía dueño. HU-UT-08 pasa a ser esa mitigación.
+- **11/11/2026.** Se incorpora el script de datos (`python tasks.py seed`) y el lote de 20 se parte en dos: lote 1, la espina del dinero más asistencia (11 historias); lote 2, el ABM que la semilla sustituye (9 historias). Ninguna historia cambia de contenido y ninguna sale del alcance: solo cambia el orden. Motivo: el feedback de la Entrega 1 sobre el tamaño del lote.
 - El bloque de cobro (HU-CC-01 a HU-CC-03) vuelve a MVP-Entrega1.
 - HU-TAR-01 a HU-TAR-04 suben a MVP-Entrega1 como un bloque nuevo de Tarifario, antes del Cobro, porque sin datos semilla el cálculo del cargo los necesita. HU-TAR-01 incorpora los dos tipos de cargo de la temporada (Preinscripción y Abono). El ABM libre de tipos de cargo (HU-TAR-05) sigue en Backlog.
 - HU-UT-03 pasa de Backlog a MVP, como la baja del ABM.
@@ -506,6 +384,30 @@ Las otras 17 del lote se construyen igual, pero quedan listadas acá sin criteri
   - el bloqueo tiene otra prioridad que HU-UT-01, y un criterio no puede tener una prioridad distinta de la de su historia.
 
 **Baja de grupos — propuesta, pendiente de confirmar:** un grupo con alumnos o asistencia registrada no se borra, se **desactiva**: deja de aparecer para inscribir, pero conserva su historia. Es el mismo criterio que ya rige para los usuarios (los desactivados se conservan para no romper las referencias de quién cobró). Si se confirma, pasa a `aclaraciones-cliente.md`.
+
+## Deuda técnica
+
+Lo que se sabe que hay que mejorar, con el disparador que dice cuándo. No son historias: no agregan comportamiento.
+
+**Velocidad de los tests del frontend.** Hoy cada test monta la app entera con `abrir()`, y Emotion reinyecta las hojas de MUI en cada montaje: el test más lento mide entre 3 y 4,1 s (medido el 13/11/2026, `testTimeout` en 10 s). No bloquea: cada pantalla nueva paga lo suyo y no se lo suma a las demás.
+
+Se actúa cuando pase cualquiera de estas dos cosas:
+- la suite completa del frontend supera los 60 s en el CI, o
+- algún test individual supera los 6 s.
+
+Dos salidas, en este orden:
+1. Probar happy-dom en lugar de jsdom en `vite.config.ts`. Es una línea y suele dar 2-3x, pero cambia la huella de los tests congelados, así que lo decide una persona con la suite verde antes y después y verificando que el DataGrid siga andando.
+2. Sedimentar el catálogo de componentes (módulo 12) para que las comprobaciones de estado bajen a nivel componente y solo los tests de integración monten `abrir()`.
+
+**Formato de los campos de fecha.** El formato que el usuario ve en los campos de fecha lo decide el navegador según el idioma del sistema, no la aplicación: una máquina en inglés muestra mm/dd/aaaa. Importa sobre todo en la fecha de nacimiento, que define el grupo y, con él, el tramo de precio. El valor que viaja a la API es siempre ISO, así que lo que está en riesgo es la lectura de la persona, no el dato.
+
+Se actúa cuando pase cualquiera de estas dos cosas:
+- aparece una máquina del club mal configurada, o
+- alguien reporta una fecha mal leída.
+
+La salida es un `DatePicker` de MUI con locale `es-AR` y formato `dd/MM/yyyy` fijo. Cuesta sumar `@mui/x-date-pickers` y `date-fns`, y rehacer cómo los tests escriben fechas.
+
+**Tema oscuro.** El prototipo define un tema oscuro completo con prefers-color-scheme. Se deja fuera de alcance: ninguna historia lo pide y duplica la revisión visual, que hoy es a ojo. tema.ts nombra los colores por función, así que se puede agregar después sin tocar las pantallas.
 
 ## Excluido por no estar en las fuentes
 

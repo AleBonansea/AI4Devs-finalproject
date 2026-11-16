@@ -1,15 +1,17 @@
 # 5. Historias de Usuario
 
-> **Recorte de MVP.** Estas 3 historias son el recorte de MVP de un backlog completo de **49 historias**. Son las que se documentan con criterios de aceptación; el resto del primer lote de desarrollo (20 historias en total) y el backlog completo, con prioridades y sustento, están en [`docs/product/historias-backlog.md`](docs/product/historias-backlog.md).
+> **Recorte de MVP.** Estas 3 historias son el recorte de MVP de un backlog completo de **49 historias**. Son las que se documentan con criterios de aceptación; el resto del primer lote de desarrollo (11 historias en total, todas construidas en la Entrega 2) y el backlog completo, con prioridades y sustento, están en [`docs/product/historias-backlog.md`](docs/product/historias-backlog.md).
 
 > **Convenciones.** "Staff" significa Admin, Coordinador o Profesor; el Profesor siempre actúa solo sobre sus grupos asignados. En el campo *Sustento*, "PRD" remite a [`docs/prd/prd-escuelita-de-verano.md`](docs/prd/prd-escuelita-de-verano.md) y "Acl." a [`docs/prd/aclaraciones-cliente.md`](docs/prd/aclaraciones-cliente.md), que prevalece sobre el PRD. Las precondiciones que dependen de otras historias del lote van en el "Dado".
 
 **Historia de Usuario 1**
 
-**HU-AF-01 — Registrar un alumno con familia, grupo y turno** · `MVP-Entrega1`
+**HU-AF-01 — Registrar un alumno con familia, grupo y turno** · `Lote 1`
 
 Como staff, quiero registrar un alumno con sus datos mínimos (incluido al menos un tutor) y asignarlo a un grupo y turno, para tenerlo inscripto desde el primer contacto y completar la documentación más adelante.
 *Sustento:* PRD «Alumnos, tutores y documentación» (ficha progresiva; la inscripción la hace el staff); PRD «Roles y permisos»; Acl. 3, 4, 8.
+
+> **Versión vigente:** HU-AF-01 ya está construida (change `familias-y-alumnos`, archivado el 13/11/2026). Los criterios que siguen son los que se entregaron en la Entrega 1 y se conservan como documento de esa entrega. El comportamiento vigente, con un Scenario por caso y los que se sumaron al construirla, está en [`openspec/specs/alumnos/spec.md`](openspec/specs/alumnos/spec.md), y la familia y las personas en [`openspec/specs/familias/spec.md`](openspec/specs/familias/spec.md). Si difieren, mandan las specs.
 
 *Criterios de aceptación* (incluyen la creación o elección de familia, la categoría y el tutor obligatorio, que se apoyan en HU-AF-02, HU-AF-03 y HU-AF-04):
 
@@ -66,10 +68,12 @@ Datos mínimos del alta (Acl. 3): nombre, apellido y fecha de nacimiento del alu
 
 **Historia de Usuario 2**
 
-**HU-GA-04 — Tomar asistencia por grupo, día y turno** · `MVP-Entrega1`
+**HU-GA-04 — Tomar asistencia por grupo, día y turno** · `Lote 1`
 
 Como staff, quiero tomar asistencia por grupo, día y turno desde el celular o la PC, para registrar quién estuvo presente.
 *Sustento:* PRD «Grupos, turnos y asistencia»; Acl. 12.
+
+> **Versión vigente:** HU-GA-04 ya está construida (change `asistencia`, archivado el 14/11/2026). Los criterios que siguen son los que se entregaron en la Entrega 1 y se conservan como documento de esa entrega. El comportamiento vigente, con un Scenario por caso y los que se sumaron al construirla, está en [`openspec/specs/asistencia/spec.md`](openspec/specs/asistencia/spec.md), y el acceso desde el inicio en [`openspec/specs/auth/spec.md`](openspec/specs/auth/spec.md). Si difieren, mandan las specs.
 
 *Criterios de aceptación:*
 
@@ -117,10 +121,12 @@ Como staff, quiero tomar asistencia por grupo, día y turno desde el celular o l
 
 **Historia de Usuario 3**
 
-**HU-CC-01 — Registrar un cargo con cálculo de tarifa y descuento** · `MVP-Entrega1`
+**HU-CC-01 — Registrar un cargo con cálculo de tarifa y descuento** · `Lote 1`
 
 Como Admin, quiero registrar un cargo a una familia (tipo, alumno, turno, modalidad y período), para dejar asentado lo que tiene que pagar.
 *Sustento:* PRD «Tarifario y cuenta corriente familiar»; Acl. 5, 6.
+
+> **Versión vigente:** HU-CC-01 y el cálculo de HU-TAR-04 ya están construidos (change `cobro`, archivado el 14/11/2026). Los criterios que siguen son los que se entregaron en la Entrega 1 y se conservan como documento de esa entrega. El comportamiento vigente, con un Scenario por caso y los que se sumaron al construirla (cargos repetidos, rechazos por campo, la simulación, la pantalla), está en [`openspec/specs/cargos/spec.md`](openspec/specs/cargos/spec.md), las inscripciones de una familia en [`openspec/specs/familias/spec.md`](openspec/specs/familias/spec.md) y el acceso desde el inicio en [`openspec/specs/auth/spec.md`](openspec/specs/auth/spec.md). Si difieren, mandan las specs.
 
 *Criterios de aceptación* (incluyen el cálculo de HU-TAR-04):
 
@@ -211,3 +217,9 @@ Qué hijos cuentan para el tramo del Mes: lo define el PRD («Tarifario y cuenta
 - **Cuando** intenta registrar un cargo o ver la cuenta corriente de una familia
 - **Entonces** no tiene esa opción en pantalla
 - **Y** si la solicitud llega igual (por ejemplo, por la API), se rechaza y no se registra nada
+**Escenario 12 — El no socio con un hijo paga la tarifa base** (caso límite)
+- **Dado** que una familia es categoría no socio y tiene **un solo** hijo inscripto en el turno mañana
+- **Cuando** el Admin registra un Abono · Mes, turno mañana, «Mes 1»
+- **Entonces** el monto es **exactamente la tarifa base, $ 100.000**, porque la celda «no socio · Mes · 1 hijo» es 0 %
+- **Y** el cálculo no toma el tramo de 2 hijos: un error de índice en el tramo daría $ 90.000, que es un monto plausible y pasaría inadvertido
+

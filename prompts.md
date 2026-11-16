@@ -154,11 +154,59 @@ Cubierto por el prompt 1 de la 2.1.
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
-Cubierto por el prompt 1 de la 2.1. La estructura está marcada como planificada hasta que exista el código (Entrega 2).
+Cubierto por el prompt 1 de la 2.1, que la dejó como estructura planificada. En la Entrega 2 se reemplazó por la estructura real del repositorio con el prompt 3 de la 2.4.
 
 ### **2.4. Infraestructura y despliegue**
 
-Cubierto por el prompt 1 de la 2.1. Le corresponden dos ajustes: el pre-deploy con `alembic upgrade head`, y no borrar los documentos fuera de temporada.
+El despliegue en Render está cubierto por el prompt 1 de la 2.1, con dos ajustes: el pre-deploy con `alembic upgrade head`, y no borrar los documentos fuera de temporada.
+
+Los dos prompts que siguen son de **mantenimiento**, la fase que en la Entrega 1 quedó sin plan: cómo se revisa cada cambio y cómo la documentación sigue al código. Las dos piezas están descriptas en `2-arquitectura-del-sistema.md`, 2.4, «Mantenimiento: revisión de pull requests y documentación viva». La pieza diaria de la documentación viva no necesita prompt propio: es `/openspec-archive-change <change>`, que al cerrar cada change funde su delta en `openspec/specs/` y se corrió una vez por change.
+
+**Prompt 2: Cuándo se deja de revisar**
+
+*Contexto:* en el primer change, `auth-ingreso`, el `adversarial-reviewer` hizo dos pases y cada uno encontró bordes nuevos de la entrada del login: un carácter de control, un *surrogate* suelto, largos medidos antes de normalizar. Cada arreglo tocaba la entrada y abría otro borde. Al cerrar el segundo ciclo le pedí al agente, además de los arreglos, una regla para que la revisión terminara. Se transcribe el cierre del mensaje; antes venían los cuatro Scenarios del último ciclo.
+
+```
+[...]
+Después del ciclo, verify y archive SIN un tercer pase adversarial.
+
+Y agregá a REVIEW.md, en una sección "Cuándo se deja de revisar": a partir
+del segundo pase solo los hallazgos graves reabren el change; los menores
+se anotan en el design y van a un change de seguimiento. Sin eso, un
+change de auth se revisa para siempre.
+```
+
+*Respuesta clave:* `REVIEW.md` sumó la sección «Cuando se deja de revisar»: el primer pase puede reabrir el change por cualquier hallazgo; desde el segundo, solo uno grave. Los menores quedan como diferidos en el design del change.
+
+*Ajuste humano / impacto:* `REVIEW.md` es el criterio común del subagente que revisa antes de la PR y del revisor automático que comenta cada PR (`.github/workflows/revisor.yml`), así que la regla vale para los dos. Dejó dos aprendizajes:
+- **Un revisor sin criterio de corte no termina nunca**, y uno que reporta todo esconde lo grave entre lo menor. Por eso `REVIEW.md` limita lo grave a cuatro categorías y pone un tope a las sugerencias.
+- **El criterio se corrige cuando la revisión se equivoca, no se ignora el comentario.** En el change `cuenta-corriente` la revisión señaló como posible contradicción que el monto de un pago viniera del cliente. No lo era: la regla protege el precio de un cargo, y un pago es un hecho que informa el Admin. La regla se acotó en `REVIEW.md` (`docs: acotar en REVIEW.md la regla del monto al precio de un cargo`), y la revisión siguiente ya no lo repite.
+
+**Prompt 3: La documentación contra el código, antes de entregar**
+
+*Contexto:* con el lote 1 terminado y las PRs mergeadas, una revisión previa a la entrega encontró que la documentación numerada seguía diciendo que no había código. Le pasé esa revisión al agente con este pedido, en una rama propia de documentación.
+
+```
+[pegué la revisión: la 2 dice «todavía no hay código», «estructura
+planificada» y «todavía no hay tests»; sigue «MUI o Mantine, pendiente de
+elegir»; la 1.4 dice que la instalación «se confirma en la Entrega 2»; y
+el feedback de la Entrega 1 dejó Mantenimiento «sin plan aún», cuando hoy
+están el revisor de cada PR y las specs de OpenSpec como documentación
+viva]
+
+Revisa la documentacion del proyecto contra lo que se hizo en entrega 2 y
+actualiza todo para poder entregarlo
+```
+
+*Respuesta clave:* el agente no se quedó con la lista: contrastó cada documento contra el código, el contrato generado, las specs, las migraciones y el historial de PRs, y encontró contradicciones que la revisión no nombraba:
+- la sección 4 documentaba `?simular=true` y `404` para las referencias inexistentes, cuando la API construida tiene `POST /cargos/simulacion` y `422` por campo. Se reescribió con un extracto del contrato generado (`docs/api/openapi.json`) en lugar del OpenAPI escrito a mano, y con una sección «Qué cambió respecto de la Entrega 1»;
+- el modelo de datos decía que las columnas *(después)* se crean desde el principio, y el código decidió lo contrario;
+- la sesión con cookie de renovación figuraba como hecha, y lo construido es un token de 8 horas en `localStorage`, con la renovación esperando al dominio propio;
+- `7-pull-requests.md` decía que las nueve PRs pasaron por el revisor automático, y la #2 no tiene informe: el revisor recién publicó desde la #3.
+
+La sección 2 pasó a describir la estructura real, los 605 tests por nivel y capability, el CI, y la nueva subsección de mantenimiento.
+
+*Ajuste humano / impacto:* **la documentación también se verifica contra el código, no contra la memoria.** Las specs no se desfasan porque cada Scenario tiene un test; los documentos numerados, que no tienen test, se habían quedado en la Entrega 1 en casi todo lo que el código cambió.
 
 ### **2.5. Seguridad**
 
@@ -166,7 +214,7 @@ Cubierto por el prompt 1 de la 2.1. Le corresponden dos ajustes: el límite de 5
 
 ### **2.6. Tests**
 
-Cubierto por el prompt 1 de la 2.1. Es el plan de tests, porque todavía no hay código.
+El plan de la Entrega 1 salió del prompt 1 de la 2.1. En la Entrega 2 se reemplazó por los tests reales con el prompt 3 de la 2.4. Cómo se escriben los tests, con la separación entre `test-writer` e `implementer`, está en los prompts de la sección 7.
 
 ---
 
@@ -453,8 +501,149 @@ entre ellos, estimación, y las referencias concretas a la historia, a las tabla
 
 ### 7. Pull Requests
 
-**Prompt 1:**
+> Prompts de las sesiones de Claude Code (CLI) sobre el repo, durante la construcción del lote 1. Se transcriben tal cual se escribieron.
+>
+> El lote se construyó en ocho *changes* de OpenSpec, uno por rama y por pull request. Cada uno siguió el mismo ciclo: `openspec-propose` → revisión humana de la propuesta y la spec → `openspec-apply-change` → `openspec-verify` → `openspec-archive`, que funde el delta en la spec vigente. Dentro del *apply*, dos subagentes con permisos distintos: **`test-writer`**, que escribe los tests desde la spec y tiene prohibido leer la implementación, y **`implementer`**, que escribe el código hasta ponerlos en verde y tiene prohibido tocar los tests. Entre uno y otro, los tests se congelan por hash (`git ls-files -s`) y al final se comprueba que el hash no cambió. Antes de cerrar cada change corre un **`adversarial-reviewer`** que busca lo que está mal, no lo que está bien.
+>
+> Sobre eso, dos capas automáticas en cada pull request: el *workflow* de integración continua (`ruff`, `mypy`, `pytest`, tests y build del frontend, y el ida y vuelta de las migraciones) y una revisión con `claude-code-action` configurada en `.github/workflows/revisor.yml`.
+>
+> Los tres prompts que siguen son los que más cambiaron el resultado: uno arregla la base sobre la que corren todos los tests, otro arregla cómo se verifica que un test puede fallar, y el tercero corrige a la IA sobre un riesgo de seguridad que una regla del cliente no había visto.
 
-**Prompt 2:**
+**Prompt 1: Un conftest que dejaba la suite en verde con el bloqueo roto**
 
-**Prompt 3:**
+*Contexto:* en el primer change, `auth-ingreso` (HU-UT-01), el agente verificó el rojo de los tests del login y señaló dos huecos. Uno era un *Scenario* que se aprobaba con una constante. El otro llevó a descubrir que el `conftest.py` le daba a la API la misma sesión de base de datos que al test: un servicio que confirmaba la transacción y uno que no eran indistinguibles. Lo corregí a mano en la rama y se lo pasé al agente con este prompt.
+
+```
+Los dos huecos son reales y el 2 es un bug mío en el conftest, no tuyo.
+Ya actualicé backend/tests/conftest.py en tu rama, sin commitear. Hacé
+git diff backend/tests/conftest.py para verlo.
+
+Qué cambió y por qué: la API ahora recibe su PROPIA sesión, abierta y
+cerrada en cada petición sobre la misma conexión, en lugar de compartir la
+del test. Verificado contra Postgres en los dos sentidos: con el conftest
+viejo, un endpoint que incrementa un contador y lanza 401 sin commitear
+dejaba el test en verde (el test leía 3 en lugar de 2); con el nuevo, ese
+test falla. En producción el incremento se habría perdido y el bloqueo por
+intentos nunca se habría activado, con la suite en verde.
+
+Además el cliente de pruebas expira los objetos del test después de cada
+petición: un objeto del ORM cargado antes devolvía el valor viejo, así que
+un test que afirma que un contador NO cambió pasaba aunque la API lo
+hubiera incrementado.
+
+Ahora, en este orden:
+
+1. Corregí el hueco 1 en la spec con /openspec-update-change: en el Scenario
+   «Ingresa con el cambio pendiente», el GIVEN tiene que incluir
+   intentos_fallidos en 2, para que el AND de que quede en 0 pruebe algo.
+   Como está, se aprueba con una constante. Y revisá si algún otro Scenario
+   tiene el mismo problema de arrancar en el valor que después afirma.
+
+2. Volvé a invocar al test-writer SOLO para reescribir ese test según el
+   GIVEN nuevo. No le des acceso a nada más de lo que ya tenía.
+
+3. Volvé a verificar el rojo con el conftest nuevo y el test corregido:
+   pegame la última línea del pytest y confirmame que siguen fallando los
+   16 por 404 y que el control positivo está entre ellos. Si alguno falla
+   por otra razón, el conftest nuevo rompió algo y quiero saberlo.
+
+4. Recién ahí congelá los tests y seguí con el implementer.
+
+Y una advertencia para cuando implementes: el test del contador ahora SÍ
+exige el commit antes del 401 que dice el design. Si el servicio no
+commitea, ese test falla. Eso es correcto, no lo trabajes alrededor.
+```
+
+*Respuesta clave:* el *Scenario* se corrigió en la spec, el test-writer reescribió solo ese test, y con el conftest nuevo los 15 *Scenarios* fallaron por 404, como correspondía. Se congelaron los tests junto con `conftest.py`, y el implementer los puso en verde con el `commit()` antes del 401 (31 tests en verde, huella intacta).
+
+*Ajuste humano / impacto:* fue el peor defecto del proyecto, y estaba en la base de las pruebas, no en el código. Con el conftest viejo, la suite quedaba en verde aunque el contador de intentos fallidos nunca se guardara: en producción, el bloqueo tras 5 intentos no se habría activado nunca. Salió de **leer los tests, no solo mirar que estuvieran en rojo**. Desde ahí la skill `backend-feature` congela `conftest.py` junto con los tests de la capability y exige leer los tests buscando aserciones que se aprueben con una constante.
+
+---
+
+**Prompt 2: Un test en rojo que no podía fallar**
+
+*Contexto:* el `adversarial-reviewer` del change de asistencia encontró que la función que calcula «hoy» en el navegador estaba bien escrita, pero que ningún test la protegía: los tests fijaban la hora a las 10:00, cuando la fecha local y la UTC coinciden. Si alguien cambiaba `hoyLocal()` por `toISOString()`, todo seguía en verde. En producción, un profesor abriendo la pantalla a las 21:30 habría guardado la asistencia en el día siguiente, sin aviso.
+
+```
+Avanzá con los dos arreglos, reabriendo el change. Y las preguntas están
+decididas, no las dejes como supuesto.
+
+1) HUSO HORARIO
+Fijá TZ=America/Argentina/Buenos_Aires para los tests del frontend, en
+vite.config.ts, en tasks.py y en el workflow del CI: si queda en un solo
+lugar, local y CI se separan. Pasá fijarHoy a las 21:30.
+
+Pero antes de darlo por bueno, vas a verlo fallar a propósito: cambiá
+hoyLocal() por toISOString(), corré los tests, confirmá que se ponen en
+rojo, y revertí. Si siguen en verde, TZ no quedó puesto donde hace falta
+y hay que buscar otro lugar. Pegame la salida del rojo.
+
+[…]
+```
+
+*(Fragmento: el mensaje seguía con cuatro puntos más sobre el mismo change —el guardado que pisaba otra fecha, no permitir desmarcar una asistencia ya guardada, registrar el autor solo en las marcas que cambiaron y un test de permisos para el profesor—. Se transcribe solo el punto del huso horario, que es el que se comenta acá.)*
+
+*Respuesta clave:* la zona horaria quedó fijada en los tres lugares, la hora de prueba pasó a las 21:30 —cuando en Argentina es el día 5 y en UTC ya es el 6— y el agente devolvió la salida en rojo de la rotura deliberada antes de revertirla.
+
+*Ajuste humano / impacto:* **un guardarraíl que nunca se vio frenar nada no está probado.** No alcanzaba con poner la variable: había que romper el código a propósito y comprobar que el test lo notaba. En este mismo proyecto ya había pasado lo contrario tres veces —un hook de formato que llamaba a un ejecutable inexistente y nunca corrió, una integración continua que no habría pasado nunca y todavía no había corrido, y un revisor automático que se salteaba en silencio—, y las tres se descubrieron usándolas, no leyéndolas. El mismo criterio dejó dos reglas más en el repo: el rojo se verifica leyendo *el motivo* de cada fallo, porque un `TypeError` dentro del test no es rojo sino un test roto; y los plazos de los tests llevan anotado el número medido y la fecha, para que un valor mágico no quede sin explicación.
+
+---
+
+**Prompt 3: Un riesgo de seguridad que la regla del cliente no había visto**
+
+*Contexto:* en el mismo change `auth-ingreso`, el agente presentó la propuesta, la spec y el design del login. Antes de aplicarlos los revisé y devolví seis ajustes. El primero es el que importa acá: un riesgo que ni la IA ni la aclaración del cliente sobre el bloqueo (Acl. 9) habían evaluado.
+
+```
+Seis ajustes antes de aplicar. Ninguno toca el proposal salvo el 1.
+
+1. RIESGO que no estaba evaluado: el bloqueo se puede disparar desde
+   afuera. Los usernames son predecibles (inicial + apellido), el 403
+   confirma que el usuario existe, y solo un Admin desbloquea. Cualquiera
+   con internet puede dejar afuera a quien quiera, y enumerar usernames
+   bloqueándolos.
+   - En design.md, sección "Riesgos": escribilo, con la mitigación
+     deferida a HU-UT-08 (límite por IP y/o desbloqueo automático).
+   - En docs/prd/aclaraciones-cliente.md, pregunta abierta: ¿una cuenta
+     bloqueada se desbloquea sola después de un rato, o sigue dependiendo
+     del Admin sabiendo que cualquiera puede bloquearla desde internet?
+     Acl. 9 dice lo segundo, pero se decidió sin esto a la vista.
+   - En proposal.md, fuera de alcance: la mitigación del bloqueo remoto.
+
+2. Mové el Scenario "El token del ingreso sirve para identificarse" del
+   requirement "Ingreso con usuario y contraseña" al de "Identificación
+   del usuario actual por token". Como está, la tarea 1 tiene que hacerlo
+   pasar pero llama a /auth/yo, que se construye en la tarea 2: la tarea 1
+   no puede cerrar en verde.
+
+3. GET /api/v1/auth/yo queda exento del 403 por cambio pendiente, igual
+   que el cambio de contraseña: el frontend lo necesita para saber quién
+   está logueado al recargar, y no expone nada sensible. El Scenario "Con
+   el cambio pendiente no puede hacer nada más" se reescribe contra el
+   router de sonda de la tarea 3. Agregá un Scenario: con el cambio
+   pendiente, /yo responde 200 con debe_cambiar_password en true.
+
+4. En design.md, invariante explícito: el username se guarda siempre en
+   minúsculas y el login busca por igualdad exacta contra la entrada ya
+   normalizada. El CHECK (username = lower(username)) lo agrega HU-UT-02;
+   mientras tanto la semilla lo respeta. Si la base tuviera JPerez, el
+   login fallaría en silencio.
+
+5. En el requirement "Identificación del usuario actual por token",
+   reemplazá "si el usuario no existe" por "si el sub del token no
+   corresponde a ningún usuario" y agregale su Scenario. Como está, es una
+   cláusula inalcanzable sin test.
+
+6. Renombrá require_rol a exigir_rol, en el change y en
+   docs/architecture/documento-tecnico.md. La regla 8 de CLAUDE.md pide
+   todo en castellano y require_rol es mitad inglés.
+
+Mostrame el diff de la spec y del design, y pará.
+```
+
+*Respuesta clave:* el riesgo quedó escrito en el design del change, con la mitigación diferida a HU-UT-08, y como pregunta abierta en `aclaraciones-cliente.md` («Desbloqueo de una cuenta bloqueada»). La spec se reordenó para que cada tarea pudiera cerrar en verde por sí sola, y `require_rol` pasó a `exigir_rol` en todo el repo.
+
+*Ajuste humano / impacto:* tres cosas que la IA no iba a resolver sola.
+
+- **Una regla del cliente puede haberse decidido sin ver un riesgo.** Acl. 9 dice que una cuenta bloqueada queda así hasta que un Admin le blanquee la contraseña. Con usernames predecibles y el ingreso abierto a internet, eso deja a cualquiera bloquear al staff entero, incluidos todos los Admin. No se cambió la regla por cuenta propia: se dejó la pregunta registrada para el cliente y, mientras no conteste, rige la Acl. 9.
+- **Un Scenario que una tarea no puede hacer pasar sola rompe el ciclo.** Si el test de la tarea 1 depende de un endpoint de la tarea 2, la tarea 1 nunca cierra en verde, y la tentación es aflojar el test.
+- **Un «queda para otro change» sin historia que lo reciba se pierde.** En la ronda siguiente apareció que HU-UT-08 describía el bloqueo que ya estaba construyendo HU-UT-01, así que nadie era dueño de la mitigación. Se reescribió HU-UT-08 como la mitigación y se marcó que no bloquea las entregas académicas, pero sí la salida a producción con datos reales.

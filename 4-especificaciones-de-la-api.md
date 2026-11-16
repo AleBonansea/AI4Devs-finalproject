@@ -1,1018 +1,804 @@
 # 4. Especificación de la API
 
 > Son 3 endpoints, uno por cada historia documentada en [`5-historias-de-usuario.md`](5-historias-de-usuario.md). Los nombres de entidades y campos son los de [`3-modelo-de-datos.md`](3-modelo-de-datos.md). El stack es FastAPI + Pydantic v2 ([`docs/architecture/documento-tecnico.md`](docs/architecture/documento-tecnico.md)).
+>
+> **De dónde sale.** Los tres endpoints están construidos. El OpenAPI de abajo **no está escrito a mano**: es un extracto del contrato completo, [`docs/api/openapi.json`](docs/api/openapi.json), que se genera desde el código con `python tasks.py openapi-generate`. El CI lo regenera en cada pull request y la PR no pasa si no coincide con el versionado ([`.github/workflows/openapi.yml`](.github/workflows/openapi.yml)). Con la API levantada, el mismo contrato se navega en `http://localhost:8000/docs`.
+>
+> El comportamiento de cada endpoint, con un Scenario por caso, está en [`openspec/specs/`](openspec/specs/): `alumnos`, `asistencia` y `cargos`. Si este documento y una spec difieren, manda la spec.
 
 ## Convenciones
 
-- **Autenticación:** todos los endpoints exigen el token de acceso JWT en `Authorization: Bearer <token>` (documento técnico, «Contraseñas y sesión»). El control de permisos se hace en la API, nunca solo en el frontend.
+- **Autenticación:** todos los endpoints de negocio exigen el token de acceso JWT en `Authorization: Bearer <token>`, que devuelve `POST /api/v1/auth/login`. El control de permisos se hace en la API, nunca solo en el frontend.
 - **Rutas:** el prefijo es `/api/v1`, los recursos van en plural y los identificadores de la base viajan en la ruta o en el cuerpo con el mismo nombre que la columna (`grupo_id`, `familia_id`, …).
 - **Tipos en JSON:**
   - Las fechas son ISO 8601: `date` como `"2027-01-05"` y `timestamptz` con zona horaria.
-  - Los montos y porcentajes son `Decimal` en Pydantic, y viajan como **string** (`"85000.00"`) para no perder precisión. Es lo que hace Pydantic v2 en modo JSON.
-- **Errores:**
-  - `401`: no hay token, el token venció o el usuario está desactivado.
+  - Los montos y porcentajes son `Decimal` en Pydantic y viajan como **string** con dos decimales (`"85000.00"`), para que un centavo no pase nunca por un número de punto flotante.
+  - Ningún cuerpo de entrada acepta el precio de un cargo: el cliente dice **qué** se cobra y la API calcula **cuánto**.
+- **Errores** (spec [`errores-de-la-api`](openspec/specs/errores-de-la-api/spec.md)):
+  - `401`: no hay token, no es válido, venció, o el usuario está desactivado o bloqueado.
   - `403`: el rol no puede usar el endpoint, o el Profesor actúa sobre un grupo que no tiene asignado.
-  - `404`: no existe un recurso referenciado (`grupo_id`, `familia_id`, …).
-  - `409`: el pedido es válido, pero choca con el estado actual. Por ejemplo, una temporada `cerrada` (solo consulta) o una configuración que falta.
-  - `422`: los datos no cumplen las reglas. Hay dos formatos:
-    - Si la regla se puede validar con el cuerpo solo (un campo que falta, una combinación inválida), FastAPI devuelve su formato estándar: `{"detail": [{"loc", "msg", "type"}]}`.
-    - Si la regla necesita consultar la base (por ejemplo, una inscripción que no es de ese grupo), devuelve `{"detail": "mensaje"}`.
+  - `404`: el recurso **de la ruta** no existe (por ejemplo, el `grupo_id` de la asistencia).
+  - `409`: el pedido es válido, pero choca con el estado actual: un grupo inactivo o de una temporada cerrada, una configuración del tarifario que falta, un cargo repetido.
+  - `422`: los datos no cumplen las reglas. **Siempre** con la misma forma, `{"detail": [{"loc", "msg", "type"}]}`, y el `msg` en castellano, tanto si lo detecta Pydantic como si sale de una regla que consulta la base (`type` `regla_de_negocio`). Así cada pantalla pega cada mensaje junto a su campo.
+  - `401`, `403`, `404` y `409` llevan `{"detail": "mensaje"}`.
 
 ## Resumen
 
 | Historia | Método y ruta | Quién puede usarlo | Éxito |
 |---|---|---|---|
-| HU-AF-01 | `POST /api/v1/alumnos` | Admin y Coordinador en cualquier grupo; Profesor solo en sus grupos | `201` alumno creado e inscripto |
-| HU-GA-04 | `PUT /api/v1/grupos/{grupo_id}/asistencias/{fecha}` | Admin y Coordinador en cualquier grupo; Profesor solo en sus grupos | `200` asistencia registrada |
-| HU-CC-01 | `POST /api/v1/cargos` | Solo Admin | `201` cargo registrado, con el saldo de la familia (`200` si se usa `simular=true`) |
+| HU-AF-01 | `POST /api/v1/alumnos` | Admin y Coordinador en cualquier grupo; Profesor solo en sus grupos | `201` alumno creado e inscripto, con su familia |
+| HU-GA-04 | `PUT /api/v1/grupos/{grupo_id}/asistencias/{fecha}` | Admin y Coordinador en cualquier grupo; Profesor solo en sus grupos | `200` con la asistencia del grupo en esa fecha |
+| HU-CC-01 | `POST /api/v1/cargos` | Solo Admin | `201` cargo registrado con su desglose y el saldo de la familia |
 
-### Concesiones por el límite de 3 endpoints
+**El resto del contrato.** La API expone 15 rutas. Las que acompañan a estas tres, y que no se detallan acá por el límite de la consigna, son:
 
-La consigna de la entrega pide documentar como máximo 3 endpoints. Eso obliga a dos concesiones, que se dejan explícitas para que no se lean como decisiones de diseño:
+| Ruta | Para qué |
+|---|---|
+| `POST /api/v1/auth/login`, `GET /api/v1/auth/yo` | Ingresar, y saber quién es el usuario del token |
+| `GET /api/v1/grupos`, `GET /api/v1/familias`, `GET /api/v1/personas` | Llenar los selectores del alta: grupos sugeridos por fecha de nacimiento, familia por apellido, persona por DNI |
+| `GET /api/v1/grupos/{grupo_id}/asistencias/{fecha}` | Abrir la lista de asistencia antes de guardarla |
+| `POST /api/v1/cargos/simulacion`, `GET /api/v1/cargos/opciones`, `GET /api/v1/familias/{familia_id}/inscripciones` | Mostrar el desglose antes de confirmar y llenar los selectores del cargo |
+| `POST /api/v1/cargos/{cargo_id}/pagos`, `GET /api/v1/familias/{familia_id}/cuenta-corriente` | Pagos parciales y cuenta corriente de la familia (HU-CC-02, HU-CC-03) |
+| `GET /salud` | Comprobar que la API responde |
 
-- **`simular=true` en `POST /api/v1/cargos`.** Sin el límite, la previsualización sería un endpoint propio: `GET /api/v1/cargos/simulacion`, con los mismos campos como parámetros de consulta. En los dos casos el cálculo pasa por la API y no por el frontend, porque **el precio no puede venir del cliente**: la tarifa base, el descuento y la cantidad de hijos se resuelven en el servidor, y el cliente solo dice qué se cobra.
-- **Escenario 4 de HU-GA-04 (grupo sin alumnos inscriptos).** Ese escenario es "abrir la lista de asistencia de un grupo sin alumnos", y se verifica contra un `GET` de la lista que no está entre los 3 endpoints documentados. El `422` por lista vacía del `PUT` es una validación correcta del cuerpo, pero no es lo mismo que ese escenario, así que no se presenta como su cobertura.
+### Qué cambió respecto de la Entrega 1
 
-### Errores por endpoint y escenario
+En la Entrega 1 este documento era el diseño previo al código. Al construirlo cambiaron tres cosas, y cada una quedó justificada en el design del change que la tomó:
 
-En cada fila, el escenario indica de qué criterio de aceptación de `5-historias-de-usuario.md` sale el error. "Regla" indica que sale de una regla del modelo de datos.
+- **La simulación es un endpoint propio, `POST /api/v1/cargos/simulacion`**, y no `POST /api/v1/cargos?simular=true`. Aquel parámetro era una concesión al límite de 3 endpoints de la consigna, no una decisión de diseño. Con un endpoint aparte, cada uno tiene su propio esquema de respuesta y su propio código (`200` y `201`), en lugar de uno solo con dos formas de respuesta. Es `POST` y no `GET` porque lleva el mismo cuerpo que el registro (design del change `cobro`).
+- **Una referencia del cuerpo que no existe es `422` en su campo, no `404`.** Un `grupo_id`, `familia_id`, `alumno_id` o `periodo_cobro_id` inexistente vuelve como error de ese campo, igual que el tipo de cargo de una temporada cerrada. Es lo que permite que la pantalla muestre el mensaje al lado del campo que hay que corregir (spec `errores-de-la-api`). El `404` queda para el recurso de la ruta.
+- **El escenario 4 de HU-GA-04 (grupo sin alumnos) ya está cubierto** por `GET /api/v1/grupos/{grupo_id}/asistencias/{fecha}`, que devuelve `alumnos` vacío. En la Entrega 1 quedaba sin cubrir porque ese `GET` no entraba entre los 3 endpoints documentados.
 
-**`POST /api/v1/alumnos` (HU-AF-01)**
+Además, el registro rechaza con `409` un **cargo repetido** (el mismo Abono para la misma inscripción y período, o el mismo monto fijo para el alumno en la temporada), una regla que la Entrega 1 no tenía. Es **[SUPUESTO]**: `aclaraciones-cliente.md`, «Preguntas abiertas», «Cargos repetidos».
 
-| Código | Cuándo | Origen |
+### Errores por endpoint
+
+Cada fila remite al requirement de la spec que la define.
+
+**`POST /api/v1/alumnos` (HU-AF-01)** — spec [`alumnos`](openspec/specs/alumnos/spec.md)
+
+| Código | Cuándo | Requirement |
 |---|---|---|
-| 403 | Un Profesor inscribe en un grupo que no tiene asignado | Escenario 5 |
-| 404 | No existe el `grupo_id`, el `familia_id` o un `persona_id` | — |
-| 409 | El grupo es de una temporada `cerrada` | Acl. 10 |
-| 409 | El grupo está inactivo | Modelo, `grupo.activo` |
-| 409 | Ya existe una persona con ese `dni` | Modelo, `persona.dni` UNIQUE |
-| 422 | Falta nombre, apellido, fecha de nacimiento o `grupo_id` | Escenario 7 |
-| 422 | Familia nueva sin `categoria` o sin ningún tutor | Escenario 7; Acl. 3 |
-| 422 | Se envía `categoria` junto con una familia existente | Escenario 6; solo un Admin la modifica |
+| 403 | Un Profesor inscribe en un grupo que no tiene asignado, exista o no | «Quién puede dar de alta un alumno» |
+| 422 | Falta nombre, apellido, fecha de nacimiento o `grupo_id`, o la fecha es posterior a hoy | «Datos del alumno en el alta» |
+| 422 | El grupo no existe, está inactivo o no es de la temporada vigente | «El grupo del alta» |
+| 422 | Familia nueva sin `categoria` o sin ningún tutor | «Alta de un alumno con familia nueva» |
+| 422 | Se envía `categoria` con una familia existente, o la familia no existe | «Alta de un alumno en una familia existente» |
+| 422 | Una persona repetida, incompleta, inexistente o con un DNI ya cargado | «Personas en el alta» |
 
-**`PUT /api/v1/grupos/{grupo_id}/asistencias/{fecha}` (HU-GA-04)**
+**`PUT /api/v1/grupos/{grupo_id}/asistencias/{fecha}` (HU-GA-04)** — spec [`asistencia`](openspec/specs/asistencia/spec.md)
 
-| Código | Cuándo | Origen |
+| Código | Cuándo | Requirement |
 |---|---|---|
-| 403 | Un Profesor toma asistencia de un grupo que no tiene asignado | Escenario 6 |
-| 404 | No existe el `grupo_id` | — |
-| 409 | El grupo es de una temporada `cerrada` | Acl. 10 |
-| 422 | La `fecha` está fuera de la temporada | Regla de `asistencia` |
-| 422 | Una `inscripcion_id` no es de ese grupo, o está repetida en el cuerpo | Escenarios 1 y 2 |
-| 422 | La lista llega vacía | Validación del cuerpo. No cubre el escenario 4: ver «Concesiones por el límite de 3 endpoints». |
+| 403 | Un Profesor toma asistencia de un grupo que no tiene asignado | «Quién puede abrir y guardar la asistencia» |
+| 404 | No existe el `grupo_id` | «Grupos donde no se guarda asistencia» |
+| 409 | El grupo es de una temporada cerrada o está inactivo | «Grupos donde no se guarda asistencia» |
+| 422 | La `fecha` está fuera de la temporada del grupo | «La fecha está dentro de la temporada del grupo» |
+| 422 | La lista llega vacía, un elemento no trae `presente`, o una `inscripcion_id` no es de ese grupo o está repetida | «El cuerpo del guardado» |
 
-**`POST /api/v1/cargos` (HU-CC-01)**
+**`POST /api/v1/cargos` (HU-CC-01)** — spec [`cargos`](openspec/specs/cargos/spec.md). La simulación rechaza con los mismos códigos y mensajes.
 
-| Código | Cuándo | Origen |
+| Código | Cuándo | Requirement |
 |---|---|---|
-| 403 | Quien lo usa es Coordinador o Profesor | Escenario 11 |
-| 404 | No existe el alumno, el tipo de cargo, la inscripción o el período | — |
-| 409 | El tipo de cargo es de una temporada `cerrada` | Escenario 10 |
-| 409 | Falta la tarifa base para ese turno y modalidad | Escenario 9 |
-| 409 | Falta el % de descuento que corresponde | Escenario 9, por extensión |
-| 422 | Los campos no cumplen la forma que corresponde a la Preinscripción o al Abono | Reglas de `cargo` |
-| 422 | El período es de otra modalidad | Regla de `cargo` |
-| 422 | La inscripción no es del alumno | Regla de `cargo` |
+| 403 | Quien lo usa es Coordinador o Profesor | «Solo el Admin registra cargos» |
+| 409 | Falta la tarifa base del turno y la modalidad, o el % que corresponde | «Falta configuración del tarifario» |
+| 409 | Ya existe el mismo cargo | «Un cargo repetido se rechaza» |
+| 422 | El alumno o el tipo de cargo no existen; los campos no tienen la forma del monto fijo o del Abono; el período no existe o es de otra modalidad; la inscripción no es del alumno | «Qué pide cada tipo de cargo» |
+| 422 | El tipo de cargo es de una temporada cerrada | «La temporada cerrada queda para consulta» |
+| 422 | El alumno no tiene inscripción en la temporada, o la fecha del Día está fuera de ella | «El alumno está inscripto en la temporada» y «La fecha del Día está dentro de la temporada» |
+
+## Ejemplos
+
+Los datos son los de los Scenarios de las specs.
+
+**Alta de un alumno con familia nueva** (`POST /api/v1/alumnos`, como Coordinador):
+
+```json
+{
+  "nombre": "Juan",
+  "apellido": "Pérez",
+  "fecha_nacimiento": "2018-03-10",
+  "grupo_id": 1,
+  "categoria": "empleado",
+  "personas": [
+    { "nombre": "María", "apellido": "Pérez", "telefono": "3415550101", "es_tutor": true }
+  ]
+}
+```
+
+Respuesta `201`:
+
+```json
+{
+  "id": 1,
+  "nombre": "Juan",
+  "apellido": "Pérez",
+  "fecha_nacimiento": "2018-03-10",
+  "familia": { "id": 1, "etiqueta": "Pérez – Juan", "categoria": "empleado" },
+  "inscripcion": { "grupo_id": 1, "grupo_nombre": "Delfines", "turno": "manana", "temporada_id": 1 }
+}
+```
+
+**Guardar la asistencia** (`PUT /api/v1/grupos/1/asistencias/2027-01-05`, como Profesor del grupo):
+
+```json
+{ "asistencias": [ { "inscripcion_id": 1, "presente": true }, { "inscripcion_id": 2, "presente": false } ] }
+```
+
+Respuesta `200`, con la misma forma que abrir esa asistencia (los alumnos, por apellido y nombre):
+
+```json
+{
+  "grupo_id": 1,
+  "grupo": "Delfines",
+  "turno": "manana",
+  "fecha": "2027-01-05",
+  "alumnos": [
+    { "inscripcion_id": 2, "nombre": "Martín", "apellido": "Gómez", "presente": false },
+    { "inscripcion_id": 1, "nombre": "Juan", "apellido": "Pérez", "presente": true }
+  ]
+}
+```
+
+**Registrar un Abono del Mes** (`POST /api/v1/cargos`, como Admin). Familia «Pérez – Ana», categoría empleado, con dos hijos en el turno mañana: tramo 2 del Mes, 15 %. El cuerpo no lleva ningún monto:
+
+```json
+{ "alumno_id": 1, "tipo_cargo_id": 2, "inscripcion_id": 1, "modalidad": "mes", "periodo_cobro_id": 1 }
+```
+
+Respuesta `201`, con el cálculo que queda guardado en el cargo y el saldo de la familia:
+
+```json
+{
+  "id": 1,
+  "temporada_id": 1,
+  "familia_id": 1,
+  "alumno_id": 1,
+  "tipo_cargo_id": 2,
+  "inscripcion_id": 1,
+  "modalidad": "mes",
+  "periodo_cobro_id": 1,
+  "fecha_dia": null,
+  "categoria_aplicada": "empleado",
+  "cantidad_hijos_aplicada": 2,
+  "monto_base": "100000.00",
+  "porcentaje_aplicado": "15.00",
+  "monto_total": "85000.00",
+  "creado_por": 1,
+  "creado_en": "2027-01-05T10:15:00-03:00",
+  "saldo_pendiente": "85000.00"
+}
+```
+
+Un rechazo `422`, por ejemplo un Abono sin inscripción ni modalidad:
+
+```json
+{
+  "detail": [
+    { "loc": ["body", "inscripcion_id"], "msg": "Este dato es obligatorio.", "type": "regla_de_negocio" },
+    { "loc": ["body", "modalidad"], "msg": "Este dato es obligatorio.", "type": "regla_de_negocio" }
+  ]
+}
+```
 
 ## Especificación OpenAPI
+
+Extracto de [`docs/api/openapi.json`](docs/api/openapi.json) con los tres endpoints y los esquemas que usan, convertido a YAML sin cambios.
 
 ```yaml
 openapi: 3.1.0
 info:
-  title: API Escuelita de Verano
+  title: Escuelita de Verano
   version: 0.1.0
-  description: >
-    Recorte de 3 endpoints, uno por cada historia documentada en
-    5-historias-de-usuario.md (HU-AF-01, HU-GA-04 y HU-CC-01).
-servers:
-  - url: /
-    description: Mismo dominio que el servicio web FastAPI (Render).
-tags:
-  - name: Alumnos
-    description: Alta de alumnos, familias e inscripciones.
-  - name: Asistencia
-    description: Presencia por grupo, día y turno.
-  - name: Cargos
-    description: Cuenta corriente familiar, cargos con cálculo de tarifa y descuento.
-security:
-  - bearerAuth: []
-
+  description: Extracto de docs/api/openapi.json con los 3 endpoints de las historias documentadas. Generado
+    desde el código, no escrito a mano.
 paths:
   /api/v1/alumnos:
     post:
-      tags: [Alumnos]
-      operationId: crear_alumno
-      summary: Alta de alumno con familia, grupo y turno (HU-AF-01)
-      description: |
-        Crea el alumno y su inscripción en el grupo, en una sola transacción.
-        El turno y la temporada salen del grupo.
-
-        - Familia nueva: `familia_id` es null. Hay que mandar `categoria` y al
-          menos una persona con `es_tutor = true` (Acl. 3). La familia se crea
-          con el alumno.
-        - Familia existente: se manda `familia_id` y no se manda `categoria`,
-          porque solo un Admin la modifica (Acl. 2, 9). El alumno queda
-          cubierto por los tutores que la familia ya tiene. `personas` es
-          opcional y sirve para sumar vínculos a la familia.
-        - Cada elemento de `personas` puede ser una persona nueva (`nombre`,
-          `apellido`, `telefono`) o una ya cargada en otra familia
-          (`persona_id`, Acl. 3).
-        - Si `es_tutor` es true, `autorizado_retiro` se guarda como true
-          (CHECK de `familia_persona`).
-        - El rango de nacimiento del grupo solo orienta: se acepta un grupo
-          fuera de rango (escenario 4).
-        - La documentación no forma parte del alta.
-
-        Permisos: Admin y Coordinador en cualquier grupo; Profesor solo en
-        grupos que tiene asignados en `grupo_profesor`.
+      tags:
+      - alumnos
+      summary: Registrar
+      operationId: registrar_api_v1_alumnos_post
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AlumnoCreate'
-            examples:
-              primer_hijo:
-                summary: Primer hijo, se crea la familia (escenario 1)
-                value:
-                  nombre: Juan
-                  apellido: Pérez
-                  fecha_nacimiento: '2018-03-10'
-                  familia_id: null
-                  categoria: empleado
-                  personas:
-                    - nombre: María
-                      apellido: Pérez
-                      telefono: '351 555-1234'
-                      dni: null
-                      es_tutor: true
-                      autorizado_retiro: true
-                  grupo_id: 3
-              segundo_hijo:
-                summary: Segundo hijo, familia existente (escenario 2)
-                value:
-                  nombre: Ana
-                  apellido: Pérez
-                  fecha_nacimiento: '2016-07-05'
-                  familia_id: 12
-                  grupo_id: 4
+              $ref: '#/components/schemas/AltaAlumnoEntrada'
+        required: true
       responses:
         '201':
-          description: Alumno creado e inscripto.
+          description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AlumnoCreado'
-              examples:
-                primer_hijo:
-                  summary: Se creó la familia «Pérez – Juan»
-                  value:
-                    id: 41
-                    familia_id: 12
-                    nombre: Juan
-                    apellido: Pérez
-                    fecha_nacimiento: '2018-03-10'
-                    familia:
-                      id: 12
-                      categoria: empleado
-                      etiqueta: 'Pérez – Juan'
-                    inscripcion:
-                      id: 88
-                      grupo_id: 3
-                      temporada_id: 1
-                      turno: manana
-                    personas:
-                      - persona_id: 20
-                        es_tutor: true
-                        autorizado_retiro: true
-                segundo_hijo:
-                  summary: La etiqueta pasa a «Pérez – Ana»
-                  value:
-                    id: 42
-                    familia_id: 12
-                    nombre: Ana
-                    apellido: Pérez
-                    fecha_nacimiento: '2016-07-05'
-                    familia:
-                      id: 12
-                      categoria: empleado
-                      etiqueta: 'Pérez – Ana'
-                    inscripcion:
-                      id: 91
-                      grupo_id: 4
-                      temporada_id: 1
-                      turno: manana
-                    personas:
-                      - persona_id: 20
-                        es_tutor: true
-                        autorizado_retiro: true
+                $ref: '#/components/schemas/AlumnoRegistrado'
         '401':
-          $ref: '#/components/responses/NoAutenticado'
+          description: Sesión inválida o vencida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MensajeError'
+              example:
+                detail: Sesión inválida o vencida.
         '403':
-          description: El Profesor intenta inscribir en un grupo que no tiene asignado (escenario 5). No se crea el alumno ni la familia.
+          description: Solo podés inscribir alumnos en tus grupos.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/MensajeError'
               example:
-                detail: No tenés asignado el grupo 4.
-        '404':
-          description: No existe el grupo, la familia o alguna de las personas indicadas.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                detail: No existe la familia 99.
-        '409':
-          description: El pedido choca con el estado actual.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              examples:
-                temporada_cerrada:
-                  summary: El grupo es de una temporada cerrada (Acl. 10)
-                  value:
-                    detail: La temporada 2025-26 está cerrada y queda solo para consulta.
-                grupo_inactivo:
-                  summary: El grupo fue dado de baja
-                  value:
-                    detail: El grupo 3 está inactivo y no admite inscripciones.
-                dni_duplicado:
-                  summary: Ya existe una persona con ese DNI
-                  value:
-                    detail: Ya existe una persona con DNI 28123456 (persona_id 20). Usá persona_id para vincularla.
+                detail: Solo podés inscribir alumnos en tus grupos.
         '422':
-          description: Faltan datos mínimos o no cumplen las reglas del alta (escenario 7).
+          description: Datos invalidos o una regla del alta incumplida (grupo, familia, personas). Cada
+            error trae su campo en `loc`.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-              examples:
-                falta_fecha:
-                  summary: Falta la fecha de nacimiento
-                  value:
-                    detail:
-                      - type: missing
-                        loc: [body, fecha_nacimiento]
-                        msg: Field required
-                familia_nueva_sin_tutor:
-                  summary: Familia nueva sin ningún tutor (Acl. 3)
-                  value:
-                    detail:
-                      - type: value_error
-                        loc: [body]
-                        msg: 'Value error, Una familia nueva necesita al menos una persona con es_tutor = true.'
-                familia_nueva_sin_categoria:
-                  summary: Familia nueva sin categoría
-                  value:
-                    detail:
-                      - type: value_error
-                        loc: [body]
-                        msg: 'Value error, Una familia nueva necesita la categoria.'
-                categoria_con_familia_existente:
-                  summary: Se envía categoría para una familia existente (escenario 6)
-                  value:
-                    detail:
-                      - type: value_error
-                        loc: [body]
-                        msg: 'Value error, La categoria solo se asigna al crear la familia. Para cambiarla, la tiene que modificar un Admin.'
-
+                $ref: '#/components/schemas/ErroresDeCampo'
+      security:
+      - HTTPBearer: []
   /api/v1/grupos/{grupo_id}/asistencias/{fecha}:
     put:
-      tags: [Asistencia]
-      operationId: registrar_asistencia
-      summary: Tomar asistencia de un grupo para un día y turno (HU-GA-04)
-      description: |
-        Registra o corrige la asistencia de un grupo en una fecha. El turno es
-        el del grupo, porque cada grupo tiene un solo turno.
-
-        - Es idempotente: crea o actualiza un registro por inscripción y fecha
-          (`UNIQUE (inscripcion_id, fecha)`). Corregir no duplica registros
-          (escenario 2).
-        - Las inscripciones que no vienen en el cuerpo no se modifican.
-        - Un alumno inscripto en los dos turnos tiene una inscripción en cada
-          grupo, así que su asistencia de cada turno se registra por separado
-          (escenario 3).
-        - No genera ni modifica cargos, y no envía avisos (escenario 5,
-          Acl. 5).
-
-        Permisos: Admin y Coordinador en cualquier grupo, aunque no tengan
-        grupos asignados (escenario 7); Profesor solo en sus grupos.
+      tags:
+      - asistencias
+      summary: Guardar
+      operationId: guardar_api_v1_grupos__grupo_id__asistencias__fecha__put
+      security:
+      - HTTPBearer: []
       parameters:
-        - name: grupo_id
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 3
-        - name: fecha
-          in: path
-          required: true
-          description: Día de la asistencia. Tiene que estar dentro de la temporada del grupo.
-          schema:
-            type: string
-            format: date
-          example: '2027-01-05'
+      - name: grupo_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Grupo Id
+      - name: fecha
+        in: path
+        required: true
+        schema:
+          type: string
+          format: date
+          title: Fecha
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AsistenciaLoteIn'
-            examples:
-              toma:
-                summary: Juan y Sofía presentes, Martín ausente (escenario 1)
-                value:
-                  asistencias:
-                    - inscripcion_id: 88
-                      presente: true
-                    - inscripcion_id: 89
-                      presente: true
-                    - inscripcion_id: 90
-                      presente: false
-              correccion:
-                summary: Martín pasa a presente (escenario 2)
-                value:
-                  asistencias:
-                    - inscripcion_id: 90
-                      presente: true
+              $ref: '#/components/schemas/AsistenciaEntrada'
       responses:
         '200':
-          description: Asistencia registrada. Devuelve los registros de esa fecha para las inscripciones enviadas.
+          description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AsistenciaLoteOut'
-              example:
-                grupo_id: 3
-                fecha: '2027-01-05'
-                turno: manana
-                asistencias:
-                  - id: 501
-                    inscripcion_id: 88
-                    fecha: '2027-01-05'
-                    presente: true
-                    registrado_por: 7
-                    registrado_en: '2027-01-05T09:12:40-03:00'
-                  - id: 502
-                    inscripcion_id: 89
-                    fecha: '2027-01-05'
-                    presente: true
-                    registrado_por: 7
-                    registrado_en: '2027-01-05T09:12:40-03:00'
-                  - id: 503
-                    inscripcion_id: 90
-                    fecha: '2027-01-05'
-                    presente: false
-                    registrado_por: 7
-                    registrado_en: '2027-01-05T09:12:40-03:00'
+                $ref: '#/components/schemas/AsistenciaDelGrupo'
         '401':
-          $ref: '#/components/responses/NoAutenticado'
+          description: Sesión inválida o vencida.
+          content:
+            application/json:
+              example:
+                detail: Sesión inválida o vencida.
+              schema:
+                $ref: '#/components/schemas/MensajeError'
         '403':
-          description: El Profesor intenta tomar asistencia de un grupo que no tiene asignado (escenario 6). No se registra nada.
+          description: Solo podés tomar asistencia de tus grupos.
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
               example:
-                detail: No tenés asignado el grupo 5.
+                detail: Solo podés tomar asistencia de tus grupos.
+              schema:
+                $ref: '#/components/schemas/MensajeError'
         '404':
-          description: No existe el grupo.
+          description: El grupo no existe.
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
               example:
-                detail: No existe el grupo 99.
+                detail: El grupo no existe.
+              schema:
+                $ref: '#/components/schemas/MensajeError'
         '409':
-          description: El grupo es de una temporada cerrada, que queda solo para consulta (Acl. 10).
+          description: El grupo no está activo.
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
               example:
-                detail: La temporada 2025-26 está cerrada y queda solo para consulta.
+                detail: El grupo no está activo.
+              schema:
+                $ref: '#/components/schemas/MensajeError'
         '422':
-          description: Los datos no cumplen las reglas de la asistencia.
+          description: La fecha está fuera de la temporada del grupo, del 04/01/2027 al 26/02/2027.
           content:
             application/json:
+              example:
+                detail: La fecha está fuera de la temporada del grupo, del 04/01/2027 al 26/02/2027.
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/HTTPValidationError'
-                  - $ref: '#/components/schemas/Error'
-              examples:
-                lista_vacia:
-                  summary: La lista de asistencias llega vacía
-                  value:
-                    detail:
-                      - type: too_short
-                        loc: [body, asistencias]
-                        msg: List should have at least 1 item after validation, not 0
-                inscripcion_repetida:
-                  summary: La misma inscripción viene dos veces en el cuerpo
-                  value:
-                    detail:
-                      - type: value_error
-                        loc: [body, asistencias]
-                        msg: 'Value error, La inscripcion_id 88 está repetida.'
-                inscripcion_ajena:
-                  summary: Una inscripción no es de ese grupo
-                  value:
-                    detail: La inscripcion_id 120 no pertenece al grupo 3.
-                fecha_fuera_de_temporada:
-                  summary: La fecha está fuera de la temporada del grupo
-                  value:
-                    detail: La fecha 2027-04-01 está fuera de la temporada 2026-27.
-
+                $ref: '#/components/schemas/MensajeError'
   /api/v1/cargos:
     post:
-      tags: [Cargos]
-      operationId: registrar_cargo
-      summary: Registrar un cargo con cálculo de tarifa y descuento (HU-CC-01)
-      description: |
-        Registra un cargo a la familia del alumno. El cliente indica qué se
-        cobra, y la API calcula y guarda el resultado. El cálculo queda
-        congelado en el cargo y no se recalcula nunca (Acl. 5). Datos que
-        calcula la API:
-
-        - `familia_id`: sale del alumno.
-        - `temporada_id`: sale del tipo de cargo.
-        - `categoria_aplicada`: la categoría actual de la familia.
-        - `cantidad_hijos_aplicada`: solo en el Mes. Cuenta las inscripciones
-          de la familia en ese turno y temporada al momento del cargo. Se
-          cuenta por turno, "contando solo a los hermanos anotados en ese
-          turno" (PRD).
-        - `monto_base`, `porcentaje_aplicado` y `monto_total`.
-
-        Cómo se calcula según el tipo de cargo:
-
-        - Preinscripción (`tipo_cargo.calculo = monto_fijo`):
-          - `monto_base` es `tipo_cargo.monto_fijo` y `porcentaje_aplicado` es 0.
-          - No lleva inscripción, modalidad ni período.
-        - Abono (`tipo_cargo.calculo = tarifario`):
-          - Exige `inscripcion_id`, que da el turno, y `modalidad`.
-          - Además exige `periodo_cobro_id` (Mes, Quincena, Semana) o
-            `fecha_dia` (Día).
-          - `monto_base` sale de `tarifa_base` (turno, modalidad).
-          - Se aplica un único porcentaje: el de `descuento_mes` (categoría y
-            `least(hijos, 4)`) si la modalidad es Mes, o el de
-            `descuento_modalidad` en los demás casos. Nunca se acumulan.
-
-        Con `simular=true` devuelve el cálculo sin guardar nada. Es lo que usa
-        la pantalla para mostrar base, porcentaje y total antes de confirmar
-        (escenario 1). Es una concesión al límite de 3 endpoints de la
-        entrega: sin ese límite sería `GET /api/v1/cargos/simulacion`. La
-        previsualización tiene que pasar por la API porque el precio no puede
-        venir del cliente.
-
-        La respuesta `201` incluye `saldo_pendiente`: el saldo de la cuenta
-        corriente de la familia en la temporada, ya incluyendo este cargo. Con
-        eso el escenario 1 ("el saldo pendiente de la familia aumenta") se
-        verifica en la misma respuesta.
-
-        Que la ficha esté incompleta no impide el cargo (escenario 8).
-
-        Permisos: solo Admin (Acl. 9).
-      parameters:
-        - name: simular
-          in: query
-          required: false
-          description: >
-            Si es true, calcula y devuelve el cargo sin guardarlo (200).
-            Es una concesión al límite de 3 endpoints de la entrega: sin ese
-            límite sería GET /api/v1/cargos/simulacion. El cálculo no se puede
-            hacer en el frontend porque el precio no puede venir del cliente.
-          schema:
-            type: boolean
-            default: false
+      tags:
+      - cargos
+      summary: Registrar
+      operationId: registrar_api_v1_cargos_post
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CargoCreate'
-            examples:
-              abono_mes:
-                summary: Abono · Mes, empleado, 2 hijos en la mañana (escenario 1)
-                value:
-                  alumno_id: 41
-                  tipo_cargo_id: 2
-                  inscripcion_id: 88
-                  modalidad: mes
-                  periodo_cobro_id: 5
-              abono_semana:
-                summary: Abono · Semana, la cantidad de hijos no cuenta (escenario 2)
-                value:
-                  alumno_id: 41
-                  tipo_cargo_id: 2
-                  inscripcion_id: 88
-                  modalidad: semana
-                  periodo_cobro_id: 9
-              preinscripcion:
-                summary: Preinscripción, monto fijo sin descuento (escenario 7)
-                value:
-                  alumno_id: 41
-                  tipo_cargo_id: 1
+              $ref: '#/components/schemas/CargoEntrada'
+        required: true
       responses:
         '201':
-          description: >
-            Cargo registrado en la cuenta corriente de la familia, con el saldo
-            pendiente resultante. Los tres ejemplos son cargos sucesivos de la
-            misma familia, todavía sin pagos.
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CargoRegistrado'
-              examples:
-                abono_mes:
-                  summary: 15 % sobre $ 100.000 = $ 85.000
-                  value:
-                    id: 301
-                    temporada_id: 1
-                    familia_id: 12
-                    alumno_id: 41
-                    tipo_cargo_id: 2
-                    inscripcion_id: 88
-                    modalidad: mes
-                    periodo_cobro_id: 5
-                    fecha_dia: null
-                    categoria_aplicada: empleado
-                    cantidad_hijos_aplicada: 2
-                    monto_base: '100000.00'
-                    porcentaje_aplicado: '15.00'
-                    monto_total: '85000.00'
-                    creado_por: 2
-                    creado_en: '2026-12-20T10:31:05-03:00'
-                    saldo_pendiente: '85000.00'
-                abono_semana:
-                  summary: 10 % sobre $ 30.000 = $ 27.000
-                  value:
-                    id: 302
-                    temporada_id: 1
-                    familia_id: 12
-                    alumno_id: 41
-                    tipo_cargo_id: 2
-                    inscripcion_id: 88
-                    modalidad: semana
-                    periodo_cobro_id: 9
-                    fecha_dia: null
-                    categoria_aplicada: empleado
-                    cantidad_hijos_aplicada: null
-                    monto_base: '30000.00'
-                    porcentaje_aplicado: '10.00'
-                    monto_total: '27000.00'
-                    creado_por: 2
-                    creado_en: '2026-12-20T10:33:47-03:00'
-                    saldo_pendiente: '112000.00'
-                preinscripcion:
-                  summary: Monto fijo de $ 20.000, sin descuento
-                  value:
-                    id: 303
-                    temporada_id: 1
-                    familia_id: 12
-                    alumno_id: 41
-                    tipo_cargo_id: 1
-                    inscripcion_id: null
-                    modalidad: null
-                    periodo_cobro_id: null
-                    fecha_dia: null
-                    categoria_aplicada: empleado
-                    cantidad_hijos_aplicada: null
-                    monto_base: '20000.00'
-                    porcentaje_aplicado: '0.00'
-                    monto_total: '20000.00'
-                    creado_por: 2
-                    creado_en: '2026-12-20T10:35:12-03:00'
-                    saldo_pendiente: '132000.00'
-        '200':
-          description: Solo con `simular=true`. Devuelve el cálculo sin guardarlo.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CargoCalculo'
-              example:
-                temporada_id: 1
-                familia_id: 12
-                alumno_id: 41
-                tipo_cargo_id: 2
-                inscripcion_id: 88
-                modalidad: mes
-                periodo_cobro_id: 5
-                fecha_dia: null
-                categoria_aplicada: empleado
-                cantidad_hijos_aplicada: 2
-                monto_base: '100000.00'
-                porcentaje_aplicado: '15.00'
-                monto_total: '85000.00'
         '401':
-          $ref: '#/components/responses/NoAutenticado'
+          description: Sesión inválida o vencida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MensajeError'
+              example:
+                detail: Sesión inválida o vencida.
         '403':
-          description: Quien lo usa no es Admin (escenario 11). No se registra nada.
+          description: No tenés permiso para esta operación.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/MensajeError'
               example:
-                detail: Solo un Admin puede registrar cargos.
-        '404':
-          description: No existe el alumno, el tipo de cargo, la inscripción o el período de cobro.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                detail: No existe el periodo_cobro 77.
+                detail: No tenés permiso para esta operación.
         '409':
-          description: El pedido choca con el estado de la temporada o con su configuración.
+          description: El alumno ya tiene un cargo «Abono» de «Mes 1» en el turno mañana.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-              examples:
-                temporada_cerrada:
-                  summary: Cargo en una temporada cerrada (escenario 10)
-                  value:
-                    detail: La temporada 2025-26 está cerrada y queda solo para consulta.
-                falta_tarifa_base:
-                  summary: Falta la tarifa base de ese turno y modalidad (escenario 9)
-                  value:
-                    detail: 'Falta la tarifa_base de la temporada 2026-27 para turno tarde y modalidad quincena.'
-                falta_descuento:
-                  summary: Falta el porcentaje que corresponde
-                  value:
-                    detail: 'Falta el descuento_mes de la temporada 2026-27 para categoría empleado y tramo 3.'
+                $ref: '#/components/schemas/MensajeError'
+              example:
+                detail: El alumno ya tiene un cargo «Abono» de «Mes 1» en el turno mañana.
         '422':
-          description: Los campos no cumplen la forma que corresponde al tipo de cargo y la modalidad.
+          description: Datos inválidos o una regla del cargo incumplida. Cada error trae su campo en `loc`.
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/HTTPValidationError'
-                  - $ref: '#/components/schemas/Error'
-              examples:
-                abono_sin_periodo:
-                  summary: Abono · Mes sin periodo_cobro_id
-                  value:
-                    detail:
-                      - type: value_error
-                        loc: [body]
-                        msg: 'Value error, Con modalidad mes, quincena o semana hace falta periodo_cobro_id.'
-                dia_sin_fecha:
-                  summary: Abono · Día sin fecha_dia
-                  value:
-                    detail:
-                      - type: value_error
-                        loc: [body]
-                        msg: 'Value error, Con modalidad dia hace falta fecha_dia.'
-                abono_sin_inscripcion:
-                  summary: El tipo de cargo es Abono y falta la inscripción
-                  value:
-                    detail: 'El tipo_cargo 2 (Abono) exige inscripcion_id y modalidad.'
-                preinscripcion_con_modalidad:
-                  summary: La Preinscripción no lleva inscripción, modalidad ni período
-                  value:
-                    detail: 'El tipo_cargo 1 (Preinscripción) es de monto fijo: no lleva inscripcion_id, modalidad, periodo_cobro_id ni fecha_dia.'
-                periodo_de_otra_modalidad:
-                  summary: El período no corresponde a la modalidad
-                  value:
-                    detail: 'El periodo_cobro 9 es de modalidad semana, no mes.'
-                inscripcion_de_otro_alumno:
-                  summary: La inscripción no es del alumno
-                  value:
-                    detail: 'La inscripcion_id 91 no pertenece al alumno 41.'
-
+                $ref: '#/components/schemas/ErroresDeCampo'
+      security:
+      - HTTPBearer: []
 components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-  responses:
-    NoAutenticado:
-      description: Falta el token de acceso, el token venció o el usuario está desactivado.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            detail: Not authenticated
-
   schemas:
-    Turno:
-      type: string
-      enum: [manana, tarde]
-    Modalidad:
-      type: string
-      enum: [mes, quincena, semana, dia]
-    CategoriaFamilia:
-      type: string
-      enum: [socio, empleado, no_socio]
-    Decimal:
-      type: string
-      pattern: '^\d+\.\d{2}$'
-      description: numeric serializado como string (Pydantic Decimal).
-
-    PersonaVinculo:
-      type: object
-      description: |
-        Vínculo de una persona con la familia (`familia_persona`). Tiene que
-        traer `persona_id` (persona ya cargada) o `nombre`, `apellido` y
-        `telefono` (persona nueva). Al menos uno de `es_tutor` o
-        `autorizado_retiro` tiene que ser true. `contacto_emergencia` llega
-        con HU-AF-08 y no se acepta en este endpoint.
-      properties:
-        persona_id:
-          type: [integer, 'null']
-        nombre:
-          type: [string, 'null']
-          maxLength: 80
-        apellido:
-          type: [string, 'null']
-          maxLength: 80
-        telefono:
-          type: [string, 'null']
-          maxLength: 30
-        dni:
-          type: [string, 'null']
-          maxLength: 15
-        es_tutor:
-          type: boolean
-          default: false
-        autorizado_retiro:
-          type: boolean
-          default: false
-
-    AlumnoCreate:
-      type: object
-      required: [nombre, apellido, fecha_nacimiento, grupo_id]
+    AltaAlumnoEntrada:
       properties:
         nombre:
           type: string
-          minLength: 1
           maxLength: 80
+          minLength: 1
+          title: Nombre
         apellido:
           type: string
-          minLength: 1
           maxLength: 80
+          minLength: 1
+          title: Apellido
         fecha_nacimiento:
           type: string
           format: date
+          title: Fecha Nacimiento
+        grupo_id:
+          type: integer
+          title: Grupo Id
         familia_id:
-          type: [integer, 'null']
-          description: Null para crear una familia nueva.
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Familia Id
         categoria:
-          description: Obligatoria si la familia es nueva. No se acepta si la familia ya existe.
-          oneOf:
-            - $ref: '#/components/schemas/CategoriaFamilia'
-            - type: 'null'
+          anyOf:
+          - $ref: '#/components/schemas/CategoriaFamilia'
+          - type: 'null'
         personas:
-          type: array
           items:
-            $ref: '#/components/schemas/PersonaVinculo'
+            oneOf:
+            - $ref: '#/components/schemas/PersonaReutilizada'
+            - $ref: '#/components/schemas/PersonaNueva'
+          type: array
+          title: Personas
           default: []
-          description: Con familia nueva, al menos una con es_tutor = true.
-        grupo_id:
-          type: integer
-          description: Grupo de la temporada vigente. Define el turno.
-
-    FamiliaResumen:
+      additionalProperties: false
       type: object
-      required: [id, categoria, etiqueta]
+      required:
+      - nombre
+      - apellido
+      - fecha_nacimiento
+      - grupo_id
+      title: AltaAlumnoEntrada
+      description: |-
+        El alta: datos del alumno, grupo, familia (existente o nueva) y
+        personas autorizadas a retirar.
+    AlumnoEnAsistencia:
       properties:
-        id:
+        inscripcion_id:
           type: integer
-        categoria:
-          $ref: '#/components/schemas/CategoriaFamilia'
-        etiqueta:
-          type: string
-          description: '"Apellido – Hijo mayor", calculada por la vista v_familia_etiqueta (Acl. 1).'
-
-    InscripcionResumen:
-      type: object
-      required: [id, grupo_id, temporada_id, turno]
-      properties:
-        id:
-          type: integer
-        grupo_id:
-          type: integer
-        temporada_id:
-          type: integer
-        turno:
-          $ref: '#/components/schemas/Turno'
-
-    FamiliaPersona:
-      type: object
-      description: >
-        Vínculo de una persona con la familia. contacto_emergencia no forma
-        parte de este contrato: se suma cuando llegue HU-AF-08.
-      required: [persona_id, es_tutor, autorizado_retiro]
-      properties:
-        persona_id:
-          type: integer
-        es_tutor:
-          type: boolean
-        autorizado_retiro:
-          type: boolean
-
-    AlumnoCreado:
-      type: object
-      required: [id, familia_id, nombre, apellido, fecha_nacimiento, familia, inscripcion, personas]
-      properties:
-        id:
-          type: integer
-        familia_id:
-          type: integer
+          title: Inscripcion Id
         nombre:
           type: string
+          title: Nombre
         apellido:
           type: string
+          title: Apellido
+        presente:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Presente
+      type: object
+      required:
+      - inscripcion_id
+      - nombre
+      - apellido
+      - presente
+      title: AlumnoEnAsistencia
+    AlumnoRegistrado:
+      properties:
+        id:
+          type: integer
+          title: Id
+        nombre:
+          type: string
+          title: Nombre
+        apellido:
+          type: string
+          title: Apellido
         fecha_nacimiento:
           type: string
           format: date
+          title: Fecha Nacimiento
         familia:
-          $ref: '#/components/schemas/FamiliaResumen'
+          $ref: '#/components/schemas/FamiliaDelAlumno'
         inscripcion:
-          $ref: '#/components/schemas/InscripcionResumen'
-        personas:
-          type: array
-          description: Personas vinculadas a la familia después del alta.
-          items:
-            $ref: '#/components/schemas/FamiliaPersona'
-
-    AsistenciaItemIn:
+          $ref: '#/components/schemas/InscripcionDelAlumno'
       type: object
-      required: [inscripcion_id, presente]
-      properties:
-        inscripcion_id:
-          type: integer
-        presente:
-          type: boolean
-
-    AsistenciaLoteIn:
-      type: object
-      required: [asistencias]
-      properties:
-        asistencias:
-          type: array
-          minItems: 1
-          description: Una entrada por inscripción del grupo, sin repetir.
-          items:
-            $ref: '#/components/schemas/AsistenciaItemIn'
-
-    Asistencia:
-      type: object
-      required: [id, inscripcion_id, fecha, presente, registrado_por, registrado_en]
-      properties:
-        id:
-          type: integer
-        inscripcion_id:
-          type: integer
-        fecha:
-          type: string
-          format: date
-        presente:
-          type: boolean
-        registrado_por:
-          type: integer
-        registrado_en:
-          type: string
-          format: date-time
-
-    AsistenciaLoteOut:
-      type: object
-      required: [grupo_id, fecha, turno, asistencias]
+      required:
+      - id
+      - nombre
+      - apellido
+      - fecha_nacimiento
+      - familia
+      - inscripcion
+      title: AlumnoRegistrado
+      description: El alumno recien dado de alta, con su familia y su inscripcion.
+    AsistenciaDelGrupo:
       properties:
         grupo_id:
           type: integer
+          title: Grupo Id
+        grupo:
+          type: string
+          title: Grupo
+        turno:
+          $ref: '#/components/schemas/Turno'
         fecha:
           type: string
           format: date
-        turno:
-          $ref: '#/components/schemas/Turno'
-        asistencias:
-          type: array
+          title: Fecha
+        alumnos:
           items:
-            $ref: '#/components/schemas/Asistencia'
-
-    CargoCreate:
+            $ref: '#/components/schemas/AlumnoEnAsistencia'
+          type: array
+          title: Alumnos
       type: object
-      required: [alumno_id, tipo_cargo_id]
-      description: |
-        Preinscripción: solo alumno_id y tipo_cargo_id.
-        Abono: además inscripcion_id y modalidad, y periodo_cobro_id
-        (mes, quincena, semana) o fecha_dia (dia).
+      required:
+      - grupo_id
+      - grupo
+      - turno
+      - fecha
+      - alumnos
+      title: AsistenciaDelGrupo
+    AsistenciaEntrada:
+      properties:
+        asistencias:
+          items:
+            $ref: '#/components/schemas/AsistenciaMarcada'
+          type: array
+          title: Asistencias
+      type: object
+      required:
+      - asistencias
+      title: AsistenciaEntrada
+      description: |-
+        Lo que se guarda: solo quien y si estuvo. Fecha y grupo vienen del path
+        y el autor de la sesion; nada de eso se acepta del cuerpo.
+
+        Sin tope de largo: el limite natural es el tamano del grupo, y los ids de
+        otro grupo ya se rechazan por elemento.
+    AsistenciaMarcada:
+      properties:
+        inscripcion_id:
+          type: integer
+          title: Inscripcion Id
+        presente:
+          type: boolean
+          title: Presente
+      type: object
+      required:
+      - inscripcion_id
+      - presente
+      title: AsistenciaMarcada
+    CargoEntrada:
       properties:
         alumno_id:
           type: integer
+          title: Alumno Id
         tipo_cargo_id:
           type: integer
+          title: Tipo Cargo Id
         inscripcion_id:
-          type: [integer, 'null']
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Inscripcion Id
         modalidad:
-          oneOf:
-            - $ref: '#/components/schemas/Modalidad'
-            - type: 'null'
+          anyOf:
+          - $ref: '#/components/schemas/Modalidad'
+          - type: 'null'
         periodo_cobro_id:
-          type: [integer, 'null']
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Periodo Cobro Id
         fecha_dia:
-          type: [string, 'null']
-          format: date
-
-    CargoCalculo:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Fecha Dia
+      additionalProperties: false
       type: object
-      description: Resultado del cálculo, tal como queda guardado en `cargo`.
-      required: [temporada_id, familia_id, alumno_id, tipo_cargo_id, categoria_aplicada, monto_base, porcentaje_aplicado, monto_total]
+      required:
+      - alumno_id
+      - tipo_cargo_id
+      title: CargoEntrada
+    CargoRegistrado:
       properties:
-        temporada_id:
-          type: integer
         familia_id:
           type: integer
-        alumno_id:
-          type: integer
-        tipo_cargo_id:
-          type: integer
-        inscripcion_id:
-          type: [integer, 'null']
-        modalidad:
-          oneOf:
-            - $ref: '#/components/schemas/Modalidad'
-            - type: 'null'
-        periodo_cobro_id:
-          type: [integer, 'null']
-        fecha_dia:
-          type: [string, 'null']
-          format: date
+          title: Familia Id
         categoria_aplicada:
           $ref: '#/components/schemas/CategoriaFamilia'
         cantidad_hijos_aplicada:
-          type: [integer, 'null']
-          minimum: 1
-          description: Solo en el Mes.
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Cantidad Hijos Aplicada
         monto_base:
-          $ref: '#/components/schemas/Decimal'
-        porcentaje_aplicado:
-          $ref: '#/components/schemas/Decimal'
-        monto_total:
-          $ref: '#/components/schemas/Decimal'
-
-    Cargo:
-      allOf:
-        - $ref: '#/components/schemas/CargoCalculo'
-        - type: object
-          required: [id, creado_por, creado_en]
-          properties:
-            id:
-              type: integer
-            creado_por:
-              type: integer
-            creado_en:
-              type: string
-              format: date-time
-
-    CargoRegistrado:
-      description: Respuesta 201 de POST /cargos. Es el cargo guardado más el saldo de la familia.
-      allOf:
-        - $ref: '#/components/schemas/Cargo'
-        - type: object
-          required: [saldo_pendiente]
-          properties:
-            saldo_pendiente:
-              $ref: '#/components/schemas/Decimal'
-              description: >
-                Saldo de la cuenta corriente de la familia en la temporada del
-                cargo, ya incluyendo este cargo. Sale de la vista
-                v_cuenta_corriente (columna saldo_pendiente).
-
-    Error:
-      type: object
-      required: [detail]
-      properties:
-        detail:
           type: string
-
-    ValidationError:
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Monto Base
+        porcentaje_aplicado:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Porcentaje Aplicado
+        monto_total:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Monto Total
+        id:
+          type: integer
+          title: Id
+        temporada_id:
+          type: integer
+          title: Temporada Id
+        alumno_id:
+          type: integer
+          title: Alumno Id
+        tipo_cargo_id:
+          type: integer
+          title: Tipo Cargo Id
+        inscripcion_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Inscripcion Id
+        modalidad:
+          anyOf:
+          - $ref: '#/components/schemas/Modalidad'
+          - type: 'null'
+        periodo_cobro_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Periodo Cobro Id
+        fecha_dia:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Fecha Dia
+        creado_por:
+          type: integer
+          title: Creado Por
+        creado_en:
+          type: string
+          format: date-time
+          title: Creado En
+        saldo_pendiente:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Saldo Pendiente
       type: object
-      required: [loc, msg, type]
+      required:
+      - familia_id
+      - categoria_aplicada
+      - cantidad_hijos_aplicada
+      - monto_base
+      - porcentaje_aplicado
+      - monto_total
+      - id
+      - temporada_id
+      - alumno_id
+      - tipo_cargo_id
+      - inscripcion_id
+      - modalidad
+      - periodo_cobro_id
+      - fecha_dia
+      - creado_por
+      - creado_en
+      - saldo_pendiente
+      title: CargoRegistrado
+    CategoriaFamilia:
+      type: string
+      enum:
+      - socio
+      - empleado
+      - no_socio
+      title: CategoriaFamilia
+    ErrorDeCampo:
       properties:
         loc:
-          type: array
           items:
-            oneOf:
-              - type: string
-              - type: integer
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Loc
         msg:
           type: string
+          title: Msg
         type:
           type: string
-
-    HTTPValidationError:
+          title: Type
       type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ErrorDeCampo
+      description: |-
+        Un error atado a un campo del pedido, de validacion o de una regla del
+        negocio (`type` `regla_de_negocio`).
+    ErroresDeCampo:
       properties:
         detail:
-          type: array
           items:
-            $ref: '#/components/schemas/ValidationError'
+            $ref: '#/components/schemas/ErrorDeCampo'
+          type: array
+          title: Detail
+      type: object
+      required:
+      - detail
+      title: ErroresDeCampo
+      description: 'El 422: la lista de errores, cada uno con su campo en `loc`.'
+    FamiliaDelAlumno:
+      properties:
+        id:
+          type: integer
+          title: Id
+        etiqueta:
+          type: string
+          title: Etiqueta
+        categoria:
+          $ref: '#/components/schemas/CategoriaFamilia'
+      type: object
+      required:
+      - id
+      - etiqueta
+      - categoria
+      title: FamiliaDelAlumno
+    InscripcionDelAlumno:
+      properties:
+        grupo_id:
+          type: integer
+          title: Grupo Id
+        grupo_nombre:
+          type: string
+          title: Grupo Nombre
+        turno:
+          $ref: '#/components/schemas/Turno'
+        temporada_id:
+          type: integer
+          title: Temporada Id
+      type: object
+      required:
+      - grupo_id
+      - grupo_nombre
+      - turno
+      - temporada_id
+      title: InscripcionDelAlumno
+    MensajeError:
+      properties:
+        detail:
+          type: string
+          title: Detail
+      type: object
+      required:
+      - detail
+      title: MensajeError
+      description: |-
+        Un rechazo con `detail` en castellano, que src/lib/api.ts muestra tal
+        cual.
+    Modalidad:
+      type: string
+      enum:
+      - mes
+      - quincena
+      - semana
+      - dia
+      title: Modalidad
+    PersonaNueva:
+      properties:
+        nombre:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Nombre
+        apellido:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Apellido
+        telefono:
+          type: string
+          maxLength: 30
+          minLength: 1
+          title: Telefono
+        dni:
+          anyOf:
+          - type: string
+            maxLength: 15
+          - type: 'null'
+          title: Dni
+        es_tutor:
+          type: boolean
+          title: Es Tutor
+      additionalProperties: false
+      type: object
+      required:
+      - nombre
+      - apellido
+      - telefono
+      - es_tutor
+      title: PersonaNueva
+      description: Una persona que se carga en el alta.
+    PersonaReutilizada:
+      properties:
+        persona_id:
+          type: integer
+          title: Persona Id
+        es_tutor:
+          type: boolean
+          title: Es Tutor
+      additionalProperties: false
+      type: object
+      required:
+      - persona_id
+      - es_tutor
+      title: PersonaReutilizada
+      description: Una persona ya cargada, elegida por su id (de la busqueda por DNI).
+    Turno:
+      type: string
+      enum:
+      - manana
+      - tarde
+      title: Turno
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer
 ```
