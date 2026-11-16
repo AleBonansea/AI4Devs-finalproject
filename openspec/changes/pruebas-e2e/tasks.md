@@ -1,0 +1,49 @@
+# Tasks
+
+Change técnico, sin código de producción: no aplican `backend-feature` ni `frontend-feature`, porque no hay comportamiento que implementar ni tests que congelar contra un implementer (design, decisión 8). Los tests E2E se escriben desde las specs sin abrir `backend/app/` ni `frontend/src/`, y su rojo se obtiene con sabotajes temporales (design, decisión 10). No se tocan rutas, esquemas ni modelos: `docs/api/openapi.json` no cambia, y `python tasks.py openapi-check` lo confirma en el grupo 6.
+
+## 1. Paquete `e2e/`
+
+- [x] 1.1 Crear `e2e/package.json` (privado, `type: module`) con `@playwright/test` y `typescript` en versión exacta, y el script `test` = `playwright test`; generar `e2e/package-lock.json` con `npm install` dentro de `e2e/`. Verificar: `npm ci` en `e2e/` termina sin errores y `npx playwright --version` muestra la versión fijada.
+- [x] 1.2 Crear `e2e/tsconfig.json` (estricto, sin emitir) y `e2e/playwright.config.ts` según el design, decisión 6: un worker, `fullyParallel: false`, `retries: 0`, `forbidOnly` en el CI, trace `retain-on-failure`, screenshot `only-on-failure`, `baseURL` de `E2E_BASE_URL`, `timezoneId` `America/Argentina/Buenos_Aires`, `locale` `es-AR`, solo Chromium, reporters `list` y `html` sin abrir. Verificar: `npx playwright test --list` en `e2e/` corre sin error de configuración.
+- [x] 1.3 Agregar a `.gitignore` `e2e/test-results/` y `e2e/playwright-report/`. Verificar: después de una corrida, `git status` no los muestra.
+
+## 2. Tarea `python tasks.py e2e`
+
+- [x] 2.1 En `tasks.py`, la comprobación de las reglas de la suite (design, decisión 7): cortar si algún archivo de `e2e/tests/` contiene `waitForTimeout(` o `setTimeout(`. Verificar: con un `setTimeout(` agregado a mano en un test, `python tasks.py e2e` corta con un mensaje que nombra el archivo, antes de tocar la base; quitarlo después.
+- [x] 2.2 En `tasks.py`, recrear `escuelita_e2e` con la guarda del design, decisión 3: URL de `E2E_DATABASE_URL` con el valor por defecto local, nombre exacto `escuelita_e2e` y host local con `verificar_base_local` antes de conectarse; borrado y creación desde la base `postgres` con `autocommit` y `WITH (FORCE)`, con el Python del entorno virtual. Verificar: con `E2E_DATABASE_URL` apuntando a `escuelita` la tarea corta sin conectarse; con un host remoto también; con la URL por defecto la base queda recreada y la de desarrollo conserva sus datos (`python tasks.py seed` sobre ella sigue diciendo que no está vacía).
+- [x] 2.3 En `tasks.py`, migrar y sembrar `escuelita_e2e` con el entorno del design, decisión 5 (`DATABASE_URL`, `SECRET_KEY` de juguete, `TZ`), reutilizando `migrate` y `seed` vía `correr(..., entorno_extra=...)`. Verificar: dos corridas seguidas terminan bien (la segunda recrea la base y la semilla no se queja de base con datos).
+- [x] 2.4 En `tasks.py`, compilar el frontend en `frontend/dist/e2e` con `VITE_API_URL=http://localhost:8001`, invocando Vite con `node` (design, decisión 4). Verificar: `frontend/dist/e2e/index.html` existe y un `.js` del build contiene `localhost:8001`.
+- [x] 2.5 En `tasks.py`, levantar la API en el 8001 (con `CORS_ORIGINS=http://localhost:4173`) y `vite preview` en el 4173 con `--strictPort`; cortar si alguno de los dos puertos ya está ocupado; sondear `/salud` y `/` con tope de 60 s, cortando antes si el proceso murió; correr `npx playwright test` en `e2e/` con los argumentos que sigan a `e2e`; bajar el árbol de procesos en un `finally` (`taskkill /T /F` en Windows, grupo de procesos en POSIX) y salir con el código de Playwright (design, decisión 2). Verificar: con un test de humo provisorio que abre `/ingresar`, la tarea sale con 0; con otro proceso escuchando en el 8001 (por ejemplo `python -m http.server 8001`), corta con el mensaje de puerto ocupado; después de cortar la corrida con Ctrl+C, una nueva arranca sin puertos tomados. (Verificado: al terminar quedan libres el 8001 y el 4173, y con otro proceso en el 8001 la tarea corta. El corte con Ctrl+C no se pudo simular desde la sesión del agente: queda por probar a mano.)
+- [x] 2.6 Agregar a `install` el `npm ci` de `e2e/` y `npx playwright install chromium`, y registrar `e2e` en `TAREAS` con su docstring. Verificar: `python tasks.py` lista `e2e` y `python tasks.py install` deja Playwright listo.
+
+## 3. Los tres tests
+
+Escritos desde las specs (design, decisiones 8 y 9). Cada uno se ve en rojo con su sabotaje (decisión 10), se guarda la salida en `.claude/tmp/e2e-rojo-<test>.txt`, se revierte, y `git diff --exit-code -- backend/app frontend/src` sale limpio antes de pasar al siguiente.
+
+- [x] 3.1 `e2e/tests/camino-de-la-plata.spec.ts`: ingreso de `mgarcia`, alta de Tomás Ibarra con familia nueva `Empleado` y tutora Elena Ibarra en Tiburones mañana, Abono del Mes 1 con `Total del cargo` `$ 75.000`, pago de `75.000` propuesto por la pantalla, y la cuenta corriente pedida de nuevo con `Saldo pendiente` `$ 0` y el renglón `Saldado`; moviéndose siempre por el menú. Verificar: verde con `python tasks.py e2e tests/camino-de-la-plata.spec.ts`; rojo en `$ 75.000` con el descuento saboteado a 0 %.
+- [x] 3.2 `e2e/tests/permisos.spec.ts`: ingreso de `jperez`, menú sin `Administración` ni `Cuenta corriente`, `/cuenta-corriente` lleva a `/` sin ningún pedido a `/api/v1/familias`, y `GET /api/v1/familias/1/cuenta-corriente` con su token responde 403 con `No tenés permiso para esta operación.` y sin `saldo_pendiente` ni `cargos`. Verificar: verde; rojo con la ruta solo-Admin saboteada, y rojo con el endpoint saboteado para aceptar al Profesor.
+- [x] 3.3 `e2e/tests/sesion.spec.ts`: JWT vigente hasta 2099 firmado con otra clave en `escuelita.token`, `/cuenta-corriente` espera el 401 de `GET /api/v1/auth/yo`, la dirección pasa a `/ingresar`, se ve el formulario y el token ya no está. Verificar: verde; rojo con el frontend saboteado para no borrar el token ante un 401.
+- [x] 3.4 Borrar el test de humo provisorio de la tarea 2.5 y correr la suite entera tres veces seguidas con `python tasks.py e2e`. Verificar: las tres corridas en verde con los tres tests, sin reintentos (la configuración tiene `retries: 0`), y `git diff --exit-code -- backend/app frontend/src` limpio.
+
+## 4. CI
+
+- [ ] 4.1 Agregar el job `e2e` a `.github/workflows/ci.yml` según el design, decisión 11: Postgres 16, `TZ` de Argentina, Python 3.12, Node 22, dependencias del backend, `npm ci` en `frontend/` y `e2e/`, Chromium con `--with-deps`, `python tasks.py e2e`, y `upload-artifact` de `e2e/test-results/` y `e2e/playwright-report/` solo si falla, con retención de 7 días. Verificar: al empujar la rama, el job `e2e` termina en verde en GitHub Actions junto a `backend` y `frontend`.
+- [ ] 4.2 Comprobar que el job falla de verdad: empujar un commit provisorio que cambia `$ 75.000` por `$ 75.001` en el test del camino de la plata. Verificar: el job `e2e` queda en rojo y el artefacto trae el trace del fallo; después revertir ese commit con un commit nuevo y ver el job en verde.
+
+## 5. Documentación
+
+- [x] 5.1 `2-arquitectura-del-sistema.md`: reemplazar la decisión «Sin tests de punta a punta en el navegador» por la nueva (tres recorridos E2E con Playwright contra el build servido y la API en otro origen, por qué esos tres, y que la recorrida a mano en celular se mantiene); agregar la fila **Punta a punta** a la tabla de niveles de 2.6 (qué prueba, cómo, 3 tests); sumar los 3 al total; agregar Playwright a la fila **Tests** de la tabla del stack y `e2e/` al árbol de carpetas. Verificar: `grep -n "Sin tests de punta a punta" 2-arquitectura-del-sistema.md` no encuentra nada y el total de 2.6 coincide con la suma de la tabla. Al aplicar apareció que 2.6 y el readme arrastraban los conteos de antes del change `menu-lateral-y-edad-de-grupos` (457 y 148, contra 467 y 164 reales): con el acuerdo del usuario se corrigieron el total, la tabla de niveles y el desglose por capability, contados de las suites.
+- [x] 5.2 `CLAUDE.md`: agregar a la tabla de comandos `python tasks.py e2e` («Tests de punta a punta») y la forma de correr uno solo (`python tasks.py e2e tests/<archivo>.spec.ts`), y `e2e/` a la sección «Estructura». Verificar: el comando de un solo test, copiado tal cual, corre.
+- [x] 5.3 `readme.md`: agregar `python tasks.py e2e` a los comandos de tests, con lo que necesita (Postgres levantado con `python tasks.py up` y Playwright instalado por `python tasks.py install`), y la cantidad de tests E2E a la tabla de estado. Verificar: los comandos del readme, en el orden en que aparecen, llevan de un clon limpio a una corrida E2E en verde.
+- [x] 5.4 `docs/product/historias-backlog.md`: agregar al «Plan de changes del lote 1» la fila `pruebas-e2e`, sin número y sin historias, como `paleta-y-encuadre`: «— (técnico)» y «Tres recorridos en un navegador real: el cobro, los permisos del Profesor y el corte de sesión». Verificar: la tabla sigue renderizando en la vista de Markdown.
+
+## 6. Cierre
+
+- [x] 6.1 Correr `python tasks.py test`, `python tasks.py lint`, `python tasks.py typecheck`, `python tasks.py front-lint`, `python tasks.py front-test`, `python tasks.py openapi-check` y `python tasks.py e2e`. Verificar: todos en verde y `docs/api/openapi.json` sin cambios.
+- [ ] 6.2 Pase del subagente `adversarial-reviewer`, una sola vez, sobre el diff completo del change, antes de abrir el pull request. Pedirle en especial: que la guarda de la base no se pueda saltear, que ningún test pase con el comportamiento roto (con los sabotajes de 3.x como referencia) y que no haya esperas fijas. Verificar: cada hallazgo queda resuelto o justificado en el informe.
+
+## Workflow follow-up
+
+- Abrir el pull request de `feat/pruebas-e2e` hacia `feature/entrega-3-AlexisBonansea`, dentro del fork.
+- Verificar con `/openspec-verify-change` y archivar con `/openspec-archive-change`. No hay delta de spec que fundir (`skip_specs: true`).

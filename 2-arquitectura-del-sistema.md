@@ -48,7 +48,7 @@ flowchart LR
 | **Base de datos** | PostgreSQL 16 | Todos los datos de la aplicación. Una temporada vigente a la vez, y nada se borra físicamente. En local corre en Docker, con una base de desarrollo y otra de pruebas. |
 | **Almacenamiento de documentos** *(planificado)* | Disco persistente de Render, adjunto al servicio web | Archivos de la documentación de los alumnos, con nombre aleatorio y fuera de cualquier carpeta pública. Llega con las historias de documentación (HU-DOC). |
 | **Autenticación** | pwdlib con argon2 (hash) y PyJWT (HS256) | Token de acceso en `Authorization: Bearer`, con vencimiento configurable (8 horas por defecto). La renovación con cookie httpOnly está planificada: ver 2.5. |
-| **Tests** | pytest + httpx en el backend; Vitest + Testing Library + jsdom en el frontend | Ver 2.6. |
+| **Tests** | pytest + httpx en el backend; Vitest + Testing Library + jsdom en el frontend; Playwright (Chromium) de punta a punta | Ver 2.6. |
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
@@ -78,6 +78,7 @@ AI4Devs-finalproject/
 │   ├── skills/                     backend-feature, frontend-feature, commit, revisar-migracion, openspec-*
 │   └── hooks/                      guardarraíles: formato, colores, datos que no salen, no borrar, no ver la implementación
 ├── scripts/seed.py                 datos de ejemplo
+├── e2e/                            Playwright: tres recorridos de punta a punta en un navegador real
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                 crea la aplicación FastAPI, monta los routers y traduce los errores
@@ -234,23 +235,24 @@ Principio general: **todo control de acceso se hace en la API**. El frontend sol
 
 ### **2.6. Tests**
 
-**605 tests automatizados**: 457 del backend y 148 del frontend. Corren en cada pull request y en local con `python tasks.py test` y `python tasks.py front-test`.
+**634 tests automatizados**: 467 del backend, 164 del frontend y 3 de punta a punta. Corren en cada pull request y en local con `python tasks.py test`, `python tasks.py front-test` y `python tasks.py e2e`.
 
-**Foco: el cálculo de cargos y descuentos.** Es donde está la lógica de negocio que mueve dinero, y donde un error pasa desapercibido hasta que un cliente reclama. Es la capability con más tests: 102 de los 457 del backend.
+**Foco: el cálculo de cargos y descuentos.** Es donde está la lógica de negocio que mueve dinero, y donde un error pasa desapercibido hasta que un cliente reclama. Es la capability con más tests: 102 de los 467 del backend.
 
 **Cómo se escriben.** Cada Scenario de una spec tiene su test, y el test lo escribe un subagente (`test-writer`) que **no puede leer la implementación**: un hook le corta la lectura de `backend/app/` y `frontend/src/`. Los tests se ven fallar por el motivo correcto, se congelan por hash y recién entonces otro subagente (`implementer`) escribe el código, sin poder tocarlos. Ver [`prompts.md`](prompts.md), sección 7.
 
 | Nivel | Qué se prueba | Cómo | Tests |
 |---|---|---|---|
-| **Funcional del backend** | Cada endpoint, por Scenario de la spec: camino feliz, rechazos, permisos por rol y por grupo | Cliente de pruebas de FastAPI contra PostgreSQL real, en `backend/tests/functional/<capability>/` | 441 |
+| **Funcional del backend** | Cada endpoint, por Scenario de la spec: camino feliz, rechazos, permisos por rol y por grupo | Cliente de pruebas de FastAPI contra PostgreSQL real, en `backend/tests/functional/<capability>/` | 451 |
 | **Cálculo de cargos** | `services/calculo_cargo.py` como función pura: un único % sin acumular, tramo de hijos solo en el Mes, tramo «4 o más» aplicado a todos, monto fijo, redondeo con `Decimal` igual al de PostgreSQL | Tablas de casos, sin base; y los mismos casos por la API | Dentro de los 102 de `cargos` |
-| **Permisos** | Cada endpoint con cada rol: `403` para los roles sin permiso, el Profesor fuera de sus grupos, y que nada quede escrito cuando se rechaza | Archivos `test_permisos*.py` de cada capability | Dentro de los 441 |
-| **Constraints de la base** | `CHECK`, FK compuestas, únicos y vistas | Insertar filas inválidas y esperar `IntegrityError` | Dentro de los 441, más 16 de forma del esquema y salud |
+| **Permisos** | Cada endpoint con cada rol: `403` para los roles sin permiso, el Profesor fuera de sus grupos, y que nada quede escrito cuando se rechaza | Archivos `test_permisos*.py` de cada capability | Dentro de los 451 |
+| **Constraints de la base** | `CHECK`, FK compuestas, únicos y vistas | Insertar filas inválidas y esperar `IntegrityError` | Dentro de los 451, más 16 de forma del esquema y salud |
 | **Migraciones** | Alembic | `upgrade head`, `downgrade -1` y `upgrade head` en el CI, en cada PR | — |
-| **Pantallas del frontend** | Cada pantalla, por Scenario de la spec: qué muestra, qué manda a la API, cómo muestra los errores por campo, qué ve cada rol | Vitest + Testing Library sobre jsdom, con la API simulada en `fetch`, en `frontend/tests/<capability>/` | 108, más 3 de la preparación |
+| **Pantallas del frontend** | Cada pantalla, por Scenario de la spec: qué muestra, qué manda a la API, cómo muestra los errores por campo, qué ve cada rol | Vitest + Testing Library sobre jsdom, con la API simulada en `fetch`, en `frontend/tests/<capability>/` | 124, más 3 de la preparación |
 | **Formato del frontend** | `lib/fechas.ts` y `lib/montos.ts`: fechas dd/mm/aaaa y montos como `$ 4.462,50` sin pasar por `float` | Vitest | 37 |
+| **Punta a punta** | Tres recorridos en un navegador real: alta, cargo y pago hasta el saldo en cero; un Profesor que no llega a la cuenta corriente ni por la pantalla ni por la API; un token inválido que vuelve al ingreso | Playwright sobre el build servido y la API en otro origen, con CORS, contra una base `escuelita_e2e` recreada y sembrada en cada corrida, en `e2e/tests/` | 3 |
 
-Por capability, en el backend: `cargos` 102, `asistencia` 45, `familias` 45, `auth` 41, `alumnos` 39, `pagos` 35, `errores-de-la-api` 30, `tarifario` 30, `semilla` 23, `grupos` 22, `cuenta-corriente` 16, `tesoreria` 13, y 16 de esquema y salud. En el frontend: `auth` 48, `alumnos` 17, `cuenta-corriente` 17, `asistencia` 13, `cargos` 13, `lib` 37 y 3 de la preparación.
+Por capability, en el backend: `cargos` 102, `asistencia` 45, `familias` 45, `auth` 41, `alumnos` 39, `pagos` 35, `errores-de-la-api` 30, `tarifario` 30, `grupos` 28, `semilla` 23, `cuenta-corriente` 16, `tesoreria` 13, `temporadas` 4, y 16 de esquema y salud. En el frontend: `auth` 49, `alumnos` 19, `cuenta-corriente` 17, `asistencia` 13, `cargos` 13, `navegacion` 13, `lib` 37 y 3 de la preparación. De punta a punta: 3, en `e2e/tests/`.
 
 **Decisiones:**
 - **PostgreSQL real en los tests, no SQLite.** SQLite no evalúa igual los `CHECK` ni las FK compuestas, y esas reglas son parte del diseño. Un test lo comprueba (`test_la_base_de_pruebas_es_postgres`), y `conftest.py` se niega a correr contra la base de desarrollo.
@@ -258,4 +260,8 @@ Por capability, en el backend: `cargos` 102, `asistencia` 45, `familias` 45, `au
 - **Datos de los criterios de aceptación.** Los tests usan los mismos montos y porcentajes que los Scenarios de las specs, así que criterios y tests no se separan.
 - **La API vieja de SQLAlchemy falla el test.** `pytest` convierte en error los avisos de `session.query` y `Column`, para que el stack no retroceda a la API 1.x.
 - **Un guardarraíl que nunca se vio fallar no está probado.** Ante un test sospechoso se rompe el código a propósito y se comprueba que el test se pone en rojo. Así se encontró, por ejemplo, que el test de la fecha de hoy no podía fallar a las 10 de la mañana, y se fijó el huso de Argentina en Vite, en `tasks.py` y en el CI.
-- **Sin tests de punta a punta en el navegador.** Las pantallas se prueban contra una API simulada y la API contra la base real; el recorrido completo en un navegador real se verifica a mano, siguiendo los Scenarios de pantalla de cada spec, en PC y en celular.
+- **Pocos tests de punta a punta, elegidos.** Hasta el change `pruebas-e2e` no había ninguno: las pantallas se probaban contra una API simulada, la API contra la base real, y el recorrido completo se verificaba a mano. Eso dejaba sin probar la costura entre las dos (una respuesta real que se separa de la fingida pasa las dos suites) y la configuración de producción, con el build estático y la API en otro origen. Ahora hay tres, los de mayor costo si se rompen: el que mueve dinero, el que protege lo contable y el que corta la sesión. El resto sigue cubierto por Scenario en las suites de pantalla y de API, que son más rápidas y dicen con precisión qué se rompió.
+  - **Reglas:** un worker, cero reintentos, sin esperas fijas (`python tasks.py e2e` corta si un test usa `waitForTimeout` o `setTimeout`) y el trace guardado solo cuando un test falla.
+  - **Base propia:** `escuelita_e2e`, recreada, migrada y sembrada en cada corrida. La tarea se niega a borrar una base que no se llame exactamente así o que no sea local.
+  - **Cada test se vio fallar** con un sabotaje temporal del código de producción (ver el design del change `pruebas-e2e`).
+  - **Lo que sigue siendo a mano:** la recorrida en celular, siguiendo los Scenarios de pantalla de cada spec. Los E2E corren solo en Chromium de escritorio.

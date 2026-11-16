@@ -22,3 +22,8 @@ uploads/
 
 # Trabajo del agente
 .claude/tmp/
+
+# Pruebas de punta a punta: reportes y trazas de cada corrida
+e2e/test-results/
+e2e/playwright-report/
+e2e/logs/
