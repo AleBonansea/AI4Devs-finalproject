@@ -20,6 +20,8 @@ import { DELFINES_MANANA, coordinador, etiqueta, type Grupo } from "../alumnos/p
 export {
   DELFINES_MANANA,
   DELFINES_TARDE,
+  TEXTO_DELFINES_MANANA,
+  TEXTO_DELFINES_TARDE,
   campoGrupo,
   coordinador,
   elegir,
@@ -41,7 +43,12 @@ export const CABALLITOS_TARDE: Grupo = {
   nacimiento_desde: "2021-01-01",
   nacimiento_hasta: "2022-12-31",
   sugerido: false,
+  edad_desde: 3,
+  edad_hasta: 4,
 };
+
+/** Los textos de las opciones de `Grupo`: nombre · turno · edad. */
+export const TEXTO_CABALLITOS_TARDE = "Caballitos · Tarde · 3 a 4 años";
 
 export interface AlumnoEnAsistencia {
   inscripcion_id: number;

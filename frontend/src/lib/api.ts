@@ -204,6 +204,9 @@ export interface GrupoParaInscribir {
   nacimiento_desde: string;
   nacimiento_hasta: string;
   sugerido: boolean;
+  /** La edad que cubre el grupo, calculada por la API. */
+  edad_desde: number;
+  edad_hasta: number;
 }
 
 /** `FamiliaEncontrada`: lo unico que trae la busqueda por apellido. */

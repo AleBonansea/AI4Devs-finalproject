@@ -125,7 +125,7 @@ export default function TomarAsistencia() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container maxWidth="md" sx={{ py: { xs: 2, sm: 4 } }}>
       <Paper variant="outlined" sx={{ p: { xs: 2, sm: 4 } }}>
         <Stack spacing={4}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>

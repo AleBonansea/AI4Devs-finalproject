@@ -59,6 +59,7 @@ erDiagram
         bigint familia_id FK
         varchar nombre
         varchar apellido
+        varchar dni UK
         date fecha_nacimiento
         text alergias
         text condiciones_medicas
@@ -456,13 +457,16 @@ Son 18 tablas en el lote 1 y 6 para después.
 | `id` | bigint | PK | |
 | `familia_id` | bigint | FK → familia, NOT NULL | |
 | `nombre`, `apellido` | varchar(80) | NOT NULL | El apellido puede ser distinto al de sus hermanos (medio hermanos, Acl. 1). |
+| `dni` | varchar(15) | NOT NULL, UNIQUE *(después, HU-AF-11)* | Identifica al alumno entre temporadas: la inscripción empieza buscándolo por DNI. [SUPUESTO], ver «DNI del alumno» en las preguntas abiertas de `aclaraciones-cliente.md`. |
 | `fecha_nacimiento` | date | NOT NULL | Se usa para sugerir el grupo y para calcular el hijo mayor. |
 | `alergias`, `condiciones_medicas` | text | NULL *(después, HU-AF-06)* | Datos sensibles (Acl. 11). |
 | `consentimiento_datos_medicos` | boolean | NOT NULL, DEFAULT false *(después, HU-AF-07)* | Ley 25.326 (Acl. 11). |
 | `consentimiento_en`, `consentimiento_registrado_por` | timestamptz, bigint (FK → usuario) | NULL *(después)* | |
 
 **Reglas:**
-- Datos mínimos del alta (Acl. 3): nombre, apellido, fecha de nacimiento, familia, al menos un tutor en la familia, y una inscripción.
+- Datos mínimos del alta (Acl. 3): nombre, apellido, fecha de nacimiento, familia, al menos un tutor en la familia, y una inscripción. Desde HU-AF-11 se suma el DNI ([SUPUESTO], ver arriba).
+- **`dni` llega con HU-AF-11**, no con el lote 1: es una columna nueva sobre una tabla que ya tiene filas. A diferencia de `persona.dni`, es NOT NULL porque es la clave con la que se busca al alumno que vuelve; un alumno sin DNI no se encontraría y se volvería a cargar. Exigirlo no frena el alta, como sí lo haría con el tutor: en el club conocen a las familias y el DNI del chico es un dato que siempre tienen (decisión del usuario, 16/11/2026). `UNIQUE (dni)`: dos fichas con el mismo DNI son el mismo chico cargado dos veces.
+- **La migración de HU-AF-11 la agrega en tres pasos, dentro del mismo `upgrade`:** crea la columna nullable, completa los alumnos existentes (los de la semilla) y recién después la pone NOT NULL. Una migración que la cree NOT NULL de entrada falla sobre cualquier base con datos.
 - No se pueden cargar `alergias` ni `condiciones_medicas` si `consentimiento_datos_medicos` es false: `CHECK (consentimiento_datos_medicos OR (alergias IS NULL AND condiciones_medicas IS NULL))`.
 - Un Profesor ve los datos médicos solo de los alumnos de sus grupos. De los hijos que estén en otros grupos no los ve (Acl. 11). Esto se filtra en la consulta.
 
