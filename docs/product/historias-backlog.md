@@ -300,6 +300,7 @@ Las historias dicen **qué** hay que construir; esta tabla dice **en qué orden 
 | 2 | `tarifario-y-semilla` | — (infraestructura) | Las tablas de grupos y tarifario, y `python tasks.py seed` cargando una temporada completa |
 | 3 | `pantalla-de-ingreso` | HU-UT-01 (frontend) | Entrar desde el navegador |
 | 4 | `familias-y-alumnos` | HU-AF-02, HU-AF-04, HU-AF-03, HU-AF-01 | Cargar una familia con su categoría, su tutor y un hijo inscripto en un grupo |
+| — | `paleta-y-encuadre` | — (visual) | La paleta del prototipo y el encuadre de las pantallas sin sesión. Se sumó entre el 4 y el 5, fuera del plan original |
 | 5 | `asistencia` | HU-GA-04 | Tomar asistencia por grupo, día y turno |
 | 6 | `cobro` | HU-TAR-04, HU-CC-01 | Registrar un cargo con su cálculo de tarifa y descuento |
 | 7 | `cuenta-corriente` | HU-CC-02, HU-CC-03, HU-TES-01 | Pagar en cuotas, ver el saldo de la familia y el ingreso en tesorería |

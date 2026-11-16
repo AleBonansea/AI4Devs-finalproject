@@ -2,7 +2,7 @@
 
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
-El lote 1 se construyó en ocho *changes* de OpenSpec, uno por rama, cada uno con su propia pull request hacia la rama de la entrega: nueve PRs en total contando la Entrega 1. Todas pasaron por integración continua (`ruff`, `mypy`, `pytest`, tests y build del frontend, y el ida y vuelta de las migraciones) y por una revisión automática con `claude-code-action` configurada en [`.github/workflows/revisor.yml`](.github/workflows/revisor.yml).
+El lote 1 se construyó en ocho *changes* de OpenSpec, uno por rama, cada uno con su propia pull request hacia la rama de la entrega. Contando la de la Entrega 1 y las de cierre (documentación y configuración del repositorio), son las de la tabla del final. Las de código pasaron por integración continua (`ruff`, `mypy`, `pytest`, tests y build del frontend, y el ida y vuelta de las migraciones). Desde la #3, todas tienen además el informe de una revisión automática con `claude-code-action`, configurada en [`.github/workflows/revisor.yml`](.github/workflows/revisor.yml) y gobernada por [`REVIEW.md`](REVIEW.md); en la #2 el revisor todavía no publicaba. Cómo encaja esa revisión en el mantenimiento del sistema está en [`2-arquitectura-del-sistema.md`](2-arquitectura-del-sistema.md), 2.4.
 
 Las tres que siguen se eligieron porque muestran tres cosas distintas: el ciclo completo estrenándose, la lógica de negocio más delicada, y el cierre de punta a punta del flujo principal.
 
@@ -67,7 +67,7 @@ El monto del pago sí lo manda el cliente, y la revisión lo señaló como una p
 
 ---
 
-### Las nueve pull requests
+### Todas las pull requests
 
 | # | Rama | Qué incorpora |
 |---|---|---|
@@ -80,3 +80,5 @@ El monto del pago sí lo manda el cliente, y la revisión lo señaló como una p
 | [#7](https://github.com/AleBonansea/AI4Devs-finalproject/pull/7) | `feat/asistencia` | Tomar asistencia por grupo y fecha (HU-GA-04) |
 | [#8](https://github.com/AleBonansea/AI4Devs-finalproject/pull/8) | `feat/cobro` | Cargo con cálculo de tarifa y descuento (HU-TAR-04, HU-CC-01) |
 | [#9](https://github.com/AleBonansea/AI4Devs-finalproject/pull/9) | `feat/cuenta-corriente` | Pagos, saldo y tesorería (HU-CC-02, HU-CC-03, HU-TES-01) |
+| [#10](https://github.com/AleBonansea/AI4Devs-finalproject/pull/10) | `docs/arranque-y-pull-requests` | Instrucciones de arranque en el readme, este documento y los prompts de la sección 7 |
+| [#11](https://github.com/AleBonansea/AI4Devs-finalproject/pull/11) | `feat/fin-de-linea` | Fin de línea LF en todo el repositorio, con `.gitattributes` |
