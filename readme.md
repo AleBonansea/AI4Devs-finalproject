@@ -39,8 +39,8 @@ Las historias que faltan para poner el sistema en producción están en el [back
 | Tests del backend | 467 |
 | Tests del frontend | 164 |
 | Tests de punta a punta | 3 |
-| Specs vigentes | 12 |
-| Pull requests | 12, con CI y, desde la #3, revisión automática |
+| Specs vigentes | 14 |
+| Pull requests | 15, con CI y, desde la #3, revisión automática |
 
 ## Cómo levantarlo en local
 

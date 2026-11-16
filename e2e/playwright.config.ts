@@ -23,7 +23,8 @@ export default defineConfig({
     // La evidencia de un fallo queda en test-results/; un verde no deja nada.
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
-    // El huso de la escuela, como la API del E2E y los tests del frontend.
+    // El huso de la escuela, como los tests del frontend y la API del E2E
+    // (en Windows la API usa la hora de la maquina: ver tasks.py).
     // Con el navegador en UTC, a la noche la pantalla propondria como fecha
     // del pago el dia siguiente y la API la rechazaria por posterior a hoy.
     timezoneId: "America/Argentina/Buenos_Aires",

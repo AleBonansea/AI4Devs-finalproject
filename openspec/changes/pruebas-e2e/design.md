@@ -56,7 +56,9 @@ Ver `proposal.md` para el porqué. Lo que condiciona el cómo:
 - La URL sale de `E2E_DATABASE_URL`, con valor por defecto `postgresql+psycopg://escuelita:escuelita@localhost:5432/escuelita_e2e`, que coincide con el Postgres de `docker-compose.yml` y con el servicio del CI.
 - **Antes de borrar nada**, `tasks.py` comprueba dos cosas y corta si alguna falla:
   - que el nombre de la base sea exactamente `escuelita_e2e`;
-  - que el host sea local, con la misma `verificar_base_local` de `app.semilla` (una sola definición de «local» en el proyecto).
+  - que el host sea `localhost`, `127.0.0.1` o `::1`. Es más estricto que `verificar_base_local` de la semilla, que acepta `db`: fuera de Docker ese nombre puede resolverse a un host de la red;
+  - que la URL no traiga ningún parámetro en la query: `?dbname=` pisa el nombre de la ruta, y `?host=`, `?hostaddr=` o `?service=` pisan el host.
+- **Y saca del entorno** de todos los pasos de la corrida las variables que desviarían la conexión sin que la URL lo muestre: toda `PG*` de libpq (`PGHOSTADDR` le gana al host de la URL; `PGSERVICE` trae su propio host) y `ALEMBIC_URL`, que `backend/alembic/env.py` prefiere a `DATABASE_URL`.
 - Con eso se conecta a la base de mantenimiento `postgres` del mismo servidor, con `autocommit`, y ejecuta `DROP DATABASE IF EXISTS escuelita_e2e WITH (FORCE)` y `CREATE DATABASE escuelita_e2e`. `WITH (FORCE)` (PostgreSQL 13+, el proyecto usa 16) cierra las conexiones que haya dejado una corrida cortada.
 - El código corre con el Python del entorno virtual (`psycopg` ya es dependencia del backend), como el guion de `openapi-generate`.
 - **Sobre el hook:** `sin_borrar_datos.py` no ve este borrado porque solo lee el texto del comando de `Bash`, y `python tasks.py e2e` no lo contiene. Es deliberado: el hook es una red contra un borrado escrito a mano; acá el borrado es parte de una tarea con una guarda más estricta que el hook (un nombre exacto y un host local). No se agrega una excepción al hook.
@@ -78,7 +80,7 @@ Ver `proposal.md` para el porqué. Lo que condiciona el cómo:
 | `DATABASE_URL` | la de `escuelita_e2e` | La única base que el E2E toca |
 | `SECRET_KEY` | una clave de juguete fija | Para que la configuración valide; no firma nada que salga de la máquina |
 | `CORS_ORIGINS` | `http://localhost:4173` | El origen del build servido. Si CORS se rompe, falla el E2E, que es lo que se quiere probar |
-| `TZ` | `America/Argentina/Buenos_Aires` | El mismo huso que los tests del frontend y el navegador (decisión 6) |
+| `TZ` | `America/Argentina/Buenos_Aires`, **solo fuera de Windows** | El mismo huso que el navegador (decisión 6). En Windows no se fija: Python no entiende un nombre IANA en `TZ` y cae a UTC; la API usa la hora de la máquina |
 
 ### 6. Configuración de Playwright
 
@@ -159,7 +161,7 @@ En `.github/workflows/ci.yml`, en paralelo con `backend` y `frontend`, `timeout-
 - [Los montos esperados dependen de la semilla] → Es buscado: la semilla tiene su spec con las tarifas y los descuentos. Si alguien los cambia, el E2E falla y obliga a revisar el número, igual que los tests de la semilla.
 - [La clave `escuelita.token` es un detalle interno] → El test de sesión espera el 401 de `/auth/yo` (decisión 9), así que un cambio de clave lo pone en rojo en lugar de dejarlo pasar en verde.
 - [Un proceso huérfano deja tomado un puerto] → Se mata el árbol de procesos en el `finally`, y un puerto ocupado al arrancar corta con un mensaje claro en lugar de reutilizar lo que haya.
-- [Borrar una base equivocada] → Nombre exacto `escuelita_e2e` y host local, comprobados antes de conectarse. Nunca se borra con una URL que no pasó las dos guardas.
+- [Borrar una base equivocada] → Nombre exacto `escuelita_e2e`, host de esta máquina y URL sin parámetros, comprobados antes de conectarse, y sin las variables de libpq que desviarían la conexión. La primera versión solo miraba el nombre y el host: la revisión adversarial mostró que `PGHOSTADDR` en el entorno o `?dbname=` en la URL la salteaban.
 - [Los selectores dependen de los textos de la pantalla] → Son los textos de la spec, que es lo que manda sobre el código: si cambian sin cambiar la spec, el E2E falla con razón.
 - [Tiempo de CI] → Un job paralelo; con tres tests, el grueso es instalar Chromium y compilar. Se acepta.
 - [Sigue sin probarse el celular] → Fuera de alcance; la recorrida a mano en celular se mantiene y se dice así en 2.6.

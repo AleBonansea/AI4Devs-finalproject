@@ -235,25 +235,33 @@ CLAVE_E2E = "clave-de-juguete-del-e2e-no-se-usa-en-ningun-lado"
 TOPE_DE_ARRANQUE_S = 60
 ESPERAS_PROHIBIDAS = ("waitForTimeout(", "setTimeout(")
 
+# Variables que libpq y Alembic leen del entorno y que mandarian la conexion
+# a otro servidor o a otra base sin que la URL lo muestre: PGHOSTADDR le gana
+# al host de la URL, PGSERVICE trae su propio host, y env.py de Alembic
+# prefiere ALEMBIC_URL a DATABASE_URL. La corrida E2E las saca del entorno de
+# todos sus pasos. Lo encontro la revision adversarial del change.
+VARIABLES_QUE_DESVIAN = ("ALEMBIC_URL",)
+PREFIJO_LIBPQ = "PG"
+
 # Corre con el Python del entorno virtual, desde backend/. Recibe la URL de la
-# base del E2E y la recrea, pero antes comprueba el nombre exacto y que el
-# host sea local con la misma funcion que usa la semilla: una sola definicion
-# de "local" en el proyecto. Si cualquiera de las dos falla, no se conecta.
+# base del E2E y la recrea, pero antes exige tres cosas y, si falta alguna, no
+# se conecta: el nombre exacto, un host de esta maquina (ni siquiera `db`, que
+# fuera de Docker puede resolverse a un host de la red) y ningun parametro en
+# la query, porque `?dbname=`, `?host=`, `?hostaddr=` o `?service=` pisan lo
+# que dice el resto de la URL.
 _GUION_BASE_E2E = """
 import sys
-sys.path.insert(0, ".")
 import psycopg
 from psycopg import sql
 from sqlalchemy.engine import make_url
-from app.semilla import SemillaRechazada, verificar_base_local
 
 url = make_url(sys.argv[1])
+if url.query:
+    sys.exit("La URL de la base del E2E no acepta parametros (?...). No se toco nada.")
 if url.database != sys.argv[2]:
     sys.exit(f"La base del E2E tiene que llamarse {sys.argv[2]!r}, no {url.database!r}. No se toco nada.")
-try:
-    verificar_base_local(sys.argv[1])
-except SemillaRechazada:
-    sys.exit("La base del E2E tiene que ser local. No se toco nada.")
+if url.host not in ("localhost", "127.0.0.1", "::1"):
+    sys.exit("La base del E2E tiene que estar en esta maquina (localhost). No se toco nada.")
 
 mantenimiento = url.set(drivername="postgresql", database="postgres")
 with psycopg.connect(mantenimiento.render_as_string(hide_password=False), autocommit=True) as conexion:
@@ -331,7 +339,15 @@ def _bajar(proceso: subprocess.Popen) -> None:
     try:
         proceso.wait(timeout=10)
     except subprocess.TimeoutExpired:
-        proceso.kill()
+        if ES_WINDOWS:
+            proceso.kill()
+        else:
+            # El grupo entero, no solo el lider: si un servicio llega a lanzar
+            # hijos, matar solo al padre los dejaria con el puerto tomado.
+            import signal
+
+            os.killpg(proceso.pid, signal.SIGKILL)
+        proceso.wait()
 
 
 def _esperar_a_que_responda(url: str, proceso: subprocess.Popen, log: Path) -> None:
@@ -361,14 +377,23 @@ def e2e() -> None:
     """Tests de punta a punta (Playwright) sobre una base propia, recreada."""
     argumentos_playwright = sys.argv[2:]
     url_base = os.environ.get("E2E_DATABASE_URL", URL_E2E_POR_DEFECTO)
+    # Fuera del entorno de esta corrida (y de todos sus procesos hijos) lo que
+    # podria desviar una conexion: ver VARIABLES_QUE_DESVIAN.
+    for variable in list(os.environ):
+        if variable.startswith(PREFIJO_LIBPQ) or variable in VARIABLES_QUE_DESVIAN:
+            del os.environ[variable]
     # Las variables pisan al .env: la API, Alembic y la semilla ven solo la
     # base del E2E.
     entorno_api = {
         "DATABASE_URL": url_base,
         "SECRET_KEY": CLAVE_E2E,
         "CORS_ORIGINS": URL_FRONT_E2E,
-        "TZ": HUSO_DE_LOS_TESTS,
     }
+    # La API en el huso de la escuela, como el navegador del E2E. Solo fuera de
+    # Windows: ahi Python no entiende un nombre IANA en TZ y cae a UTC, que es
+    # peor que la hora de la maquina. En Windows la API usa la hora local.
+    if not ES_WINDOWS:
+        entorno_api["TZ"] = HUSO_DE_LOS_TESTS
 
     _comprobar_reglas_e2e()
     for puerto in (PUERTO_API_E2E, PUERTO_FRONT_E2E):

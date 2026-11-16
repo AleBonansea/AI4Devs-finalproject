@@ -28,8 +28,8 @@ Escritos desde las specs (design, decisiones 8 y 9). Cada uno se ve en rojo con 
 
 ## 4. CI
 
-- [ ] 4.1 Agregar el job `e2e` a `.github/workflows/ci.yml` según el design, decisión 11: Postgres 16, `TZ` de Argentina, Python 3.12, Node 22, dependencias del backend, `npm ci` en `frontend/` y `e2e/`, Chromium con `--with-deps`, `python tasks.py e2e`, y `upload-artifact` de `e2e/test-results/` y `e2e/playwright-report/` solo si falla, con retención de 7 días. Verificar: al empujar la rama, el job `e2e` termina en verde en GitHub Actions junto a `backend` y `frontend`.
-- [ ] 4.2 Comprobar que el job falla de verdad: empujar un commit provisorio que cambia `$ 75.000` por `$ 75.001` en el test del camino de la plata. Verificar: el job `e2e` queda en rojo y el artefacto trae el trace del fallo; después revertir ese commit con un commit nuevo y ver el job en verde.
+- [x] 4.1 Agregar el job `e2e` a `.github/workflows/ci.yml` según el design, decisión 11: Postgres 16, `TZ` de Argentina, Python 3.12, Node 22, dependencias del backend, `npm ci` en `frontend/` y `e2e/`, Chromium con `--with-deps`, `python tasks.py e2e`, y `upload-artifact` de `e2e/test-results/` y `e2e/playwright-report/` solo si falla, con retención de 7 días. Verificar: al empujar la rama, el job `e2e` termina en verde en GitHub Actions junto a `backend` y `frontend`.
+- [x] 4.2 Comprobar que el job falla de verdad: empujar un commit provisorio que cambia `$ 75.000` por `$ 75.001` en el test del camino de la plata. Verificar: el job `e2e` queda en rojo y el artefacto trae el trace del fallo; después revertir ese commit con un commit nuevo y ver el job en verde.
 
 ## 5. Documentación
 
@@ -41,7 +41,7 @@ Escritos desde las specs (design, decisiones 8 y 9). Cada uno se ve en rojo con 
 ## 6. Cierre
 
 - [x] 6.1 Correr `python tasks.py test`, `python tasks.py lint`, `python tasks.py typecheck`, `python tasks.py front-lint`, `python tasks.py front-test`, `python tasks.py openapi-check` y `python tasks.py e2e`. Verificar: todos en verde y `docs/api/openapi.json` sin cambios.
-- [ ] 6.2 Pase del subagente `adversarial-reviewer`, una sola vez, sobre el diff completo del change, antes de abrir el pull request. Pedirle en especial: que la guarda de la base no se pueda saltear, que ningún test pase con el comportamiento roto (con los sabotajes de 3.x como referencia) y que no haya esperas fijas. Verificar: cada hallazgo queda resuelto o justificado en el informe.
+- [x] 6.2 Pase del subagente `adversarial-reviewer`, una sola vez, sobre el diff completo del change, antes de abrir el pull request. Pedirle en especial: que la guarda de la base no se pueda saltear, que ningún test pase con el comportamiento roto (con los sabotajes de 3.x como referencia) y que no haya esperas fijas. Verificar: cada hallazgo queda resuelto o justificado en el informe. Resultado: sin hallazgos graves; ningún test pasa con el comportamiento roto. Cuatro menores, resueltos: la guarda de la base no veía `PGHOSTADDR`, `PGSERVICE` ni `?dbname=`, y `ALEMBIC_URL` podía migrar otra base (ahora se rechaza toda query, el host tiene que ser `localhost`, `127.0.0.1` o `::1`, y se sacan del entorno las `PG*` y `ALEMBIC_URL`); `TZ` ponía la API en UTC en Windows (ahora se fija solo fuera de Windows); el readme tenía 12 specs y 12 PRs (son 14 y 15). La pregunta sobre huérfanos en POSIX se resolvió matando el grupo también con `SIGKILL`.
 
 ## Workflow follow-up
 
