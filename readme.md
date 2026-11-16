@@ -36,10 +36,11 @@ Las historias que faltan para poner el sistema en producción están en el [back
 
 | | |
 |---|---|
-| Tests del backend | 457 |
-| Tests del frontend | 148 |
-| Specs vigentes | 12 |
-| Pull requests | 12, con CI y, desde la #3, revisión automática |
+| Tests del backend | 467 |
+| Tests del frontend | 164 |
+| Tests de punta a punta | 3 |
+| Specs vigentes | 14 |
+| Pull requests | 15, con CI y, desde la #3, revisión automática |
 
 ## Cómo levantarlo en local
 
@@ -93,7 +94,10 @@ python tasks.py front-test  # tests del frontend
 python tasks.py lint        # ruff check y ruff format
 python tasks.py typecheck   # mypy
 python tasks.py front-lint  # eslint, prettier y build
+python tasks.py e2e         # tests de punta a punta en Chromium (necesita el paso 3)
 ```
+
+`python tasks.py e2e` no toca la base de desarrollo: recrea, migra y siembra una propia, `escuelita_e2e`, compila el frontend como en producción y levanta la API en el puerto 8001 y el build en el 4173, que tienen que estar libres. `python tasks.py install` ya deja instalados Playwright y Chromium. Si un test falla, su trace queda en `e2e/test-results/` y se abre con `cd e2e && npx playwright show-trace <trace.zip>`.
 
 `python tasks.py` sin argumentos lista todas las tareas.
 

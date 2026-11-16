@@ -317,6 +317,7 @@ Las historias dicen **qué** hay que construir; esta tabla dice **en qué orden 
 | 5 | `asistencia` | HU-GA-04 | Tomar asistencia por grupo, día y turno |
 | 6 | `cobro` | HU-TAR-04, HU-CC-01 | Registrar un cargo con su cálculo de tarifa y descuento |
 | 7 | `cuenta-corriente` | HU-CC-02, HU-CC-03, HU-TES-01 | Pagar en cuotas, ver el saldo de la familia y el ingreso en tesorería |
+| — | `pruebas-e2e` | — (técnico) | Tres recorridos en un navegador real: el cobro, los permisos del Profesor y el corte de sesión. Se sumó después de cerrar el lote, fuera del plan original |
 
 **Del 4 en adelante, cada change incluye su pantalla.** Un change es una tajada vertical —modelo, API y pantalla— y no una capa. Así cada uno se puede demostrar solo, que es lo que pide la Entrega 2: «el flujo principal operativo».
 

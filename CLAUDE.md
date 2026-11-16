@@ -36,6 +36,8 @@ No es un `Makefile` porque `make` no viene con Windows, que es donde se programa
 | Frontend en desarrollo | `cd frontend && npm run dev` |
 | Lint y build del frontend | `cd frontend && npm run lint && npm run build` |
 | Tests del frontend | `python tasks.py front-test` |
+| Tests de punta a punta | `python tasks.py e2e` (necesita Postgres levantado; recrea la base `escuelita_e2e`) |
+| Un solo test de punta a punta | `python tasks.py e2e tests/<archivo>.spec.ts` |
 
 ## Estructura
 
@@ -57,6 +59,7 @@ frontend/src/
   lib/api.ts           único punto de contacto con el backend
   components/  pages/  routes/
 scripts/seed.py        datos de ejemplo
+e2e/tests/             Playwright: tres recorridos en un navegador real
 docs/api/openapi.json  contrato versionado — generado, no se edita
 ```
 
