@@ -802,7 +802,7 @@ No son tablas: se calculan, para que no haya datos duplicados que se puedan desi
 
 #### Puesta en marcha
 
-Al instalar el sistema se crean el primer Admin (Acl. 9) y la primera temporada `vigente` (Acl. 10). Es una tarea de instalación, no una historia de usuario, y no son datos de ejemplo: el resto (grupos, tarifario, usuarios, alumnos) se carga desde el sistema.
+Al instalar el sistema se crean el primer Admin (Acl. 9) y la primera temporada `vigente` (Acl. 10). Es una tarea de instalación, no una historia de usuario, y no son datos de ejemplo: el resto (grupos, tarifario, usuarios, alumnos) se carga desde el sistema. El comando que la hace va con el lote 2, junto a HU-UT-06 (cambio de contraseña): el primer Admin nace con el cambio de contraseña pendiente y, sin esa historia, no puede operar.
 
 #### Fuera del modelo
 

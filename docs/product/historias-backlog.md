@@ -346,6 +346,7 @@ Diez historias. Nueve son las que `python tasks.py seed` cubre durante el lote 1
 - HU-UT-02: alta y modificación de usuarios. El ABM de profesores es este mismo, con rol Profesor.
 - HU-UT-03: baja, es decir, desactivar un usuario.
 - HU-UT-06: cambio obligatorio de contraseña en el primer ingreso y después de un blanqueo.
+- Puesta en marcha: el comando que crea el primer Admin y la primera temporada. No es una historia de usuario, pero sin él una instalación nueva no se puede usar. Va junto a HU-UT-06, porque el Admin nace con el cambio de contraseña pendiente.
 - HU-UT-07: blanqueo de contraseña por un Admin.
 - HU-UT-08: que nadie pueda dejar al staff afuera bloqueando cuentas desde internet. No bloquea las entregas académicas, pero sí la puesta en producción.
 - HU-GA-01: ABM de grupos.
@@ -358,7 +359,7 @@ Diez historias. Nueve son las que `python tasks.py seed` cubre durante el lote 1
 
 **El dato no es lo mismo que la pantalla.** La tabla de tesorería se crea en el lote 1 y cada pago registra su ingreso desde el primer día (HU-TES-01). Lo que queda afuera son las pantallas: ver movimientos y saldo (HU-TES-03) y cargar egresos manuales (HU-TES-02). Escribir el ingreso al registrar el pago cuesta dos líneas; generar esos ingresos después con una migración sería más riesgoso.
 
-**Puesta en marcha.** El primer Admin y la primera temporada vigente se crean al instalar el sistema (Acl. 9, 10) y no son historias de usuario. Abrir una temporada **nueva**, con la copia de grupos y los reseteos, sigue en Backlog (HU-UT-04).
+**Puesta en marcha.** El primer Admin y la primera temporada vigente se crean al instalar el sistema (Acl. 9, 10) y no son historias de usuario; el comando que los crea está en la lista de arriba, junto a HU-UT-06. Abrir una temporada **nueva**, con la copia de grupos y los reseteos, sigue en Backlog (HU-UT-04).
 
 **Qué es y qué no es la semilla.** `python tasks.py seed` es una herramienta de desarrollo y de demostración. Carga datos inventados, nunca datos reales de familias ni de alumnos, y no se ejecuta en producción. La puesta en marcha real de la temporada es el lote 2.
 
