@@ -14,7 +14,7 @@ Artefacto de trabajo derivado de las fuentes. **No** es parte del PRD.
 **Prioridades:**
 - **Lote 1**: se construye en la Entrega 2 (11 historias, ver «Alcance de la implementación»). Tres de ellas, además, se documentan con criterios en `5-historias-de-usuario.md` para cumplir con la consigna del curso.
 - **Lote 2**: se construye después del lote 1 (10 historias). Son las que `python tasks.py seed` sustituye durante el lote 1 y que el sistema necesita antes de ser productivo, más la mitigación del bloqueo disparado desde afuera (HU-UT-08), que no hace falta para las entregas académicas pero sí para salir a producción.
-- **Lote 3**: sale de la revisión de la Entrega 2 con el usuario (16/11/2026, ver el registro de cambios). Tres historias: buscar al alumno por DNI al inscribir (HU-AF-11), la Preinscripción automática (HU-CC-07) y el menú lateral (HU-UT-09).
+- **Lote 3**: sale de la revisión de la Entrega 2 con el usuario (16/11/2026, ver el registro de cambios). Cuatro historias: buscar al alumno por DNI al inscribir (HU-AF-11), la Preinscripción automática (HU-CC-07), el menú lateral (HU-UT-09) y la edad de cada grupo en el selector (HU-GA-06).
 - **Should-have**: valiosa, pero no imprescindible para demostrar el sistema en esta entrega.
 - **Backlog**: necesaria para el sistema en producción, pero fuera de esta entrega académica.
 
@@ -117,6 +117,10 @@ Como staff, quiero tomar asistencia por grupo, día y turno desde el celular o l
 **HU-GA-05** · `Should-have`
 Como staff, quiero consultar la asistencia registrada de un grupo o de un alumno, para controlar quién vino cada día.
 *Sustento:* PRD «Grupos, turnos y asistencia»; Acl. 5 (la asistencia es solo control).
+
+**HU-GA-06** · `Lote 3`
+Como staff, quiero ver en el selector de grupo la edad que cubre cada grupo (por ejemplo, «Delfines · Mañana · 5 a 6 años»), para elegir el grupo sin tener que traducir el rango de fechas de nacimiento.
+*Sustento:* Acl. 4 (el grupo se define por rango de nacimiento). La edad no se guarda: sale del rango del grupo, en años enteros contra el primer año del nombre de la temporada. El porqué está en el design del change `menu-lateral-y-edad-de-grupos`.
 
 ## 4. Tarifario
 
@@ -261,13 +265,13 @@ Como usuario, quiero un menú lateral permanente con los accesos que me permite 
 |---|---|---|---|---|---|---|
 | Alumnos y familias | 11 | 4 | 0 | 1 | 5 | 1 |
 | Documentación | 6 | 0 | 0 | 0 | 4 | 2 |
-| Grupos y asistencia | 5 | 1 | 2 | 0 | 2 | 0 |
+| Grupos y asistencia | 6 | 1 | 2 | 1 | 2 | 0 |
 | Tarifario | 5 | 1 | 3 | 0 | 0 | 1 |
 | Cuenta corriente familiar | 7 | 3 | 0 | 1 | 2 | 1 |
 | Tesorería general | 3 | 1 | 0 | 0 | 2 | 0 |
 | Canon al club | 5 | 0 | 0 | 0 | 0 | 5 |
 | Usuarios y temporadas | 9 | 1 | 5 | 1 | 0 | 2 |
-| **Total** | **51** | **11** | **10** | **3** | **15** | **12** |
+| **Total** | **52** | **11** | **10** | **4** | **15** | **12** |
 
 ## Alcance de la implementación (decisión del 11/11/2026)
 
@@ -376,6 +380,8 @@ Las otras ocho del lote 1 se construyen igual, pero quedan listadas acá sin cri
   - HU-UT-09 (nueva): menú lateral permanente según el rol, sin el tablero de indicadores del inicio.
 
   HU-AF-01 suma el DNI a los datos mínimos del alta, porque la búsqueda de HU-AF-11 lo necesita en todas las fichas. El DNI del alumno y la Preinscripción automática son [SUPUESTO] y quedan como preguntas abiertas en `aclaraciones-cliente.md`.
+
+  El mismo día se suma HU-GA-06 (nueva, Lote 3): la edad que cubre cada grupo, en el selector. Va en el mismo change que HU-UT-09 (`menu-lateral-y-edad-de-grupos`). Un change no necesita una historia para existir (`paleta-y-encuadre` no tuvo ninguna); se escribe porque la traza sirve.
 - **12/11/2026.** HU-UT-08 se reescribe y pasa de Should-have a Lote 2. Antes pedía el bloqueo tras 5 intentos, que ahora construye HU-UT-01 al hacer cumplir Acl. 9. Al diseñar HU-UT-01 apareció que el bloqueo se puede disparar desde internet (usuarios predecibles, solo el Admin desbloquea), y la mitigación no tenía dueño. HU-UT-08 pasa a ser esa mitigación.
 - **11/11/2026.** Se incorpora el script de datos (`python tasks.py seed`) y el lote de 20 se parte en dos: lote 1, la espina del dinero más asistencia (11 historias); lote 2, el ABM que la semilla sustituye (9 historias). Ninguna historia cambia de contenido y ninguna sale del alcance: solo cambia el orden. Motivo: el feedback de la Entrega 1 sobre el tamaño del lote.
 - El bloque de cobro (HU-CC-01 a HU-CC-03) vuelve a MVP-Entrega1.
