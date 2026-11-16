@@ -29,7 +29,10 @@ export default function MarcoZonaProtegida() {
   }
 
   return (
-    <>
+    // Columna de al menos el alto de la ventana: el cuerpo ocupa lo que deja
+    // el encabezado, asi la columna del menu llega siempre hasta abajo, aunque
+    // la pantalla tenga poco contenido o pocas opciones.
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <AppBar position="static" color="inherit" elevation={0} sx={{ bgcolor: "background.paper" }}>
         <Toolbar sx={{ gap: 2, borderBottom: 1, borderColor: "divider", minWidth: 0 }}>
           <Box sx={{ flexShrink: 0, display: "flex" }}>
@@ -57,7 +60,7 @@ export default function MarcoZonaProtegida() {
           </Button>
         </Toolbar>
       </AppBar>
-      <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" } }}>
+      <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, flexGrow: 1 }}>
         <Box
           sx={{
             flexShrink: 0,
@@ -75,6 +78,6 @@ export default function MarcoZonaProtegida() {
           <Outlet />
         </Box>
       </Box>
-    </>
+    </Box>
   );
 }
