@@ -82,3 +82,4 @@ El monto del pago sí lo manda el cliente, y la revisión lo señaló como una p
 | [#9](https://github.com/AleBonansea/AI4Devs-finalproject/pull/9) | `feat/cuenta-corriente` | Pagos, saldo y tesorería (HU-CC-02, HU-CC-03, HU-TES-01) |
 | [#10](https://github.com/AleBonansea/AI4Devs-finalproject/pull/10) | `docs/arranque-y-pull-requests` | Instrucciones de arranque en el readme, este documento y los prompts de la sección 7 |
 | [#11](https://github.com/AleBonansea/AI4Devs-finalproject/pull/11) | `feat/fin-de-linea` | Fin de línea LF en todo el repositorio, con `.gitattributes` |
+| [#12](https://github.com/AleBonansea/AI4Devs-finalproject/pull/12) | `docs/actualizar-documentacion-entrega-2` | Documentación numerada alineada con lo construido en la Entrega 2 |
