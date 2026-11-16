@@ -5,6 +5,12 @@ Un test por Scenario de
 - Requirement «Grupos donde se puede inscribir» (5 Scenarios).
 - Requirement «Grupo sugerido por fecha de nacimiento» (6 Scenarios).
 
+El change menu-lateral-y-edad-de-grupos modifica «Grupos donde se puede
+inscribir»: cada grupo trae ademas `edad_desde` y `edad_hasta`
+(`openspec/changes/menu-lateral-y-edad-de-grupos/specs/grupos/spec.md`).
+Aca solo cambia el conjunto de campos; los valores de la edad se prueban en
+`test_edad_del_grupo.py`.
+
 Se prueba por la API. El estado se prepara con la sesion del test: las
 temporadas con el ORM y los grupos y asignaciones con SQL crudo sobre los
 nombres del modelo de datos, igual que `test_grupos.py`. Los tokens salen
@@ -26,7 +32,16 @@ URL_LOGIN = "/api/v1/auth/login"
 URL_GRUPOS = "/api/v1/grupos"
 CONTRASENA = "Verano2026"
 
-CAMPOS_DEL_GRUPO = {"id", "nombre", "turno", "nacimiento_desde", "nacimiento_hasta", "sugerido"}
+CAMPOS_DEL_GRUPO = {
+    "id",
+    "nombre",
+    "turno",
+    "nacimiento_desde",
+    "nacimiento_hasta",
+    "edad_desde",
+    "edad_hasta",
+    "sugerido",
+}
 
 DESDE = date(2020, 1, 1)
 HASTA = date(2021, 12, 31)

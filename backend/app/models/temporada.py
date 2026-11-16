@@ -50,6 +50,9 @@ class Temporada(Base):
             "porcentaje_canon IS NULL OR (porcentaje_canon >= 0 AND porcentaje_canon <= 100)",
             name="ck_temporada_canon_rango",
         ),
+        # El nombre es "AAAA-AA" (por ejemplo 2026-27): de ahi sale el año de
+        # referencia para calcular la edad de los grupos.
+        CheckConstraint("nombre ~ '^[0-9]{4}-[0-9]{2}$'", name="ck_temporada_nombre_formato"),
         # Una sola temporada vigente a la vez. Es un indice unico parcial, no
         # un CHECK: la restriccion es entre filas, no dentro de una.
         Index(

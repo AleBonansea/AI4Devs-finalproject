@@ -20,3 +20,5 @@ class GrupoParaInscribir(BaseModel):
     nacimiento_desde: date
     nacimiento_hasta: date
     sugerido: bool
+    edad_desde: int
+    edad_hasta: int
