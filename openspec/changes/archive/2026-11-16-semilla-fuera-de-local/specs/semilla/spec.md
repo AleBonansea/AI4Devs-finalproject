@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: La semilla solo corre contra una base local
-La semilla SHALL negarse a correr si el host de la URL de la base no es `localhost`, `127.0.0.1`, `::1` o `db`, el servicio de `docker-compose.yml`, o si la query de la URL trae un `host` o un `hostaddr` que no sea uno de esos. Los hosts de la query se comparan sin su `:puerto`. Al negarse MUST terminar con error, con el mensaje `La semilla solo corre contra una base local.`, sin conectarse a la base. La única excepción es el permiso explícito de `SEMILLA_FUERA_DE_LOCAL`, en su propio requirement.
+La semilla SHALL negarse a correr si el host de la URL de la base no es `localhost`, `127.0.0.1`, `::1` o `db`, el servicio de `docker-compose.yml`, o si la query de la URL trae un `host` o un `hostaddr` que no sea uno de esos. Los hosts de la query se comparan sin su `:puerto`. Al negarse MUST terminar con error, con el mensaje `La semilla solo corre contra una base local.`, sin conectarse a la base. La excepción es el permiso de `SEMILLA_FUERA_DE_LOCAL`, en su propio requirement.
 
 #### Scenario: Base del docker-compose
 - **WHEN** se comprueba la URL `postgresql+psycopg://escuelita:escuelita@db:5432/escuelita`
