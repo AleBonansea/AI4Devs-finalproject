@@ -7,7 +7,7 @@ El marco común de la zona protegida: un encabezado con el usuario y un menú la
 ## ADDED Requirements
 
 ### Requirement: Encabezado de la zona protegida
-Toda pantalla de la zona protegida SHALL mostrar un encabezado con el nombre de la aplicación `Escuela de Verano`, el nombre y el apellido del usuario actual, su rol escrito como `Admin`, `Coordinador` o `Profesor`, y el botón `Salir`.
+Toda pantalla de la zona protegida SHALL mostrar un encabezado con el logo, el nombre de la aplicación `Escuela de Verano`, el nombre y el apellido del usuario actual, su rol escrito como `Admin`, `Coordinador` o `Profesor`, y el botón `Salir`. En pantallas angostas (teléfono) el nombre de la aplicación se oculta y queda el logo, y el nombre y el rol se cortan con «…», para que el encabezado nunca desplace la página hacia el costado.
 
 #### Scenario: Encabezado en una pantalla que no es el inicio
 - **GIVEN** la sesión de un usuario `Carlos Gómez` con rol `profesor` y `debe_cambiar_password` en false

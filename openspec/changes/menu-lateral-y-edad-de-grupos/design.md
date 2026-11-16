@@ -76,7 +76,7 @@ La regla queda en una capability nueva, `temporadas`, no en `grupos`: es una reg
 `RutaProtegida` sigue resolviendo antes la carga y el cambio pendiente, así que el marco no aparece en esos estados sin que haga falta ninguna condición nueva. Esto cumple «Sin menú fuera de la zona habilitada». `/ingresar` queda fuera de las dos rutas.
 
 **Componentes nuevos en `src/components/`:**
-- `MarcoZonaProtegida`: el encabezado, con el logo existente (`LogoConAro`), `Escuela de Verano`, el usuario, el rol y `Salir`, más el menú.
+- `MarcoZonaProtegida`: el encabezado, con el logo existente (`LogoConAro`), `Escuela de Verano`, el usuario, el rol y `Salir`, más el menú. Debajo de `sm` el título se oculta y el nombre y el rol se cortan con `noWrap`: con un apellido largo, a 320–360 px la fila completa desplazaba la página hacia el costado (hallazgo de la revisión adversarial). El marco ocupa al menos el alto de la ventana (`minHeight: 100vh`) para que la columna del menú llegue siempre hasta abajo.
 - `MenuLateral`: dibuja una lista declarativa de secciones y opciones (`{ texto, a, soloAdmin? }`). Esa lista es el único lugar donde un change futuro suma una pantalla.
 
 Las opciones son `NavLink` de react-router, que ya pone `aria-current="page"` en la activa. `Inicio` lleva `end`, para que no quede marcada en todas las direcciones.
@@ -89,7 +89,7 @@ Las opciones son `NavLink` de react-router, que ya pone `aria-current="page"` en
 
 Desde `md` en adelante, el menú es una columna fija a la izquierda. Por debajo, es una fila con desplazamiento horizontal bajo el encabezado, como en `09-mobile-inicio.png`. Se resuelve con breakpoints en `sx`, sin `useMediaQuery`: el DOM es el mismo en los dos tamaños, así que los tests de jsdom ven las mismas opciones y la revisión del tamaño es visual.
 
-Los colores salen de `tema.ts`: la opción activa usa `accion` sobre `accionSuave`, como el prototipo.
+Los colores salen de `tema.ts`. La opción activa usa `texto` sobre `accionSuave`, en negrita, con un borde de 3 px de `accion` (a la izquierda en la columna, abajo en la fila). El prototipo pone el texto en `accion`, pero sobre `accionSuave` eso da 4,05:1 y WCAG AA pide 4,5:1 para texto de este tamaño; con `texto` da 11,56:1, y el borde conserva el azul como marca (hallazgo de la revisión adversarial).
 
 ## Reversibilidad
 
