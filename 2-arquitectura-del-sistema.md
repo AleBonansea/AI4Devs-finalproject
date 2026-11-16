@@ -162,7 +162,7 @@ flowchart TB
 3. `alembic upgrade head` corre como comando previo al arranque del servicio web (pre-deploy command de Render), para que la API nunca arranque con un esquema viejo. Que cada migración sea reversible ya lo comprueba el CI.
 4. El servicio web arranca. Mientras tanto hay un corte breve, aceptable con menos de 10 usuarios.
 
-**Puesta en marcha.** Al instalar el sistema se crean el primer Admin y la primera temporada vigente (Acl. 9, 10). Es una tarea de instalación, no una historia de usuario; su comando llega con el lote 2. En producción **no se corre la semilla**.
+**Puesta en marcha.** Al instalar el sistema se crean el primer Admin y la primera temporada vigente (Acl. 9, 10). Es una tarea de instalación, no una historia de usuario; su comando va con el lote 2, junto a HU-UT-06 (cambio de contraseña): el primer Admin nace con el cambio de contraseña pendiente y, sin esa historia, no puede operar. En producción **no se corre la semilla**: es solo para desarrollo y para el entorno demo, que se siembra con el permiso explícito `SEMILLA_FUERA_DE_LOCAL=1` (ver el readme). La puesta en marcha de la base del club corre en el servidor, no desde una notebook.
 
 **Fuera de temporada (marzo a noviembre).** El documento técnico ofrece tres opciones y recomienda la A: suspender el servidor y dejar la base prendida. Es la que coincide con la decisión del cliente de **conservar todo** entre temporadas (Acl. 10). La recomendación original del documento técnico de borrar los archivos de documentación al cerrar la temporada **no se adopta**, porque Acl. 10 establece que no se borra nada.
 

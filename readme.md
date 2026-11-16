@@ -83,7 +83,21 @@ Entrá a **http://localhost:5173** con cualquiera de los usuarios de ejemplo, to
 | `lrodriguez` | Coordinador | Alumnos, familias, grupos y asistencia |
 | `jperez` | Profesor | Solo sus grupos y su asistencia |
 
-> Los usuarios y los montos de la semilla son de ejemplo. `python tasks.py seed` se niega a correr sobre una base que ya tiene datos.
+> Los usuarios y los montos de la semilla son de ejemplo. **La semilla es solo para desarrollo y demo**: se niega a correr sobre una base que ya tiene datos y, salvo permiso explícito, sobre una base que no sea local.
+
+**Sembrar el entorno demo.** Para sembrar una base remota con datos inventados (la del entorno demo en Render), apuntá `DATABASE_URL` a esa base y dale a la semilla el permiso explícito, solo para ese comando. En PowerShell:
+
+```powershell
+$env:DATABASE_URL='<External Database URL de la base demo>'; $env:SEMILLA_FUERA_DE_LOCAL='1'; python tasks.py seed; Remove-Item Env:DATABASE_URL, Env:SEMILLA_FUERA_DE_LOCAL
+```
+
+Las dos variables se sacan al terminar. Si `DATABASE_URL` queda puesta, un `python tasks.py migrate` o el backend levantado en esa misma terminal van contra la base demo. La URL trae la contraseña y queda en el historial de PowerShell, así que conviene cerrar la terminal después.
+
+Antes de conectarse, la semilla avisa a qué host va a escribir: el host que nombra la URL. Una URL sin host se rechaza aun con permiso. Las variables de libpq `PGHOST`, `PGHOSTADDR` y `PGSERVICE` no tienen que estar definidas al sembrar: desvían la conexión sin que la URL lo muestre, y la semilla no las mira.
+
+El permiso vale solo con el valor exacto `1`, y solo desde el entorno de la terminal. Una línea en `backend/.env` no lo da, para que no quede puesto para siempre.
+
+**Nunca con la base del club:** la External Database URL de producción no se copia a ninguna máquina de desarrollo.
 
 **Comprobar que todo está en orden:**
 
@@ -97,4 +111,4 @@ python tasks.py front-lint  # eslint, prettier y build
 
 `python tasks.py` sin argumentos lista todas las tareas.
 
-> **Puesta en marcha real.** En producción no se corre la semilla: el primer Admin y la primera temporada vigente se crean al instalar el sistema (Acl. 9 y 10). El comando que hace eso es parte del lote 2, junto con el alta de usuarios desde la aplicación.
+> **Puesta en marcha real.** En producción no se corre la semilla: el primer Admin y la primera temporada vigente se crean al instalar el sistema (Acl. 9 y 10). El comando que hace eso va con el lote 2, junto a HU-UT-06 (cambio de contraseña): el primer Admin nace con el cambio de contraseña pendiente y, sin esa historia, no puede operar. Cuando exista, corre en la shell del servidor, no desde una notebook.

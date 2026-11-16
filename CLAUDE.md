@@ -30,7 +30,7 @@ No es un `Makefile` porque `make` no viene con Windows, que es donde se programa
 | Tipos del backend | `python tasks.py typecheck` (mypy) |
 | Nueva migración | `cd backend && alembic revision --autogenerate -m "<mensaje>"` |
 | Aplicar migraciones | `python tasks.py migrate` |
-| Datos de ejemplo | `python tasks.py seed` |
+| Datos de ejemplo (solo desarrollo y demo; una base remota necesita `SEMILLA_FUERA_DE_LOCAL=1` en el entorno) | `python tasks.py seed` |
 | Regenerar el contrato OpenAPI | `python tasks.py openapi-generate` |
 | Comprobar que el contrato está al día | `python tasks.py openapi-check` |
 | Frontend en desarrollo | `cd frontend && npm run dev` |
