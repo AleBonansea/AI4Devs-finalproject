@@ -456,12 +456,18 @@ Si `GET /api/v1/auth/yo` responde 401, el navegador SHALL borrar el token guarda
 - **THEN** se ve el inicio con el nombre del usuario
 
 ### Requirement: Inicio de la zona protegida
-La dirección `/` SHALL mostrar el nombre y el apellido del usuario actual, su rol escrito como `Admin`, `Coordinador` o `Profesor`, un botón `Salir`, un acceso `Registrar alumno` que lleva a `/alumnos/nuevo` y un acceso `Tomar asistencia` que lleva a `/asistencia`. Solo para el Admin, además, un acceso `Registrar cargo` que lleva a `/cargos/nuevo` y un acceso `Cuenta corriente` que lleva a `/cuenta-corriente`. Además del nombre de la aplicación, no tiene otro contenido.
+La dirección `/` SHALL mostrar, dentro del encabezado y el menú de la zona protegida (capability `navegacion`), el saludo `Hola, <nombre>` con el nombre del usuario actual. Los accesos a las pantallas son los del menú: el inicio no repite botones de acceso ni tiene otro contenido. Lo que se ve en toda la página respeta el rol: al Coordinador y al Profesor no se les ofrece `Registrar cargo` ni `Cuenta corriente`.
 
 #### Scenario: Inicio de un Profesor
 - **GIVEN** la sesión de un usuario `Carlos Gómez` con rol `profesor` y `debe_cambiar_password` en false
 - **WHEN** se abre `/`
-- **THEN** se ve `Carlos Gómez`, `Profesor` y el botón `Salir`
+- **THEN** se ve `Hola, Carlos`
+- **AND** se ven `Carlos Gómez`, `Profesor` y el botón `Salir`
+
+#### Scenario: El inicio no repite los accesos del menú
+- **GIVEN** la sesión de un Admin con `debe_cambiar_password` en false
+- **WHEN** se abre `/`
+- **THEN** cada uno de `Registrar alumno`, `Tomar asistencia`, `Registrar cargo` y `Cuenta corriente` aparece una sola vez en la página, en el menú
 
 #### Scenario: Ir a registrar un alumno
 - **GIVEN** la sesión de un Coordinador con `debe_cambiar_password` en false

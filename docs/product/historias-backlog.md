@@ -382,6 +382,8 @@ Las otras ocho del lote 1 se construyen igual, pero quedan listadas acá sin cri
   HU-AF-01 suma el DNI a los datos mínimos del alta, porque la búsqueda de HU-AF-11 lo necesita en todas las fichas. El DNI del alumno y la Preinscripción automática son [SUPUESTO] y quedan como preguntas abiertas en `aclaraciones-cliente.md`.
 
   El mismo día se suma HU-GA-06 (nueva, Lote 3): la edad que cubre cada grupo, en el selector. Va en el mismo change que HU-UT-09 (`menu-lateral-y-edad-de-grupos`). Un change no necesita una historia para existir (`paleta-y-encuadre` no tuvo ninguna); se escribe porque la traza sirve.
+
+  HU-UT-09 y HU-GA-06 quedaron construidas en el change `menu-lateral-y-edad-de-grupos`, archivado el 16/11/2026. Sus criterios viven en las specs `navegacion`, `grupos` («Edad que cubre el grupo») y `temporadas`.
 - **12/11/2026.** HU-UT-08 se reescribe y pasa de Should-have a Lote 2. Antes pedía el bloqueo tras 5 intentos, que ahora construye HU-UT-01 al hacer cumplir Acl. 9. Al diseñar HU-UT-01 apareció que el bloqueo se puede disparar desde internet (usuarios predecibles, solo el Admin desbloquea), y la mitigación no tenía dueño. HU-UT-08 pasa a ser esa mitigación.
 - **11/11/2026.** Se incorpora el script de datos (`python tasks.py seed`) y el lote de 20 se parte en dos: lote 1, la espina del dinero más asistencia (11 historias); lote 2, el ABM que la semilla sustituye (9 historias). Ninguna historia cambia de contenido y ninguna sale del alcance: solo cambia el orden. Motivo: el feedback de la Entrega 1 sobre el tamaño del lote.
 - El bloque de cobro (HU-CC-01 a HU-CC-03) vuelve a MVP-Entrega1.

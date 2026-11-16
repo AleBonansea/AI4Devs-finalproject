@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Grupos en la pantalla
-El campo `Grupo` SHALL ofrecer los grupos que devuelve `GET /api/v1/grupos`, escritos como nombre, turno y edad (`Delfines · Mañana · 5 a 6 años`). La edad sale de `edad_desde` y `edad_hasta` tal como vienen de la API; si son iguales se escribe una sola (`7 años`). Al cargar la fecha de nacimiento, los vuelve a pedir con esa fecha y marca cada sugerido agregando `(sugerido)` al final. Mientras el usuario no haya elegido el grupo a mano, la sugerencia manda: con exactamente un sugerido lo elige, y con dos o ninguno deja el grupo sin elegir. Una elección a mano no la pisa ninguna sugerencia.
+El campo `Grupo` SHALL ofrecer los grupos de `GET /api/v1/grupos`, escritos como nombre, turno y edad (`Delfines · Mañana · 5 a 6 años`; `7 años` si `edad_desde` y `edad_hasta` coinciden). Con la fecha de nacimiento los vuelve a pedir y marca los sugeridos con `(sugerido)` al final. Mientras el usuario no haya elegido el grupo a mano, la sugerencia manda: con exactamente un sugerido lo elige, y con dos o ninguno deja el grupo sin elegir. Una elección a mano no la pisa ninguna sugerencia.
 
 #### Scenario: Profesor ve solo sus grupos
 - **GIVEN** la sesión de un Profesor y `GET /api/v1/grupos` responde solo «Delfines» mañana, con `edad_desde` 5 y `edad_hasta` 6
