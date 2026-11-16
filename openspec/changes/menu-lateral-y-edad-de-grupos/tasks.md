@@ -50,11 +50,11 @@
     - los tests en rojo por el motivo correcto (no hay menú);
     - la huella de `frontend/tests/` intacta después de implementar;
     - `python tasks.py front-test` y `cd frontend && npm run lint && npm run build` en verde.
-- [ ] 4.2 Revisar a ojo el marco en ancho de escritorio y de teléfono (360 px) con `python tasks.py up` y la semilla, contra `docs/previews/01-inicio.png` y `09-mobile-inicio.png`. **Se verifica con** capturas de `/`, `/alumnos/nuevo` y `/asistencia` en los dos anchos: en teléfono el menú es una fila desplazable y no hay desplazamiento horizontal de la página.
+- [x] 4.2 Revisar a ojo el marco en ancho de escritorio y de teléfono (360 px) con `python tasks.py up` y la semilla, contra `docs/previews/01-inicio.png` y `09-mobile-inicio.png`. **Se verifica con** capturas de `/`, `/alumnos/nuevo` y `/asistencia` en los dos anchos: en teléfono el menú es una fila desplazable y no hay desplazamiento horizontal de la página.
 
 ## 5. Cierre
 
-- [ ] 5.1 Comprobación completa: `python tasks.py test`, `lint`, `typecheck`, `openapi-check`, `front-test`, y `cd frontend && npm run lint && npm run build`, todo en verde.
+- [x] 5.1 Comprobación completa: `python tasks.py test`, `lint`, `typecheck`, `openapi-check`, `front-test`, y `cd frontend && npm run lint && npm run build`, todo en verde.
 - [ ] 5.2 Pase del subagente `adversarial-reviewer` sobre el change completo, una sola vez, antes del pull request. **Se verifica con** su informe y cada hallazgo resuelto o descartado con motivo.
 
 ## Workflow follow-up
