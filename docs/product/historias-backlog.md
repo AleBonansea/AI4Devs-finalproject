@@ -14,6 +14,7 @@ Artefacto de trabajo derivado de las fuentes. **No** es parte del PRD.
 **Prioridades:**
 - **Lote 1**: se construye en la Entrega 2 (11 historias, ver «Alcance de la implementación»). Tres de ellas, además, se documentan con criterios en `5-historias-de-usuario.md` para cumplir con la consigna del curso.
 - **Lote 2**: se construye después del lote 1 (10 historias). Son las que `python tasks.py seed` sustituye durante el lote 1 y que el sistema necesita antes de ser productivo, más la mitigación del bloqueo disparado desde afuera (HU-UT-08), que no hace falta para las entregas académicas pero sí para salir a producción.
+- **Lote 3**: sale de la revisión de la Entrega 2 con el usuario (16/11/2026, ver el registro de cambios). Tres historias: buscar al alumno por DNI al inscribir (HU-AF-11), la Preinscripción automática (HU-CC-07) y el menú lateral (HU-UT-09).
 - **Should-have**: valiosa, pero no imprescindible para demostrar el sistema en esta entrega.
 - **Backlog**: necesaria para el sistema en producción, pero fuera de esta entrega académica.
 
@@ -22,8 +23,8 @@ Artefacto de trabajo derivado de las fuentes. **No** es parte del PRD.
 ## 1. Alumnos y familias
 
 **HU-AF-01** · `Lote 1`
-Como staff, quiero registrar un alumno con sus datos mínimos (incluido al menos un tutor) y asignarlo a un grupo y turno, para tenerlo inscripto desde el primer contacto y completar la documentación más adelante.
-*Sustento:* PRD «Alumnos, tutores y documentación» (ficha progresiva; la inscripción la hace el staff); PRD «Roles y permisos»; Acl. 3, 4, 8.
+Como staff, quiero registrar un alumno con sus datos mínimos (nombre, apellido, DNI, fecha de nacimiento y al menos un tutor) y asignarlo a un grupo y turno, para tenerlo inscripto desde el primer contacto y completar la documentación más adelante.
+*Sustento:* PRD «Alumnos, tutores y documentación» (ficha progresiva; la inscripción la hace el staff); PRD «Roles y permisos»; Acl. 3, 4, 8. El DNI del alumno es [SUPUESTO], ver «DNI del alumno» en las preguntas abiertas de `aclaraciones-cliente.md`; se sumó el 16/11/2026 y se construye con HU-AF-11.
 
 *Criterios de aceptación:* están en [`5-historias-de-usuario.md`](../../5-historias-de-usuario.md), que es el documento que los entrega. **No se copian acá**: hasta el 11/11/2026 estaban en los dos archivos y ya habían empezado a divergir.
 
@@ -63,9 +64,9 @@ Como staff, quiero inscribir a un alumno en los dos turnos como inscripciones in
 Como Profesor, quiero ver las alergias y condiciones médicas de los alumnos de mis grupos (y no las de los hijos de la misma familia que estén en otros grupos), para actuar rápido ante una emergencia.
 *Sustento:* Acl. 9, 11 (Acceso por necesidad).
 
-**HU-AF-11** · `Backlog`
-Como staff, quiero inscribir en los grupos de la nueva temporada a un alumno que vuelve, reutilizando su ficha, su familia y sus tutores, para no cargar todo de nuevo. Las inscripciones a grupos se hacen de nuevo en cada temporada.
-*Sustento:* Acl. 10.
+**HU-AF-11** · `Lote 3`
+Como staff, quiero empezar la inscripción buscando al alumno por su DNI, para no volver a cargar a los que ya vinieron en temporadas anteriores. Si el DNI no existe, se da de alta el alumno con su familia. Si existe y no está inscripto en la temporada vigente, se reutiliza su ficha, su familia y sus personas autorizadas, y solo se elige grupo y turno. Si ya está inscripto en la temporada vigente, el sistema lo avisa y no deja seguir.
+*Sustento:* Acl. 10 (la ficha se conserva entre temporadas; las inscripciones se hacen de nuevo cada temporada). El DNI del alumno es [SUPUESTO], ver «DNI del alumno» en las preguntas abiertas de `aclaraciones-cliente.md`.
 
 ## 2. Documentación
 
@@ -167,6 +168,10 @@ Como staff, quiero indicar una modalidad sugerida al inscribir a un alumno, para
 Como Admin, quiero anular un cobro mal cargado indicando el motivo, sin borrarlo y dejando registrado quién lo anuló, para corregir errores sin perder el rastro de lo que pasó.
 *Sustento:* Acl. 6 (Anulaciones).
 
+**HU-CC-07** · `Lote 3`
+Como staff, quiero que al inscribir a un alumno en la temporada se registre solo su cargo de Preinscripción, para no tener que acordarme de cargarlo uno por uno.
+*Sustento:* Acl. 6 (Preinscripción: monto fijo, sin descuento, no pasa por el tarifario). Se automatiza solo la Preinscripción, nunca el Abono: el tramo de descuento del Abono depende de cuántos hijos haya inscriptos en el turno en ese momento y el cargo no se recalcula, así que generarlo en el alta le daría al primer hermano un tramo de 1 hijo que después no se puede corregir. El Abono se registra después, desde Registrar cargo. La Preinscripción deja de aparecer en el selector de tipo de cargo de esa pantalla, porque ya no se carga a mano. Que se genere sola es [SUPUESTO], ver «Preinscripción automática» en las preguntas abiertas de `aclaraciones-cliente.md`.
+
 ## 6. Tesorería general
 
 **HU-TES-01** · `Lote 1`
@@ -244,21 +249,25 @@ Como Admin, quiero que nadie pueda dejar al staff afuera bloqueando cuentas desd
 *Sustento:* el riesgo «Bloqueo disparado desde afuera» del design del change `auth-ingreso`, y la pregunta abierta «Desbloqueo de una cuenta bloqueada» de `aclaraciones-cliente.md`. El bloqueo en sí (5 intentos fallidos seguidos, hasta el blanqueo de HU-UT-07) lo construye HU-UT-01, según Acl. 9; esta historia no lo vuelve a hacer.
 *No bloquea las entregas académicas, pero sí la puesta en producción: el sistema no sale con datos de familias reales sin esto.*
 
+**HU-UT-09** · `Lote 3`
+Como usuario, quiero un menú lateral permanente con los accesos que me permite mi rol, para moverme entre las pantallas sin volver al inicio. El menú muestra solo lo que ya existe y crece a medida que se construyen las pantallas.
+*Sustento:* el prototipo (`docs/previews/01-inicio.png`, `03-grupos.png`). El tablero con indicadores del inicio **no** entra: necesita HU-DOC-02, HU-CC-04 y el listado de grupos, que no están construidos.
+
 ---
 
 ## Resumen
 
-| Módulo | Historias | Lote 1 | Lote 2 | Should-have | Backlog |
-|---|---|---|---|---|---|
-| Alumnos y familias | 11 | 4 | 0 | 5 | 2 |
-| Documentación | 6 | 0 | 0 | 4 | 2 |
-| Grupos y asistencia | 5 | 1 | 2 | 2 | 0 |
-| Tarifario | 5 | 1 | 3 | 0 | 1 |
-| Cuenta corriente familiar | 6 | 3 | 0 | 2 | 1 |
-| Tesorería general | 3 | 1 | 0 | 2 | 0 |
-| Canon al club | 5 | 0 | 0 | 0 | 5 |
-| Usuarios y temporadas | 8 | 1 | 5 | 0 | 2 |
-| **Total** | **49** | **11** | **10** | **15** | **13** |
+| Módulo | Historias | Lote 1 | Lote 2 | Lote 3 | Should-have | Backlog |
+|---|---|---|---|---|---|---|
+| Alumnos y familias | 11 | 4 | 0 | 1 | 5 | 1 |
+| Documentación | 6 | 0 | 0 | 0 | 4 | 2 |
+| Grupos y asistencia | 5 | 1 | 2 | 0 | 2 | 0 |
+| Tarifario | 5 | 1 | 3 | 0 | 0 | 1 |
+| Cuenta corriente familiar | 7 | 3 | 0 | 1 | 2 | 1 |
+| Tesorería general | 3 | 1 | 0 | 0 | 2 | 0 |
+| Canon al club | 5 | 0 | 0 | 0 | 0 | 5 |
+| Usuarios y temporadas | 9 | 1 | 5 | 1 | 0 | 2 |
+| **Total** | **51** | **11** | **10** | **3** | **15** | **12** |
 
 ## Alcance de la implementación (decisión del 11/11/2026)
 
@@ -361,6 +370,12 @@ Son dos cosas distintas y no tienen por qué coincidir:
 Las otras ocho del lote 1 se construyen igual, pero quedan listadas acá sin criterios.
 
 **Cambios respecto de las versiones anteriores:**
+- **16/11/2026.** Salen de la revisión de la Entrega 2 con el usuario. Se abre el lote 3 con tres historias:
+  - HU-AF-11 se reescribe y pasa de Backlog a Lote 3: la inscripción empieza buscando al alumno por DNI, para reutilizar la ficha de los que vuelven y frenar al que ya está inscripto en la temporada.
+  - HU-CC-07 (nueva): la Preinscripción se registra sola al inscribir. Solo la Preinscripción: el Abono no, porque su tramo depende de los hermanos inscriptos en el turno y el cargo no se recalcula.
+  - HU-UT-09 (nueva): menú lateral permanente según el rol, sin el tablero de indicadores del inicio.
+
+  HU-AF-01 suma el DNI a los datos mínimos del alta, porque la búsqueda de HU-AF-11 lo necesita en todas las fichas. El DNI del alumno y la Preinscripción automática son [SUPUESTO] y quedan como preguntas abiertas en `aclaraciones-cliente.md`.
 - **12/11/2026.** HU-UT-08 se reescribe y pasa de Should-have a Lote 2. Antes pedía el bloqueo tras 5 intentos, que ahora construye HU-UT-01 al hacer cumplir Acl. 9. Al diseñar HU-UT-01 apareció que el bloqueo se puede disparar desde internet (usuarios predecibles, solo el Admin desbloquea), y la mitigación no tenía dueño. HU-UT-08 pasa a ser esa mitigación.
 - **11/11/2026.** Se incorpora el script de datos (`python tasks.py seed`) y el lote de 20 se parte en dos: lote 1, la espina del dinero más asistencia (11 historias); lote 2, el ABM que la semilla sustituye (9 historias). Ninguna historia cambia de contenido y ninguna sale del alcance: solo cambia el orden. Motivo: el feedback de la Entrega 1 sobre el tamaño del lote.
 - El bloque de cobro (HU-CC-01 a HU-CC-03) vuelve a MVP-Entrega1.
