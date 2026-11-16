@@ -77,7 +77,7 @@ test("alta, cargo y pago completo dejan la cuenta corriente en cero", async ({ p
     /^Tarifa base · Mañana · Mes\s*\$ 100\.000$/,
   );
   await expect(renglon(/^Descuento Empleado · /)).toHaveText(/^Descuento Empleado · .*\s*25 %$/);
-  await expect(renglon("Total del cargo")).toHaveText(/^Total del cargo\s*\$ 75\.001$/);
+  await expect(renglon("Total del cargo")).toHaveText(/^Total del cargo\s*\$ 75\.000$/);
 
   await principal.getByRole("button", { name: "Registrar cargo" }).click();
   await expect(
