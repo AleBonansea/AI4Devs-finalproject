@@ -115,7 +115,7 @@ Ingresá como **`mgarcia`** (Admin).
 | 1.5 | Menú **Registrar cargo**. En **Familia** escribí tu apellido y elegila. | «Categoría: Empleado». |
 | 1.6 | **Alumno y turno**: Tomás · Mañana. **Tipo de cargo**: Abono. **Modalidad**: Mes. **Período**: Mes 1. | El desglose, que calcula la API: tarifa base **$ 100.000**, descuento Empleado **25 %**, total **$ 75.000**. |
 | 1.7 | **Registrar cargo**. | «Cargo registrado por $ 75.000. Saldo pendiente de la familia: $ 75.000.» |
-| 1.8 | Repetí el mismo cargo: Abono, Mes, Mes 1, mismo alumno. | Se rechaza por repetido. Un cargo no se cobra dos veces. |
+| 1.8 | Repetí el mismo cargo: Abono, Mes, Mes 1, mismo alumno. | «El alumno ya tiene un cargo «Abono» de «Mes 1» en el turno mañana.»: un cargo no se cobra dos veces. |
 | 1.9 | Menú **Cuenta corriente**, elegí tu familia. | Saldo pendiente **$ 75.000** y el renglón «Abono · Mes 1». |
 | 1.10 | **Registrar pago**. Cambiá el monto a **$ 30.000** y confirmá. | Saldo pendiente **$ 45.000**: los pagos parciales se permiten. |
 | 1.11 | **Registrar pago** otra vez, por **$ 50.000**. | Se rechaza: el pago no puede superar lo que se debe. |
