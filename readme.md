@@ -28,19 +28,129 @@ Proyecto Final del máster **AI4Devs (LIDR)**, desarrollado con **Spec-Driven De
 
 ## Estado
 
-**Entrega 2 — Código funcional.** El lote 1 está implementado: la «espina del dinero» completa, de punta a punta — ingreso al sistema, alta de alumno con su familia, grupos y asistencia, tarifario, cargo con el cálculo de descuentos, pagos y cuenta corriente.
+**Entrega 3 — Entrega final.** El lote 1 está implementado: la «espina del dinero» completa, de punta a punta — ingreso al sistema, alta de alumno con su familia, grupos y asistencia, tarifario, cargo con el cálculo de descuentos, pagos y cuenta corriente. Está desplegado en Render como entorno demo (ver [Probarlo en línea](#probarlo-en-línea)) y cubierto por tests unitarios, de integración y de punta a punta.
 
-Se construyó con **Spec-Driven Development** sobre [OpenSpec](openspec/): cada funcionalidad pasó por propuesta, especificación, diseño y tareas antes de escribir una línea de código. Los ocho *changes* del lote están archivados en [`openspec/changes/archive/`](openspec/changes/archive/) y sus especificaciones vigentes viven en [`openspec/specs/`](openspec/specs/).
+Se construyó con **Spec-Driven Development** sobre [OpenSpec](openspec/): cada funcionalidad pasó por propuesta, especificación, diseño y tareas antes de escribir una línea de código. Los ocho *changes* del lote, y los tres que se sumaron después (menú lateral, tests de punta a punta y semilla del entorno demo), están archivados en [`openspec/changes/archive/`](openspec/changes/archive/) y sus especificaciones vigentes viven en [`openspec/specs/`](openspec/specs/).
 
 Las historias que faltan para poner el sistema en producción están en el [backlog](docs/product/historias-backlog.md), identificadas como «Lote 2».
 
 | | |
 |---|---|
-| Tests del backend | 467 |
+| Tests del backend | 482 |
 | Tests del frontend | 164 |
 | Tests de punta a punta | 3 |
 | Specs vigentes | 14 |
-| Pull requests | 15, con CI y, desde la #3, revisión automática |
+| Pull requests | 17, con CI y, desde la #3, revisión automática |
+
+## Probarlo en línea
+
+**https://escuelita-cm.onrender.com/ingresar**
+
+Es un **entorno demo** en Render, con datos inventados que cargó la semilla. No tiene datos reales de familias ni de alumnos.
+
+> **Antes de empezar:**
+> - **El primer ingreso tarda.** Es el plan gratuito de Render: la API se duerme después de un rato sin uso y tarda cerca de un minuto en despertar. Si el ingreso parece colgado, esperá; no es un error. Después responde normal.
+> - **Disponible hasta el 16/12/2026.** La base gratuita de Render vence a los 30 días de creada.
+> - **La base es compartida.** Lo que cargues lo ven los demás evaluadores. Para las familias nuevas usá un apellido propio, por ejemplo el tuyo.
+> - **Las fechas de los campos** las muestra el navegador según el idioma de tu sistema: en inglés aparecen como mm/dd/aaaa.
+
+### Usuarios de prueba
+
+Todos con la contraseña **`Verano2026`**:
+
+| Usuario | Rol | Qué puede hacer |
+|---|---|---|
+| `mgarcia` | Admin | Todo: alumnos, asistencia, cargos, pagos y cuenta corriente |
+| `lrodriguez` | Coordinador | Alumnos y asistencia en cualquier grupo; nada de dinero |
+| `jperez` | Profesor | Asistencia solo en sus grupos (los dos Delfines); nada de dinero |
+
+### Qué trae cargado
+
+**Temporada 2026-27**, del 04/01/2027 al 26/02/2027.
+
+| Grupo | Turno | Nacidos | Profesor |
+|---|---|---|---|
+| Delfines | Mañana y Tarde | 2020 a 2021 | `jperez` |
+| Tiburones | Mañana y Tarde | 2017 a 2019 | `cfernandez` |
+
+| Familia | Categoría | Hijos inscriptos |
+|---|---|---|
+| Pérez | Empleado | Ana (Tiburones · Mañana) y Juan (Delfines · Mañana) |
+| Gómez | Socio | Lucía (Delfines · Tarde) |
+| Ruiz | No socio | Sofía (Tiburones · Tarde) |
+
+**Tarifa base:**
+
+| | Mes | Quincena | Semana | Día |
+|---|---|---|---|---|
+| Mañana | $ 100.000 | $ 55.000 | $ 30.000 | $ 8.000 |
+| Tarde | $ 80.000 | $ 45.000 | $ 25.000 | $ 7.000 |
+
+**Descuento.** Se aplica un único porcentaje, nunca acumulado:
+
+| Categoría | Día, Semana, Quincena | Mes, 1 hijo | Mes, 2 hijos | Mes, 3 hijos | Mes, 4 o más |
+|---|---|---|---|---|---|
+| No socio | 0 % | 0 % | 10 % | 15 % | 20 % |
+| Socio | 50 % | 50 % | 55 % | 57,5 % | 60 % |
+| Empleado | 25 % | 25 % | 32,5 % | 36,25 % | 40 % |
+
+En el Mes, los hijos se cuentan **por turno**, y el porcentaje del tramo alcanza a todos los hermanos.
+
+**Tipos de cargo:** *Abono*, que se calcula con la tarifa y el descuento, y *Preinscripción*, con monto fijo de $ 20.000 y sin descuento.
+
+### Recorrido de verificación
+
+Unos 15 minutos. Cada paso dice qué hacer y qué tenés que ver. Los montos salen de las tablas de arriba, así que se pueden comprobar a mano.
+
+#### 1. El flujo principal: alta → cargo → pagos → saldo en cero
+
+Ingresá como **`mgarcia`** (Admin).
+
+| # | Hacé esto | Tenés que ver |
+|---|---|---|
+| 1.1 | Menú **Registrar alumno**. Cargá nombre *Tomás*, apellido *tu apellido* y fecha de nacimiento **12/04/2019**. | En **Grupo** aparecen sugeridos los dos Tiburones, porque 2019 cae en su rango de edad. |
+| 1.2 | Elegí **Tiburones · Mañana**. Dejá **Familia nueva** y elegí la categoría **Empleado**. | — |
+| 1.3 | Probá **Registrar** sin cargar ninguna persona. | El alta se rechaza: la familia nueva necesita al menos un tutor. |
+| 1.4 | **Agregar persona nueva**: nombre, apellido, teléfono y DNI, y marcá **Tutor**. **Registrar**. | «Tomás *Apellido* quedó inscripto en Tiburones (Mañana). Familia: *Apellido* – Tomás.» |
+| 1.5 | Menú **Registrar cargo**. En **Familia** escribí tu apellido y elegila. | «Categoría: Empleado». |
+| 1.6 | **Alumno y turno**: Tomás · Mañana. **Tipo de cargo**: Abono. **Modalidad**: Mes. **Período**: Mes 1. | El desglose, que calcula la API: tarifa base **$ 100.000**, descuento Empleado **25 %**, total **$ 75.000**. |
+| 1.7 | **Registrar cargo**. | «Cargo registrado por $ 75.000. Saldo pendiente de la familia: $ 75.000.» |
+| 1.8 | Repetí el mismo cargo: Abono, Mes, Mes 1, mismo alumno. | Se rechaza por repetido. Un cargo no se cobra dos veces. |
+| 1.9 | Menú **Cuenta corriente**, elegí tu familia. | Saldo pendiente **$ 75.000** y el renglón «Abono · Mes 1». |
+| 1.10 | **Registrar pago**. Cambiá el monto a **$ 30.000** y confirmá. | Saldo pendiente **$ 45.000**: los pagos parciales se permiten. |
+| 1.11 | **Registrar pago** otra vez, por **$ 50.000**. | Se rechaza: el pago no puede superar lo que se debe. |
+| 1.12 | **Registrar pago** con el monto que propone la pantalla, **$ 45.000**. | Saldo pendiente **$ 0**, el cargo figura **Saldado** y desaparece el botón de pago. |
+
+#### 2. El cálculo: descuento por tramo de hijos y monto fijo
+
+Seguí como **`mgarcia`**, en **Registrar cargo**. En cada caso mirá el desglose antes de registrar. Para comprobar solo el cálculo no hace falta registrar.
+
+| # | Familia · alumno | Cargo | Total esperado | Por qué |
+|---|---|---|---|---|
+| 2.1 | Pérez · Ana · Mañana | Abono · Mes · Mes 1 | **$ 67.500** | Empleado con 2 hijos a la mañana: 32,5 %, no 25 % |
+| 2.2 | Pérez · Juan · Mañana | Abono · Mes · Mes 1 | **$ 67.500** | El tramo alcanza a los dos hermanos, no solo al segundo |
+| 2.3 | Gómez · Lucía · Tarde | Abono · Quincena · Quincena 1 | **$ 22.500** | Socio en Quincena: 50 %. La cantidad de hijos no cuenta fuera del Mes |
+| 2.4 | Ruiz · Sofía · Tarde | Abono · Mes · Mes 1 | **$ 80.000** | No socio con 1 hijo: sin descuento |
+| 2.5 | Ruiz · Sofía · Tarde | Abono · Día, con una fecha de la temporada | **$ 7.000** | El Día no tiene período: se elige la fecha |
+| 2.6 | Cualquiera | Preinscripción | **$ 20.000** | Monto fijo, sin descuento, aunque la familia sea Socio |
+
+Si otro evaluador ya registró uno de estos cargos, la pantalla lo va a rechazar por repetido. Elegí otro período, por ejemplo Mes 2 o Quincena 2, y el total tiene que dar igual.
+
+#### 3. Asistencia y permisos por rol
+
+| # | Usuario | Hacé esto | Tenés que ver |
+|---|---|---|---|
+| 3.1 | `jperez` (Profesor) | Mirá el menú. | Solo **Inicio**, **Registrar alumno** y **Tomar asistencia**. No aparece la sección **Administración**. |
+| 3.2 | `jperez` | **Tomar asistencia**: abrí el selector de grupo. | Solo sus grupos, Delfines Mañana y Delfines Tarde. Los Tiburones no aparecen. |
+| 3.3 | `jperez` | Delfines · Mañana, una fecha de la temporada (enero o febrero de 2027). Marcá a Juan Pérez y guardá. | «Asistencia guardada.» |
+| 3.4 | `jperez` | Escribí a mano en la barra del navegador `…onrender.com/cuenta-corriente`. | Te devuelve al inicio: la cuenta corriente es solo del Admin, aunque se conozca la dirección. |
+| 3.5 | `lrodriguez` (Coordinador) | **Tomar asistencia**. | Ve los cuatro grupos. Tampoco tiene **Administración**: el Coordinador no ve dinero. |
+| 3.6 | Cualquiera | **Salir**, y volvé a ingresar con una contraseña incorrecta. | Se rechaza el ingreso, con un mensaje que no dice si lo que falló fue el usuario o la contraseña. |
+
+#### 4. Lo que no se ve en la pantalla
+
+- **La documentación de la API:** https://escuelita-cm-api.onrender.com/docs *(ver la nota del final)*. Probá `POST /api/v1/cargos` mandando un `monto`: la API lo ignora o lo rechaza, porque **el precio nunca viene del cliente**.
+- **Los tests:** el último run del CI en GitHub Actions muestra los cuatro jobs (backend, frontend, contrato y punta a punta) en verde. Los tres recorridos de punta a punta (`e2e/tests/`) automatizan los pasos 1 y 3 de este recorrido.
 
 ## Cómo levantarlo en local
 

@@ -235,7 +235,7 @@ Principio general: **todo control de acceso se hace en la API**. El frontend sol
 
 ### **2.6. Tests**
 
-**634 tests automatizados**: 467 del backend, 164 del frontend y 3 de punta a punta. Corren en cada pull request y en local con `python tasks.py test`, `python tasks.py front-test` y `python tasks.py e2e`.
+**649 tests automatizados**: 482 del backend, 164 del frontend y 3 de punta a punta. Corren en cada pull request y en local con `python tasks.py test`, `python tasks.py front-test` y `python tasks.py e2e`.
 
 **Foco: el cálculo de cargos y descuentos.** Es donde está la lógica de negocio que mueve dinero, y donde un error pasa desapercibido hasta que un cliente reclama. Es la capability con más tests: 102 de los 467 del backend.
 
@@ -252,7 +252,7 @@ Principio general: **todo control de acceso se hace en la API**. El frontend sol
 | **Formato del frontend** | `lib/fechas.ts` y `lib/montos.ts`: fechas dd/mm/aaaa y montos como `$ 4.462,50` sin pasar por `float` | Vitest | 37 |
 | **Punta a punta** | Tres recorridos en un navegador real: alta, cargo y pago hasta el saldo en cero; un Profesor que no llega a la cuenta corriente ni por la pantalla ni por la API; un token inválido que vuelve al ingreso | Playwright sobre el build servido y la API en otro origen, con CORS, contra una base `escuelita_e2e` recreada y sembrada en cada corrida, en `e2e/tests/` | 3 |
 
-Por capability, en el backend: `cargos` 102, `asistencia` 45, `familias` 45, `auth` 41, `alumnos` 39, `pagos` 35, `errores-de-la-api` 30, `tarifario` 30, `grupos` 28, `semilla` 23, `cuenta-corriente` 16, `tesoreria` 13, `temporadas` 4, y 16 de esquema y salud. En el frontend: `auth` 49, `alumnos` 19, `cuenta-corriente` 17, `asistencia` 13, `cargos` 13, `navegacion` 13, `lib` 37 y 3 de la preparación. De punta a punta: 3, en `e2e/tests/`.
+Por capability, en el backend: `cargos` 102, `asistencia` 45, `familias` 45, `auth` 41, `alumnos` 39, `pagos` 35, `errores-de-la-api` 30, `tarifario` 30, `grupos` 28, `semilla` 38, `cuenta-corriente` 16, `tesoreria` 13, `temporadas` 4, y 16 de esquema y salud. En el frontend: `auth` 49, `alumnos` 19, `cuenta-corriente` 17, `asistencia` 13, `cargos` 13, `navegacion` 13, `lib` 37 y 3 de la preparación. De punta a punta: 3, en `e2e/tests/`.
 
 **Decisiones:**
 - **PostgreSQL real en los tests, no SQLite.** SQLite no evalúa igual los `CHECK` ni las FK compuestas, y esas reglas son parte del diseño. Un test lo comprueba (`test_la_base_de_pruebas_es_postgres`), y `conftest.py` se niega a correr contra la base de desarrollo.
