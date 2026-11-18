@@ -1,0 +1,6 @@
+schema: spec-driven
+created: 2026-11-16
+# Change técnico: agrega pruebas de punta a punta sobre comportamiento ya
+# especificado en auth, navegacion, alumnos, cargos, pagos y cuenta-corriente.
+# Ningún requirement cambia, así que no hay delta de spec.
+skip_specs: true

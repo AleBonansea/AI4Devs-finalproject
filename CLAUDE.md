@@ -30,12 +30,14 @@ No es un `Makefile` porque `make` no viene con Windows, que es donde se programa
 | Tipos del backend | `python tasks.py typecheck` (mypy) |
 | Nueva migración | `cd backend && alembic revision --autogenerate -m "<mensaje>"` |
 | Aplicar migraciones | `python tasks.py migrate` |
-| Datos de ejemplo | `python tasks.py seed` |
+| Datos de ejemplo (solo desarrollo y demo; una base remota necesita `SEMILLA_FUERA_DE_LOCAL=1` en el entorno) | `python tasks.py seed` |
 | Regenerar el contrato OpenAPI | `python tasks.py openapi-generate` |
 | Comprobar que el contrato está al día | `python tasks.py openapi-check` |
 | Frontend en desarrollo | `cd frontend && npm run dev` |
 | Lint y build del frontend | `cd frontend && npm run lint && npm run build` |
 | Tests del frontend | `python tasks.py front-test` |
+| Tests de punta a punta | `python tasks.py e2e` (necesita Postgres levantado; recrea la base `escuelita_e2e`) |
+| Un solo test de punta a punta | `python tasks.py e2e tests/<archivo>.spec.ts` |
 
 ## Estructura
 
@@ -57,6 +59,7 @@ frontend/src/
   lib/api.ts           único punto de contacto con el backend
   components/  pages/  routes/
 scripts/seed.py        datos de ejemplo
+e2e/tests/             Playwright: tres recorridos en un navegador real
 docs/api/openapi.json  contrato versionado — generado, no se edita
 ```
 

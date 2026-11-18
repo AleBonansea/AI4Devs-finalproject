@@ -4,13 +4,17 @@ Carga usuarios, grupos, tarifario y familias inventados mientras el ABM que los 
 desde la aplicacion no existe. Nunca datos reales.
 
 Dos negativas la protegen (ver `design.md` del change tarifario-y-semilla):
-- solo corre contra una base local, comprobado antes de conectarse;
-- solo corre sobre una base vacia: no borra, no actualiza, no mezcla.
+- solo corre contra una base local, comprobado antes de conectarse, salvo que
+  el entorno traiga `SEMILLA_FUERA_DE_LOCAL=1` (permiso explicito, que ademas
+  imprime un aviso con los hosts remotos; ver el change semilla-fuera-de-local);
+- solo corre sobre una base vacia: no borra, no actualiza, no mezcla. El
+  permiso no afloja esta.
 
 `cargar` hace flush y nunca commit. El commit lo hace `scripts/seed.py`, y
 asi los tests la corren dentro de su transaccion revertida.
 """
 
+from collections.abc import Mapping
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -44,10 +48,17 @@ from app.models import (
 
 MENSAJE_BASE_NO_LOCAL = "La semilla solo corre contra una base local."
 MENSAJE_BASE_NO_VACIA = "La base no está vacía: la semilla solo corre sobre una base vacía."
+MENSAJE_HOST_VACIO = (
+    "La semilla no siembra una base remota sin nombrar su host: la URL tiene un host vacío."
+)
 
 # `db` es el servicio de Postgres del docker-compose.yml. Se compara el host
 # exacto: `localhost.ejemplo.com` no es local.
 HOSTS_LOCALES = frozenset({"localhost", "127.0.0.1", "::1", "db"})
+
+# Permiso explicito para sembrar una base remota. Se lee del entorno del
+# proceso, nunca de `Configuracion` ni del `.env`.
+VARIABLE_FUERA_DE_LOCAL = "SEMILLA_FUERA_DE_LOCAL"
 
 # --- Datos ------------------------------------------------------------------
 
@@ -203,24 +214,73 @@ class SemillaRechazada(Exception):
     """La semilla se nego a correr. El mensaje es para quien la lanzo."""
 
 
-def verificar_base_local(url: str) -> None:
-    """Se niega si el host de la URL no es local. No se conecta a la base.
+def _hosts_de(url: str) -> list[str]:
+    """Todos los hosts a los que podria conectarse libpq con esta URL.
 
     libpq tambien toma `host` y `hostaddr` de la query, y esos le ganan al
     host de la URL: cada valor (string o tupla, cada uno una lista separada
-    por comas) tiene que ser local.
+    por comas) cuenta como un host. Un elemento de la query puede traer su
+    puerto (`host:5432`, `[::1]:5432`): se le saca, porque el puerto no es parte
+    del host y `localhost:5432` seguiria contando como remoto.
     """
     url_parseada = make_url(url)
-    if url_parseada.host not in HOSTS_LOCALES:
-        raise SemillaRechazada(MENSAJE_BASE_NO_LOCAL)
+    hosts: list[str] = [url_parseada.host or ""]
     for clave in ("host", "hostaddr"):
         valor = url_parseada.query.get(clave)
         if valor is None:
             continue
         valores = (valor,) if isinstance(valor, str) else valor
-        for elemento in (e.strip() for v in valores for e in v.split(",")):
-            if elemento not in HOSTS_LOCALES:
-                raise SemillaRechazada(MENSAJE_BASE_NO_LOCAL)
+        hosts.extend(_sin_puerto(e.strip()) for v in valores for e in v.split(","))
+    return hosts
+
+
+def _sin_puerto(elemento: str) -> str:
+    """Saca el `:puerto` de un host de la query.
+
+    `[ipv6]:puerto` queda como el ipv6 sin corchetes (igual que lo entrega
+    `make_url` para el host de la URL, asi `::1` sigue siendo local y el aviso
+    nombra la direccion pelada). `host:digitos`, con un unico `:`, queda como
+    `host`. Un IPv6 sin corchetes (varios `:`) no se toca: no se puede saber
+    cual es su puerto.
+    """
+    if elemento.startswith("["):
+        cierre = elemento.find("]")
+        if cierre != -1:
+            return elemento[1:cierre]
+        return elemento
+    anfitrion, separador, puerto = elemento.partition(":")
+    if separador and puerto.isdigit() and ":" not in puerto:
+        return anfitrion
+    return elemento
+
+
+def verificar_base_local(url: str) -> None:
+    """Se niega si algun host de la URL no es local. No se conecta a la base."""
+    if any(host not in HOSTS_LOCALES for host in _hosts_de(url)):
+        raise SemillaRechazada(MENSAJE_BASE_NO_LOCAL)
+
+
+def comprobar_destino(url: str, entorno: Mapping[str, str]) -> str | None:
+    """Decide si la semilla puede escribir en la base de `url`. No se conecta.
+
+    Devuelve `None` si la base es local. Si es remota y el entorno trae
+    `SEMILLA_FUERA_DE_LOCAL` igual a `"1"` (solo ese valor exacto), devuelve el
+    aviso con los hosts no locales. Si no, se niega con `SemillaRechazada`.
+    Con el permiso, un host vacio (URL sin host o elemento vacio en la lista)
+    tambien se rechaza: no hay nombre que poner en el aviso.
+    """
+    if entorno.get(VARIABLE_FUERA_DE_LOCAL) != "1":
+        verificar_base_local(url)
+        return None
+    if any(host == "" for host in _hosts_de(url)):
+        raise SemillaRechazada(MENSAJE_HOST_VACIO)
+    remotos = list(dict.fromkeys(h for h in _hosts_de(url) if h not in HOSTS_LOCALES))
+    if not remotos:
+        return None
+    return (
+        f"Atención: {VARIABLE_FUERA_DE_LOCAL}=1. "
+        f"La semilla va a escribir en una base remota: {', '.join(remotos)}."
+    )
 
 
 def cargar(sesion: Session) -> None:

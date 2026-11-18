@@ -174,4 +174,4 @@ python tasks.py front-lint  # eslint, prettier y build
 
 Los tests del backend corren contra PostgreSQL, no contra SQLite (ver [`2-arquitectura-del-sistema.md`](2-arquitectura-del-sistema.md), sección 2.6).
 
-**Puesta en marcha real.** En producción no se corre la semilla: lo único que se crea al instalar es el **primer Admin** y la **primera temporada vigente** (Acl. 9, 10). El comando que lo hace llega con el lote 2, junto con el alta de usuarios desde la aplicación.
+**Puesta en marcha real.** En producción no se corre la semilla: lo único que se crea al instalar es el **primer Admin** y la **primera temporada vigente** (Acl. 9, 10). El comando que lo hace va con el lote 2, junto a HU-UT-06 (cambio de contraseña): el primer Admin nace con el cambio de contraseña pendiente y, sin esa historia, no puede operar. La semilla es solo para desarrollo y para el entorno demo.

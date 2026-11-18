@@ -95,7 +95,7 @@ No se usa ningún gestor de tickets. Desde la Entrega 2, la unidad de trabajo es
   - **Qué mira hoy:** el host principal, más `host` y `hostaddr` de la query.
   - **Por qué es una red y no un candado:** psycopg puede terminar conectado a otra base sin que la URL lo muestre:
     - con `service=` y un `pg_service.conf`;
-    - con `PGHOST` o `PGDATABASE` en el entorno;
+    - con `PGHOST`, `PGHOSTADDR` o `PGDATABASE` en el entorno (`PGHOSTADDR` le gana al host de la URL: lo confirmó la revisión adversarial del change `semilla-fuera-de-local`, que lo encontró pasando la comprobación sin permiso y sin aviso);
     - con otros parámetros de conexión.
 
     Tapar `service=` deja abiertos los demás.
@@ -104,6 +104,7 @@ No se usa ningún gestor de tickets. Desde la Entrega 2, la unidad de trabajo es
   - **Cuándo importa:** una sola vez, el día que se cree la base de producción. Ese día hay una base que importa y que está vacía, y fallan juntas las dos defensas actuales:
     - la de base local, porque se esquiva por los caminos de arriba;
     - la de base vacía, porque la base recién creada todavía está vacía.
+  - **Permiso explícito (change `semilla-fuera-de-local`):** `SEMILLA_FUERA_DE_LOCAL=1`, leído solo del entorno del proceso (no de `backend/.env`), deja sembrar una base remota a propósito, para el entorno demo, y avisa el host antes de conectarse. **No cierra este pendiente:** con la variable puesta y la External Database URL en la notebook, la única defensa que queda es la de base vacía. Por eso la puesta en marcha de la base del club corre en el servidor, no desde una notebook, y la External Database URL de producción no se copia a ninguna máquina de desarrollo.
   - **Origen:** queda diferido desde el change `tarifario-y-semilla`. Ver su design, archivado en `openspec/changes/archive/2026-11-13-tarifario-y-semilla/`.
 - [x] **Librería de UI**: MUI (Entrega 2).
 - [ ] **Gestor de issues para el proyecto real**: adoptar GitHub Issues o seguir sin gestor. No afecta a la entrega del curso.

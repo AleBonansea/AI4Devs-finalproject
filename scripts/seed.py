@@ -9,14 +9,18 @@ script es el unico que hace commit. El orden importa:
 2. Se comprueba que la base sea local antes de abrir la sesion. Importar
    `app.semilla` ya importa `app.core.db` (los modelos cuelgan de su `Base`)
    y eso crea el motor, pero `create_engine` no se conecta: la primera
-   conexion la abre la sesion. Asi no llega a tocar una base remota.
-3. Sesion, `cargar` y commit, todo en una transaccion: si algo falla a mitad
+   conexion la abre la sesion. Asi no llega a tocar una base remota. Si el
+   entorno trae `SEMILLA_FUERA_DE_LOCAL=1` la base remota se acepta.
+3. Si hubo permiso para una base remota, el aviso con sus hosts sale por
+   stderr (con flush) antes de abrir la sesion.
+4. Sesion, `cargar` y commit, todo en una transaccion: si algo falla a mitad
    de camino no queda una temporada a medias.
 
 Para volver a sembrar se recrea la base: `docker compose down -v`, luego
 `python tasks.py migrate` y `python tasks.py seed`.
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -30,13 +34,16 @@ from app.semilla import (  # noqa: E402
     USUARIOS,
     SemillaRechazada,
     cargar,
-    verificar_base_local,
+    comprobar_destino,
 )
 
 
 def main() -> None:
     try:
-        verificar_base_local(obtener_configuracion().database_url)
+        # El permiso se lee del entorno real del proceso, no de la configuracion.
+        aviso = comprobar_destino(obtener_configuracion().database_url, os.environ)
+        if aviso:
+            print(aviso, file=sys.stderr, flush=True)
 
         # Recien aca se abre la primera conexion.
         with FabricaDeSesiones() as sesion:

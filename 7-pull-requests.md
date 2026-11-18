@@ -2,7 +2,7 @@
 
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
-El lote 1 se construyó en ocho *changes* de OpenSpec, uno por rama, cada uno con su propia pull request hacia la rama de la entrega. Contando la de la Entrega 1 y las de cierre (documentación y configuración del repositorio), son las de la tabla del final. Las de código pasaron por integración continua (`ruff`, `mypy`, `pytest`, tests y build del frontend, y el ida y vuelta de las migraciones). Desde la #3, todas tienen además el informe de una revisión automática con `claude-code-action`, configurada en [`.github/workflows/revisor.yml`](.github/workflows/revisor.yml) y gobernada por [`REVIEW.md`](REVIEW.md); en la #2 el revisor todavía no publicaba. Cómo encaja esa revisión en el mantenimiento del sistema está en [`2-arquitectura-del-sistema.md`](2-arquitectura-del-sistema.md), 2.4.
+El lote 1 se construyó en ocho *changes* de OpenSpec, uno por rama, cada uno con su propia pull request hacia la rama de la entrega. Contando la de la Entrega 1 y las de cierre (documentación y configuración del repositorio), son las de la tabla del final. Después de la Entrega 2 se sumaron tres *changes* más: el menú lateral, los tests de punta a punta y la semilla del entorno demo en Render (#14, #16 y #17). Las de código pasaron por integración continua (`ruff`, `mypy`, `pytest`, tests y build del frontend, y el ida y vuelta de las migraciones). Desde la #3, todas tienen además el informe de una revisión automática con `claude-code-action`, configurada en [`.github/workflows/revisor.yml`](.github/workflows/revisor.yml) y gobernada por [`REVIEW.md`](REVIEW.md); en la #2 el revisor todavía no publicaba. Cómo encaja esa revisión en el mantenimiento del sistema está en [`2-arquitectura-del-sistema.md`](2-arquitectura-del-sistema.md), 2.4.
 
 Las tres que siguen se eligieron porque muestran tres cosas distintas: el ciclo completo estrenándose, la lógica de negocio más delicada, y el cierre de punta a punta del flujo principal.
 
@@ -83,3 +83,8 @@ El monto del pago sí lo manda el cliente, y la revisión lo señaló como una p
 | [#10](https://github.com/AleBonansea/AI4Devs-finalproject/pull/10) | `docs/arranque-y-pull-requests` | Instrucciones de arranque en el readme, este documento y los prompts de la sección 7 |
 | [#11](https://github.com/AleBonansea/AI4Devs-finalproject/pull/11) | `feat/fin-de-linea` | Fin de línea LF en todo el repositorio, con `.gitattributes` |
 | [#12](https://github.com/AleBonansea/AI4Devs-finalproject/pull/12) | `docs/actualizar-documentacion-entrega-2` | Documentación numerada alineada con lo construido en la Entrega 2 |
+| [#13](https://github.com/AleBonansea/AI4Devs-finalproject/pull/13) | `feature/entrega-2-AlexisBonansea` | Entrega 2 hacia `main` |
+| [#14](https://github.com/AleBonansea/AI4Devs-finalproject/pull/14) | `feat/menu-lateral-y-edad-de-grupos` | Menú lateral y edad de cada grupo en los selectores |
+| [#15](https://github.com/AleBonansea/AI4Devs-finalproject/pull/15) | `feature/entrega-2-AlexisBonansea` | El menú lateral (#14) hacia `main` |
+| [#16](https://github.com/AleBonansea/AI4Devs-finalproject/pull/16) | `feat/pruebas-e2e` | Tres recorridos de punta a punta con Playwright, con su job en el CI |
+| [#17](https://github.com/AleBonansea/AI4Devs-finalproject/pull/17) | `feat/semilla-fuera-de-local` | Permiso explícito para sembrar la base del entorno demo en Render |
