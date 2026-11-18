@@ -4,6 +4,7 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 
 ## Índice
 
+0. [Herramientas, modelos y contexto](#herramientas-modelos-y-contexto)
 1. [Descripción general del producto](1-descripcion-general-del-producto.md)
 2. [Arquitectura del sistema](2-arquitectura-del-sistema.md)
 3. [Modelo de datos](3-modelo-de-datos.md)
@@ -11,6 +12,50 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 5. [Historias de usuario](5-historias-de-usuario.md)
 6. [Tickets de trabajo](6-tickets-de-trabajo.md)
 7. [Pull requests](7-pull-requests.md)
+
+---
+
+## Herramientas, modelos y contexto
+
+Cómo se trabajó con IA en todo el proyecto. Las secciones que siguen recogen los prompts clave de cada fase; esta dice con qué se hicieron.
+
+### Herramientas
+
+| Herramienta | Para qué |
+|---|---|
+| **Claude Code (CLI)**, sobre el repo | Todo el ciclo de construcción: proponer y especificar cada *change* de OpenSpec, escribir los tests, implementar, revisar, commitear, abrir las pull requests y mirar el CI con `gh`. |
+| **Claude (chat y Cowork)** | Fuera del repo: el relevamiento que terminó en el PRD (sección 1), revisar planes antes de pasárselos a Claude Code, comparar el estado del proyecto contra las consignas del curso y preparar el entorno de una segunda máquina. |
+| **`claude-code-action`** en GitHub Actions | Revisor automático de cada pull request ([`.github/workflows/revisor.yml`](.github/workflows/revisor.yml)), con el criterio de [`REVIEW.md`](REVIEW.md). |
+
+No se usaron otros asistentes ni IDE con IA.
+
+### Modelos
+
+| Dónde | Modelo | Por qué |
+|---|---|---|
+| Sesión principal de Claude Code: propuestas, specs, design, `test-writer`, `adversarial-reviewer` | **Opus** | Es donde se decide qué se construye y si está bien: razonar sobre reglas de negocio, encontrar el caso que falta, desconfiar de un test en verde. |
+| Subagentes `implementer` y `ui-implementer` | **Sonnet** | Escriben código contra tests ya congelados: la especificación está cerrada y el test dice cuándo terminaron. Es trabajo acotado, y Sonnet lo hace más rápido y más barato. |
+| Revisor automático de las pull requests | **Sonnet** | Una palanca de costo: corre en cada push y no necesita el modelo grande para aplicar un criterio escrito. |
+| Claude en el chat | **Opus** | Análisis y revisión de documentos y planes. |
+
+### Contexto avanzado
+
+- **[`CLAUDE.md`](CLAUDE.md):** las fuentes de verdad y su precedencia, los comandos, las convenciones del backend que no son sugerencias (el cálculo en una función pura, el precio nunca viene del cliente, nada se borra), los roles, las entidades y las reglas de proceso (una rama por *change*, todo en castellano, lo no confirmado se marca [SUPUESTO]).
+- **OpenSpec** ([`openspec/config.yaml`](openspec/config.yaml)): el contexto que cada propuesta recibe sin pedirlo, con las fuentes de verdad y lo que tiene que incluir cada artefacto. Cada funcionalidad pasó por `propose` → revisión humana → `apply` → `verify` → `archive`.
+- **Once skills** en [`.claude/skills/`](.claude/skills/): las siete de OpenSpec, más cuatro propias:
+  - `backend-feature` y `frontend-feature` fijan el orden *tests → rojo → congelar → implementar → verde* y reparten el trabajo entre subagentes;
+  - `revisar-migracion`, para el diff de cada migración de Alembic;
+  - `commit`, para cerrar cada petición en la rama correcta.
+- **Cuatro subagentes** en [`.claude/agents/`](.claude/agents/), con separación de poderes:
+  - `test-writer` escribe los tests desde los Scenarios **sin poder leer la implementación**;
+  - `implementer` y `ui-implementer` escriben el código **sin poder tocar los tests**, congelados por hash;
+  - `adversarial-reviewer` revisa una vez al final de cada *change*, buscando lo que está mal.
+- **Cinco hooks** en [`.claude/hooks/`](.claude/hooks/):
+  - `sin_ver_implementacion` es el candado del `test-writer`;
+  - `sin_borrar_datos` y `datos_que_no_salen` cortan comandos que destruirían datos o los sacarían del proyecto, porque el sistema guarda datos de salud de menores;
+  - `color_con_nombre` corta los colores escritos a pelo fuera del tema;
+  - `formato` formatea cada archivo escrito.
+- **[`REVIEW.md`](REVIEW.md):** el criterio común del revisor adversarial y del revisor automático, incluido cuándo se deja de revisar.
 
 ---
 
@@ -208,13 +253,97 @@ La sección 2 pasó a describir la estructura real, los 605 tests por nivel y ca
 
 *Ajuste humano / impacto:* **la documentación también se verifica contra el código, no contra la memoria.** Las specs no se desfasan porque cada Scenario tiene un test; los documentos numerados, que no tienen test, se habían quedado en la Entrega 1 en casi todo lo que el código cambió.
 
+---
+
+#### Entrega 3: el entorno demo en Render
+
+> La sesión de Claude Code de este trabajo no se conservó, así que no hay prompt textual. Lo que sigue se reconstruye desde el *change* `semilla-fuera-de-local` ([`openspec/changes/archive/2026-11-16-semilla-fuera-de-local/`](openspec/changes/archive/2026-11-16-semilla-fuera-de-local/)) y la PR #17.
+
+**Una red de seguridad que hacía su trabajo demasiado bien**
+
+*Contexto:* el sistema se desplegó en Render como **entorno demo**, para que se pueda probar desde una URL pública. Hubo que fijar Python 3.12 para el build (`eb67eb8`). La base demo quedó vacía y la semilla no la cargaba: `verificar_base_local` rechaza cualquier base cuyo host no sea local. Es la red que impide sembrar datos inventados en la base del club, y estaba bien que rechazara. Lo que faltaba era una forma de saltearla **a propósito**.
+
+*Respuesta clave:* un *change* técnico, con spec, tests y revisión adversarial como cualquier otro:
+
+- **Un permiso explícito y difícil de dejar puesto por descuido.** La semilla siembra una base remota solo si la variable de entorno `SEMILLA_FUERA_DE_LOCAL` vale exactamente `1`, y la lee del entorno de la terminal. Una línea en `backend/.env` no da el permiso: el `.env` es un archivo que se queda, y el permiso tiene que durar lo que dura la terminal.
+- **El host a la vista antes de conectarse.** La semilla avisa a qué host va a escribir, y una URL sin host se rechaza aun con permiso.
+- **15 tests nuevos**, que prueban el permiso con un `dict` de entorno, sin tocar el entorno real. Uno corre el comando de verdad contra un dominio `.invalid` para comprobar que el aviso sale antes del error de conexión.
+- La base demo se sembró desde la notebook, con la External Database URL de Render solo para ese comando. El readme quedó con el comando exacto para PowerShell, que borra las dos variables al terminar.
+
+*Ajuste humano / impacto:*
+
+- **No se aflojó la red: se le agregó una puerta con llave.** Lo rápido era borrar la comprobación o sembrar a mano con SQL. Las dos opciones dejaban sin protección la base del club, que va a guardar datos de salud de menores.
+- **El alcance se recortó.** El *change* llegó a incluir el comando de puesta en marcha real, con el primer Admin y la primera temporada, y se sacó: ese Admin nace con el cambio de contraseña pendiente y, sin HU-UT-06, la API le responde 403 en todo. Un comando que deja un Admin que no puede operar no sirve. Quedó en el lote 2, junto a HU-UT-06.
+- **El riesgo que abre el permiso quedó escrito, no escondido.** Con la URL externa en una notebook, la red de la semilla deja de proteger esa base. Para la base demo es aceptable, porque solo tiene datos inventados y la semilla igual se niega a sembrar dos veces. Para la del club no lo es, y quedaron dos reglas: la puesta en marcha corre en el servidor, nunca desde una notebook, y la URL externa de producción no se copia a ninguna máquina de desarrollo.
+- **La revisión adversarial encontró un hueco anterior.** Con `PGHOSTADDR` definida, libpq conecta a otro host sin que la URL lo muestre, y la semilla pasaba la comprobación sin permiso y sin aviso. No se cerró en este *change*, porque cerrarlo es preguntarle a la conexión dónde terminó, una clase de problema más amplia. Quedó documentado en el readme y sumado al pendiente técnico de la semilla.
+
 ### **2.5. Seguridad**
 
 Cubierto por el prompt 1 de la 2.1. Le corresponden dos ajustes: el límite de 5 MB y la cookie de renovación resuelta con un subdominio.
 
 ### **2.6. Tests**
 
-El plan de la Entrega 1 salió del prompt 1 de la 2.1. En la Entrega 2 se reemplazó por los tests reales con el prompt 3 de la 2.4. Cómo se escriben los tests, con la separación entre `test-writer` e `implementer`, está en los prompts de la sección 7.
+El plan de la Entrega 1 salió del prompt 1 de la 2.1. En la Entrega 2 se reemplazó por los tests reales con el prompt 3 de la 2.4. Cómo se escriben los tests, con la separación entre `test-writer` e `implementer`, está en los prompts de la sección 7. En la Entrega 3 se sumaron los tests de punta a punta, con los dos prompts que siguen.
+
+#### Entrega 3: tests de punta a punta
+
+> El prompt 1 se armó en Claude (Cowork) revisando un plan previo y se corrió en Claude Code (CLI) sobre el repo. El prompt 2 es de Claude (Cowork), al preparar una segunda máquina. Se transcriben tal cual se escribieron.
+
+**Prompt 1: Tres recorridos E2E, y revertir la decisión de no tenerlos**
+
+*Contexto:* hasta la Entrega 2, `2-arquitectura-del-sistema.md` decía «Sin tests de punta a punta en el navegador»: las pantallas se probaban contra una API simulada y la API contra la base real, pero nada probaba la unión de las dos. Un primer plan de Claude ya traía lo central: Playwright en `e2e/`, tres recorridos, una base propia sembrada en cada corrida, un solo worker y cero reintentos. Antes de pedírselo a Claude Code lo pasé por una revisión en Cowork, que le sumó tres cosas: que fuera un *change* de OpenSpec como cualquier otro trabajo, que el test de sesión usara un token inválido en lugar de esperar las 8 horas del vencimiento, y que se guardara la traza solo cuando un test falla. Además señaló que el plan contradecía una decisión ya escrita en la arquitectura. Con eso armé el prompt:
+
+```
+/openspec-propose pruebas-e2e: change técnico, sin historias. Agrega tres tests E2E con Playwright en e2e/ (raíz):
+1) camino de la plata: ingresar → alta de alumno → registrar cargo → registrar pago → saldo en cero;
+2) permisos: un Profesor no llega a Cuenta corriente;
+3) sesión: con un token inválido en localStorage, una pantalla protegida vuelve al ingreso.
+Base propia escuelita_e2e recreada, migrada y sembrada en cada corrida, vía `python tasks.py e2e`. Un worker, cero reintentos, sin esperas fijas, trace retain-on-failure. Un job nuevo en ci.yml con Postgres, API y build servido.
+Revierte la decisión «Sin tests de punta a punta en el navegador» de 2-arquitectura-del-sistema.md: el proposal tiene que justificarlo y las tasks tienen que actualizar ese documento, la tabla de comandos de CLAUDE.md y el readme.
+No agrega comportamiento: los flujos ya están especificados en auth, cargos y cuenta-corriente.
+```
+
+*Respuesta clave:*
+
+- El *change* salió sin deltas de spec, porque no agrega comportamiento. El `proposal.md` justifica la reversión con tres huecos: la unión entre el frontend y la API no se probaba, la configuración de dos orígenes de producción nunca se ejercitaba, y la verificación manual no se podía repetir.
+- Quedó un paquete aparte en `e2e/` con su configuración y los tres recorridos, la tarea `python tasks.py e2e` y un tercer job en el CI. La tarea recrea la base con candados para no pisar otra, migra, siembra, compila el frontend como en producción, levanta la API y el build en puertos propios y los baja al terminar.
+- Cada test se vio fallar por el motivo correcto: el agente rompió el código de producción a propósito, comprobó el rojo y revirtió.
+- Durante la implementación encontró que la sección de tests de la arquitectura tenía los conteos de un *change* anterior (457 y 148 en lugar de 467 y 164).
+
+*Ajuste humano / impacto:*
+
+- **Un plan de la IA se revisa con otra mirada antes de ejecutarlo.** De las reglas del prompt, la base propia, un worker y cero reintentos ya venían en el plan. La revisión sumó el token inválido, sin el cual el test de sesión habría tardado 8 horas o habría tocado el código para acortar el vencimiento, y la traza al fallar, que es lo único que deja entender un fallo del CI cuando no hay reintentos.
+- **Una decisión escrita no se contradice en silencio.** El proposal dice por qué se revierte y el mismo *change* actualiza la arquitectura, `CLAUDE.md` y el readme.
+- **Se corrigió también el desfase heredado,** en lugar de sumar 3 a números que ya estaban mal. Quedaron 634 tests documentados con su detalle por capability.
+- **Se vio el job en rojo en el CI, no solo en local.** Autoricé un commit que rompe un test a propósito (`2c731b1`) y su reversión (`23bdc79`): el job falló con el mensaje esperado y subió la traza, la captura y los logs como *artifact*. Es la misma regla de la sección 7: un guardarraíl que nunca se vio frenar nada no está probado.
+
+---
+
+**Prompt 2: 148 tests en rojo en una máquina nueva**
+
+*Contexto:* para trabajar desde una segunda computadora cloné el repo y Claude preparó un script que instalaba Python, Node, OpenSpec y Docker con `winget`. Con `OpenJS.NodeJS.LTS`, winget instaló la LTS más reciente de Node. En esa máquina, `python tasks.py front-test` dio:
+
+```
+TypeError: Cannot read properties of undefined (reading 'clear')
+ ❯ tests/preparar.ts:20:16
+     18|   vi.unstubAllGlobals();
+     19|   vi.restoreAllMocks();
+     20|   localStorage.clear();
+       |                ^
+     21| });
+
+ Test Files  20 failed (20)
+      Tests  148 failed (148)
+
+no pasó ningun test
+```
+
+*Respuesta clave:* el error no era del código. Las versiones recientes de Node traen un `localStorage` global propio, que sin un archivo configurado vale `undefined` y tapa al de jsdom. Se rompía la preparación común, así que caían los 148 tests a la vez. El CI no lo veía porque fija Node 22. La solución fue instalar Node 22, reinstalar `node_modules` y volver a instalar OpenSpec, porque los paquetes globales de npm quedan atados a la versión de Node.
+
+*Ajuste humano / impacto:*
+
+- **El entorno local tiene que coincidir con el CI.** La versión que manda es la del CI, y «la última LTS» no es una versión. Que todos los tests fallen por la misma línea apunta al entorno antes que al código.
+- **Las dos máquinas trabajan sobre el mismo remoto, no sobre una carpeta sincronizada.** El repo vivía en OneDrive. Al pasar a dos computadoras se clonó fuera de la sincronización, porque `.git`, `.venv` y `node_modules` sincronizados entre dos máquinas corrompen el repositorio. Desde entonces el trabajo pasa de una máquina a la otra solo con `push` y `pull`, una rama por *change*.
 
 ---
 
